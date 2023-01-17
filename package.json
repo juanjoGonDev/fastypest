@@ -1,0 +1,38 @@
+{
+  "name": "typeorm-test-restore-db",
+  "version": "1.0.0",
+  "description": "Restores the database automatically after each test. Allows serial execution of tests without having to delete and reseat the database",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/juanjo96Dev/typeorm-test-restore-db.git"
+  },
+  "keywords": [
+    "typeorm",
+    "test",
+    "transaction",
+    "rollback",
+    "nestjs",
+    "restore",
+    "db",
+    "speed",
+    "up",
+    "tests",
+    "jest"
+  ],
+  "author": "juanjo96Dev",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/juanjo96Dev/typeorm-test-restore-db/issues"
+  },
+  "homepage": "https://github.com/juanjo96Dev/typeorm-test-restore-db#readme",
+  "dependencies": {
+    "@nestjs/common": "^9.2.1",
+    "@nestjs/core": "^9.2.1",
+    "@nestjs/testing": "^9.2.1",
+    "@nestjs/typeorm": "^9.0.1"
+  }
+}
