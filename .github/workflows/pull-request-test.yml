@@ -55,6 +55,7 @@ jobs:
           - name: mysql
             image: "mysql/mysql-server:latest"
             env:
+              MYSQL_USER: user
               MYSQL_ROOT_PASSWORD: password
               MYSQL_ALLOW_EMPTY_PASSWORD: 1
               MYSQL_DATABASE: test
@@ -66,7 +67,7 @@ jobs:
               --health-interval=10s
               --health-timeout=5s
               --health-retries=3
-              --entrypoint sh mysql/mysql-server:latest -c "exec /entrypoint.sh --authentication_policy=mysql_native_password --sql_mode=NO_ENGINE_SUBSTITUTION && mysql -u root -ppassword -e 'GRANT ALL PRIVILEGES ON *.* TO `root`@`%` IDENTIFIED BY `password` WITH GRANT OPTION;'"
+              --entrypoint sh mysql/mysql-server:latest -c "exec /entrypoint.sh --authentication_policy=mysql_native_password --sql_mode=NO_ENGINE_SUBSTITUTION && mysql -u root -ppassword -e 'UPDATE mysql.user SET Host = '%' WHERE user = 'user'; FLUSH PRIVILEGES;'"
           # - name: postgress
           #   image: "postgres:latest"
           # - name: mariadb
