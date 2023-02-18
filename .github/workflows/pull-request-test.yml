@@ -86,8 +86,8 @@ jobs:
           ORACLE_PWD: ${{env.DB_PASSWORD}}
           ORACLE_CHARACTERSET: AL32UTF8
 
-        ports:
-          - "${{env.DB_PORT}}:${{env.DB_PORT}}"
+        options: >-
+          "-p ${{env.DB_PORT}}:${{env.DB_PORT}}"
 
     steps:
       - name: Check repository
