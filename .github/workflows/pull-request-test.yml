@@ -67,6 +67,7 @@ jobs:
               --health-timeout=5s
               --health-retries=3
               --entrypoint sh mysql/mysql-server:latest -c "exec /entrypoint.sh --authentication_policy=mysql_native_password --sql_mode=NO_ENGINE_SUBSTITUTION"
+            privileges: mysql -u root -p "password" -h 127.0.0.1 -e "UPDATE mysql.user SET Host = '%'; FLUSH PRIVILEGES;"
           # - name: postgress
           #   image: "postgres:latest"
           # - name: mariadb
@@ -89,6 +90,9 @@ jobs:
           cache: npm
       - name: npm ci
         run: npm ci
+
+      - name: Grant Privileges
+        run: ${{ matrix.database.privileges }}
 
       - name: Run test
         env:
