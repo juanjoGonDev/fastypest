@@ -9,9 +9,8 @@ const dataBaseSource = new DataSource({
   entities: [Simple],
   database: "test",
   synchronize: true,
+  logging: false,
 });
-
-console.log({ envDB_TYPE: process.env.DATABASE_TYPE });
 
 export const initialize = () => dataBaseSource.initialize();
 
