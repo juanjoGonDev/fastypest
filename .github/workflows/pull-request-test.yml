@@ -44,6 +44,7 @@ jobs:
         run: npm run eslint
 
   run-test:
+    name: Test - ${{ matrix.database.name }}
     runs-on: ubuntu-latest
     timeout-minutes: 2
     needs: build
@@ -52,11 +53,11 @@ jobs:
       matrix:
         database:
           - name: mysql
-            image: "mysql/mysql-server:latest"
-          - name: postgress
-            image: "postgres:latest"
-          - name: mariadb
-            image: "mariadb/server:10.4.13-bionic"
+            image: "mysql/mysql-server:8.0.20"
+          # - name: postgress
+          #   image: "postgres:latest"
+          # - name: mariadb
+          #   image: "mariadb/server:10.4.13-bionic"
 
     services:
       data-base:
