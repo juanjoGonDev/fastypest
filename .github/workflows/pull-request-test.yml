@@ -51,8 +51,7 @@ jobs:
     needs: build
     strategy:
       matrix:
-        data-base:
-          [postgres, cockroachdb, mariadb, mysql, oracle, mssql, sqlite]
+        database: [postgres, cockroachdb, mariadb, mysql, oracle, mssql, sqlite]
         image:
           [
             postgres:latest,
@@ -85,4 +84,4 @@ jobs:
         run: npm ci
 
       - name: Run test
-        run: DATABASE_TYPE=${{matrix.data-base}} npm run test
+        run: DATABASE_TYPE=${{matrix.database}} npm run test
