@@ -67,7 +67,7 @@ jobs:
               --health-interval=10s
               --health-timeout=5s
               --health-retries=3
-              --entrypoint sh mysql/mysql/mysql-server:latest -c "exec /entrypoint.sh --authentication_policy=mysql_native_password"
+              --entrypoint sh ${{ matrix.database.image }}t -c "exec /entrypoint.sh --authentication_policy=mysql_native_password"
           # - name: postgress
           #   image: "postgres:latest"
           # - name: mariadb
