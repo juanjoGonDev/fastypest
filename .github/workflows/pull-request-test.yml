@@ -68,7 +68,7 @@ jobs:
               --health-timeout=5s
               --health-retries=3
 
-          - name: postgress
+          - name: postgres
             image: "postgres:latest"
             env:
               POSTGRES_PASSWORD: password
