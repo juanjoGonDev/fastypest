@@ -90,6 +90,9 @@ jobs:
       - name: npm ci
         run: npm ci
 
+      - name: Reset docker
+        run: docker-compose down --rmi all --volumes && docker-compose up -d
+
       - name: Run test
         env:
           DATABASE_TYPE: ${{matrix.database.name}}
