@@ -66,7 +66,7 @@ jobs:
               --health-interval=10s
               --health-timeout=5s
               --health-retries=3
-              --entrypoint sh mysql/mysql-server:latest -c "exec /entrypoint.sh --authentication_policy=mysql_native_password --sql_mode=NO_ENGINE_SUBSTITUTION"
+              --entrypoint sh mysql/mysql-server:latest -c "exec /entrypoint.sh --authentication_policy=mysql_native_password --sql_mode=NO_ENGINE_SUBSTITUTION --bind-address=0.0.0.0"
           # - name: postgress
           #   image: "postgres:latest"
           # - name: mariadb
@@ -89,9 +89,6 @@ jobs:
           cache: npm
       - name: npm ci
         run: npm ci
-
-      - name: Grant Privileges
-        run: ${{ matrix.database.privileges }}
 
       - name: Run test
         env:
