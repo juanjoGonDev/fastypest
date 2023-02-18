@@ -57,7 +57,7 @@ jobs:
     services:
       data-base:
         image: ${{matrix.image}}
-        optios: >-
+        options: >-
           -e MYSQL_ROOT_PASSWORD=${{env.DB_PASSWORD}}
           -e MYSQL_USER=${{env.DB_USER}}
           -e MYSQL_PASSWORD=${{env.DB_PASSWORD}}
