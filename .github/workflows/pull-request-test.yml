@@ -60,8 +60,7 @@ jobs:
               MYSQL_ALLOW_EMPTY_PASSWORD: 1
               MYSQL_PASSWORD: password
               MYSQL_DATABASE: test
-            ports:
-              - 3306:3306
+            ports: "3306:3306"
             options: >-
               --health-cmd="mysqladmin ping"
               --health-interval=10s
@@ -77,7 +76,8 @@ jobs:
       data-base:
         image: ${{matrix.database.image}}
         env: ${{matrix.database.env}}
-        ports: ${{matrix.database.port}}
+        ports:
+          - ${{matrix.database.port}}
         options: ${{matrix.database.options}}
 
     steps:
