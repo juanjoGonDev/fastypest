@@ -5,6 +5,9 @@ on:
     branches: ["main"]
 env:
   NODE_VERSION: "16.x"
+  DB_USER: root
+  DB_PASSWORD: password
+  DB_NAME: test
 
 jobs:
   build:
