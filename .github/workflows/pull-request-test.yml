@@ -5,17 +5,6 @@ on:
     branches: ["main"]
 env:
   NODE_VERSION: "16.x"
-  DB_USER: "root"
-  DB_PASSWORD: "password"
-  DB_NAME: "test"
-  DB_IMAGES: >-
-    postgres:latest,
-    cockroachdb/cockroach:v19.2.4,
-    mariadb/server:10.4.13-bionic,
-    mysql/mysql-server:8.0.20,
-    oracle/database-instantclient:19.3.0.0.0-1,
-    mcr.microsoft.com/mssql/server:2019-CU4-ubuntu-18.04,
-    mcr.microsoft.com/sqlite/sqlite3
 
 jobs:
   build:
@@ -23,14 +12,12 @@ jobs:
     timeout-minutes: 2
     steps:
       - name: Check repository
-        uses: actions/checkout@v2
-
+        uses: actions/checkout@v3
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-
       - name: npm ci
         run: npm ci
 
@@ -43,14 +30,12 @@ jobs:
     needs: build
     steps:
       - name: Check repository
-        uses: actions/checkout@v2
-
+        uses: actions/checkout@v3
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-
       - name: npm ci
         run: npm ci
 
@@ -63,33 +48,39 @@ jobs:
     needs: build
     strategy:
       matrix:
-        data-base:
-          [postgres, cockroachdb, mariadb, mysql, oracle, mssql, sqlite]
-
-    env:
-      DB_IMAGE: ${{ matrix.data-base }}:${{ index(split(env.DB_IMAGES, ","), sub(indexOf(split(env.DB_IMAGES, ","), "${{ matrix.data-base }}:"), 1)) }}
+        image:
+          [
+            "postgres:latest",
+            "cockroachdb/cockroach:v19.2.4",
+            "mariadb/server:10.4.13-bionic",
+            "mysql/mysql-server:8.0.20",
+            "oracle/database-instantclient:19.3.0.0.0-1",
+            "mcr.microsoft.com/mssql/server:2019-CU4-ubuntu-18.04",
+            "mcr.microsoft.com/sqlite/sqlite3",
+          ]
 
     services:
       data-base:
-        image: ${{ env.DB_IMAGE }}
+        image: ${{matrix.image}}
         options: >-
-          --user=${{ env.DB_USER }}
-          --password=${{ env.DB_PASSWORD }}
-          --database=${{ env.DB_NAME }}
+          --user=root
+          --password=password
+          --database=test
           --port=3306
 
     steps:
       - name: Check repository
-        uses: actions/checkout@v2
-
+        uses: actions/checkout@v3
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-
       - name: npm ci
         run: npm ci
 
-      - name: Run test for ${{ matrix.data-base }}
+      - name: Run test
+        env:
+          databaseImageMap: '{"postgres:latest":"postgres","cockroachdb/cockroach:v19.2.4":"cockroachdb","mariadb/server:10.4.13-bionic":"mariadb","mysql/mysql-server:8.0.20":"mysql","oracle/database-instantclient:19.3.0.0.0-1":"oracle","mcr.microsoft.com/mssql/server:2019-CU4-ubuntu-18.04":"mssql","mcr.microsoft.com/sqlite/sqlite3":"sqlite"}'
+          DATABASE_TYPE: ${{ env.databaseImageMap[matrix.image]}}
         run: npm run test
