@@ -56,11 +56,9 @@ jobs:
             image: "mysql/mysql-server:latest"
             env:
               MYSQL_ROOT_PASSWORD: password
-              MYSQL_USER: test_user
               MYSQL_ALLOW_EMPTY_PASSWORD: 1
-              MYSQL_PASSWORD: password
               MYSQL_DATABASE: test
-              MYSQL_ROOT_HOST: "172.18.0.1"
+              MYSQL_ROOT_HOST: "%"
             ports:
               - 3306:3306
             options: >-
