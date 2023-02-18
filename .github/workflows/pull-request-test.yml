@@ -50,14 +50,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: ["mysql", "postgress", "mariadb"]
-
-    env:
-      image_map: '{"mysql": "mysql/mysql-server:latest", "postgress": "postgres:latest", "mariadb": "mariadb/server:10.4.13-bionic"}'
+        database:
+          - name: mysql
+            image: "mysql/mysql-server:latest"
+          - name: postgress
+            image: "postgres:latest"
+          - name: mariadb
+            image: "mariadb/server:10.4.13-bionic"
 
     services:
       data-base:
-        image: ${{fromJson(env.image_map).image_map[matrix.image]}}
+        image: ${{matrix.database.image}}
         env:
           MYSQL_ROOT_PASSWORD: password
           MYSQL_USER: test_user
@@ -85,5 +88,5 @@ jobs:
 
       - name: Run test
         env:
-          DATABASE_TYPE: ${{ matrix.image }}
+          DATABASE_TYPE: ${{matrix.database.name}}
         run: npm run test
