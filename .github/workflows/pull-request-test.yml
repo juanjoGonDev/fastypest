@@ -72,7 +72,7 @@ jobs:
             image: "postgres:latest"
             env:
               POSTGRES_PASSWORD: password
-              POSTGRES_USER: testuser
+              POSTGRES_USER: root
               POSTGRES_DB: test
             ports:
               - 5432:5432
