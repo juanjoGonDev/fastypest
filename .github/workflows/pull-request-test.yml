@@ -67,7 +67,7 @@ jobs:
               --health-interval=10s
               --health-timeout=5s
               --health-retries=3
-              --entrypoint sh mysql/mysql-server:latest -c "exec /entrypoint.sh --authentication_policy=mysql_native_password --sql_mode=NO_ENGINE_SUBSTITUTION && mysql -u root -ppassword -e 'UPDATE mysql.user SET Host = `%` WHERE user = `user`; FLUSH PRIVILEGES;'"
+              --entrypoint sh mysql/mysql-server:latest -c "exec /entrypoint.sh --authentication_policy=mysql_native_password --sql_mode=NO_ENGINE_SUBSTITUTION && mysql -u root -ppassword -e \"UPDATE mysql.user SET Host = '%' WHERE user = 'user'; FLUSH PRIVILEGES;\""
           # - name: postgress
           #   image: "postgres:latest"
           # - name: mariadb
