@@ -10,7 +10,6 @@ const dataBaseSource = new DataSource({
   database: "test",
   synchronize: true,
   logging: false,
-  schema: "test",
 });
 
 export const initialize = () => dataBaseSource.initialize();
