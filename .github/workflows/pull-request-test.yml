@@ -87,7 +87,7 @@ jobs:
           ORACLE_CHARACTERSET: AL32UTF8
 
         ports:
-          - ${{env.DB_PORT}}:${{env.DB_PORT}}
+          - "${{env.DB_PORT}}:${{env.DB_PORT}}"
 
     steps:
       - name: Check repository
