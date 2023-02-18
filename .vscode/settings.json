@@ -1,0 +1,11 @@
+{
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": true,
+    "source.organizeImports": true
+  },
+  "cSpell.words": [
+    "typeorm"
+  ],
+  "files.trimFinalNewlines": true
+}
