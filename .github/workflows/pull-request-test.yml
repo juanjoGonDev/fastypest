@@ -54,13 +54,13 @@ jobs:
         database: [postgres, cockroachdb, mariadb, mysql, oracle, mssql, sqlite]
         image:
           [
-            postgres:latest,
-            cockroachdb/cockroach:v19.2.4,
-            mariadb/server:10.4.13-bionic,
-            mysql/mysql-server:8.0.20,
-            oracle/database-instantclient:19.3.0.0.0-1,
-            mcr.microsoft.com/mssql/server:2019-CU4-ubuntu-18.04,
-            mcr.microsoft.com/sqlite/sqlite3,
+            "postgres:latest",
+            "cockroachdb/cockroach:v19.2.4",
+            "mariadb/server:10.4.13-bionic",
+            "mysql/mysql-server:8.0.20",
+            "oracle/database-instantclient:19.3.0.0.0-1",
+            "mcr.microsoft.com/mssql/server:2019-CU4-ubuntu-18.04",
+            "mcr.microsoft.com/sqlite/sqlite3",
           ]
 
     services:
