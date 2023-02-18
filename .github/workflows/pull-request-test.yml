@@ -66,7 +66,7 @@ jobs:
               --health-interval=10s
               --health-timeout=5s
               --health-retries=3
-              --entrypoint sh docker.io/mysql/mysql-server:latest -c "exec /entrypoint.sh --ignore-db-dir --explicit_defaults_for_timestamp --skip-name-resolve --sql_mode=NO_ENGINE_SUBSTITUTION && mysql -u root -ppassword -e 'GRANT ALL PRIVILEGES ON *.* TO `root`@`%` IDENTIFIED BY `password` WITH GRANT OPTION;'"
+              --entrypoint sh mysql/mysql-server:latest -c "exec /entrypoint.sh --authentication_policy=mysql_native_password --sql_mode=NO_ENGINE_SUBSTITUTION && mysql -u root -ppassword -e 'GRANT ALL PRIVILEGES ON *.* TO `root`@`%` IDENTIFIED BY `password` WITH GRANT OPTION;'"
           # - name: postgress
           #   image: "postgres:latest"
           # - name: mariadb
