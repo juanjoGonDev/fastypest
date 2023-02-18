@@ -53,7 +53,7 @@ jobs:
             "postgres:latest",
             "cockroachdb/cockroach:v19.2.4",
             "mariadb/server:10.4.13-bionic",
-            "mysql/mysql-server:8.0.20",
+            "mysql/mysql-server:latest",
             "oracle/database-instantclient:19.3.0.0.0-1",
             "mcr.microsoft.com/mssql/server:2019-CU4-ubuntu-18.04",
             "mcr.microsoft.com/sqlite/sqlite3",
@@ -62,11 +62,13 @@ jobs:
     services:
       data-base:
         image: ${{matrix.image}}
-        options: >-
-          --user=root
-          --password=password
-          --database=test
-          --port=3306
+        env:
+          - DB_USER: root
+          - DB_PASSWORD: password
+          - DB_NAME: test
+          - DB_PORT: 3306
+        ports:
+          - "3306:3306"
 
     steps:
       - name: Check repository
@@ -81,6 +83,6 @@ jobs:
 
       - name: Run test
         env:
-          databaseImageMap: '{"postgres:latest":"postgres","cockroachdb/cockroach:v19.2.4":"cockroachdb","mariadb/server:10.4.13-bionic":"mariadb","mysql/mysql-server:8.0.20":"mysql","oracle/database-instantclient:19.3.0.0.0-1":"oracle","mcr.microsoft.com/mssql/server:2019-CU4-ubuntu-18.04":"mssql","mcr.microsoft.com/sqlite/sqlite3":"sqlite"}'
+          databaseImageMap: '{"postgres:latest":"postgres","cockroachdb/cockroach:v19.2.4":"cockroachdb","mariadb/server:10.4.13-bionic":"mariadb","mysql/mysql-server:latest":"mysql","oracle/database-instantclient:19.3.0.0.0-1":"oracle","mcr.microsoft.com/mssql/server:2019-CU4-ubuntu-18.04":"mssql","mcr.microsoft.com/sqlite/sqlite3":"sqlite"}'
           DATABASE_TYPE: ${{ env.databaseImageMap[matrix.image]}}
         run: npm run test
