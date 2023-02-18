@@ -53,11 +53,12 @@ jobs:
       matrix:
         database:
           - name: mysql
-            image: "mysql:latest"
+            image: "mysql/mysql-server:latest"
             env:
               MYSQL_ROOT_PASSWORD: password
               MYSQL_ALLOW_EMPTY_PASSWORD: 1
               MYSQL_DATABASE: test
+              MYSQL_ROOT_HOST: "%"
             ports:
               - 3306:3306
             options: >-
@@ -65,7 +66,7 @@ jobs:
               --health-interval=10s
               --health-timeout=5s
               --health-retries=3
-              --entrypoint sh mysql:latest -c "exec /entrypoint.sh --authentication_policy=mysql_native_password --sql_mode=NO_ENGINE_SUBSTITUTION"
+              --entrypoint sh mysql/mysql-server:latest -c "exec /entrypoint.sh --authentication_policy=mysql_native_password --sql_mode=NO_ENGINE_SUBSTITUTION"
           # - name: postgress
           #   image: "postgres:latest"
           # - name: mariadb
