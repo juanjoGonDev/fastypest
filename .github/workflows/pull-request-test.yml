@@ -54,12 +54,7 @@ jobs:
 
     env:
       env_vars:
-        image_map: |
-          {
-            "mysql": "mysql/mysql-server:latest",
-            "postgress": "postgres:latest",
-            "mariadb": "mariadb/server:10.4.13-bionic"
-          }
+        image_map: '{"mysql": "mysql/mysql-server:latest", "postgress": "postgres:latest", "mariadb": "mariadb/server:10.4.13-bionic"}'
 
     services:
       data-base:
