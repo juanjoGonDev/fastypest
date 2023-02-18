@@ -69,7 +69,7 @@ jobs:
               --health-retries=3
 
           - name: postgres
-            image: "postgres:latest"
+            image: "bitnami/postgresql"
             env:
               POSTGRES_PASSWORD: password
               POSTGRES_USER: root
@@ -117,5 +117,4 @@ jobs:
       - name: Run test
         env:
           DB_TYPE: ${{ matrix.database.name }}
-          DB_PORT: ${{ matrix.database.ports[0] }}
         run: npm run test

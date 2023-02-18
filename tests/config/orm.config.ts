@@ -10,7 +10,6 @@ const dataBaseSource = new DataSource({
   database: "test",
   synchronize: true,
   logging: false,
-  port: Number(process.env.DB_PORT),
 });
 
 export const initialize = () => dataBaseSource.initialize();
