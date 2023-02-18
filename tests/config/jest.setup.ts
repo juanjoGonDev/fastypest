@@ -10,7 +10,6 @@ let connection: DataSource;
 
 beforeAll(async () => {
   connection = await initialize();
-  console.log({ options: connection.options });
   await seed(connection);
   boost = new TypeormTestBoost(connection);
   await boost.init();

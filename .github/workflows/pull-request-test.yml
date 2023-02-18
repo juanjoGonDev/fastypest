@@ -98,10 +98,10 @@ jobs:
 
     services:
       data-base:
-        image: ${{matrix.database.image}}
-        env: ${{matrix.database.env}}
-        ports: ${{matrix.database.ports}}
-        options: ${{matrix.database.options}}
+        image: ${{ matrix.database.image }}
+        env: ${{ matrix.database.env }}
+        ports: ${{ matrix.database.ports }}
+        options: ${{ matrix.database.options }}
 
     steps:
       - name: Check repository
@@ -116,5 +116,6 @@ jobs:
 
       - name: Run test
         env:
-          DATABASE_TYPE: ${{matrix.database.name}}
+          DB_TYPE: ${{ matrix.database.name }}
+          DB_PORT: ${{ matrix.database.ports[0] }}
         run: npm run test
