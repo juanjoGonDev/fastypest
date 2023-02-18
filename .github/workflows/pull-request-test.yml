@@ -53,7 +53,7 @@ jobs:
       matrix:
         database:
           - name: mysql
-            image: "bitnami/mysql::latest"
+            image: "bitnami/mysql:latest"
             env:
               MYSQL_ROOT_PASSWORD: password
               MYSQL_ALLOW_EMPTY_PASSWORD: 1
