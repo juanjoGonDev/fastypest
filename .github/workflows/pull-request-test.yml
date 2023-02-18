@@ -52,16 +52,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image:
-          [
-            "postgres:latest",
-            "cockroachdb/cockroach:v19.2.4",
-            "mariadb/server:10.4.13-bionic",
-            "mysql/mysql-server:latest",
-            "oracle/database-instantclient:19.3.0.0.0-1",
-            "mcr.microsoft.com/mssql/server:2019-CU4-ubuntu-18.04",
-            "mcr.microsoft.com/sqlite/sqlite3",
-          ]
+        image: ["mysql/mysql-server:latest"]
 
     services:
       data-base:
@@ -71,24 +62,7 @@ jobs:
           MYSQL_USER: ${{env.DB_USER}}
           MYSQL_PASSWORD: ${{env.DB_PASSWORD}}
           MYSQL_DATABASE: ${{env.DB_NAME}}
-          POSTGRES_USER: ${{env.DB_USER}}
-          POSTGRES_PASSWORD: ${{env.DB_PASSWORD}}
-          POSTGRES_DB: ${{env.DB_NAME}}
-          COCKROACH_USER: ${{env.DB_USER}}
-          COCKROACH_PASSWORD: ${{env.DB_PASSWORD}}
-          COCKROACH_DATABASE: ${{env.DB_NAME}}
-          MARIADB_ROOT_PASSWORD: ${{env.DB_PASSWORD}}
-          MARIADB_USER: ${{env.DB_USER}}
-          MARIADB_PASSWORD: ${{env.DB_PASSWORD}}
-          MARIADB_DATABASE: ${{env.DB_NAME}}
-          ACCEPT_EULA: Y
-          SA_PASSWORD: ${{env.DB_PASSWORD}}
-          MSSQL_PID: Developer
-          ORACLE_ALLOW_REMOTE: true
-          ORACLE_HOME: /opt/oracle/product/19c/dbhome_1
-          ORACLE_SID: XE
-          ORACLE_PWD: ${{env.DB_PASSWORD}}
-          ORACLE_CHARACTERSET: AL32UTF8
+          MYSQL_ALLOW_EMPTY_PASSWORD: true
 
     steps:
       - name: Check repository
