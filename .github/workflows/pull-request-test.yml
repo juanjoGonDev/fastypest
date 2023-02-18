@@ -65,11 +65,11 @@ jobs:
     env:
       options_map: |
         {  
-          "postgress": "-e POSTGRES_USER=${{secret.DB_USER}} -e POSTGRES_PASSWORD=${{secret.DB_PASSWORD}} -e POSTGRES_DB=${{secret.DB_NAME}} -p 5432:5432",
-          "mysql": "-e MYSQL_ROOT_PASSWORD=${{secret.DB_PASSWORD}} -e MYSQL_USER=${{secret.DB_USER}} -e MYSQL_PASSWORD=${{secret.DB_PASSWORD}} -e MYSQL_DATABASE=${{secret.DB_NAME}} -e MYSQL_ALLOW_EMPTY_PASSWORD=1 -p 3306:3306",
-          "mssql": "-e ACCEPT_EULA=Y -e SA_PASSWORD=${{secret.DB_PASSWORD}} -p 1433:1433",
+          "postgress": "-e POSTGRES_USER=${{secrets.DB_USER}} -e POSTGRES_PASSWORD=${{secrets.DB_PASSWORD}} -e POSTGRES_DB=${{secrets.DB_NAME}} -p 5432:5432",
+          "mysql": "-e MYSQL_ROOT_PASSWORD=${{secrets.DB_PASSWORD}} -e MYSQL_USER=${{secrets.DB_USER}} -e MYSQL_PASSWORD=${{secrets.DB_PASSWORD}} -e MYSQL_DATABASE=${{secrets.DB_NAME}} -e MYSQL_ALLOW_EMPTY_PASSWORD=1 -p 3306:3306",
+          "mssql": "-e ACCEPT_EULA=Y -e SA_PASSWORD=${{secrets.DB_PASSWORD}} -p 1433:1433",
           "cockroachdb": "-p 26257:26257 -p 8080:8080",
-          "oracle": "-p 1521:1521 -e ORACLE_PWD=${{secret.DB_PASSWORD}}",
+          "oracle": "-p 1521:1521 -e ORACLE_PWD=${{secrets.DB_PASSWORD}}",
           "sqlite": "-v /var/lib/sqlite:/var/lib/sqlite"
         }
       images_map: |
