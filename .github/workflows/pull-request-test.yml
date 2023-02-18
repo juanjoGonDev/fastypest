@@ -60,7 +60,7 @@ jobs:
               MYSQL_ALLOW_EMPTY_PASSWORD: 1
               MYSQL_PASSWORD: password
               MYSQL_DATABASE: test
-              MYSQL_ROOT_HOST: "%"
+              MYSQL_ROOT_HOST: "172.18.0.1"
             ports:
               - 3306:3306
             options: >-
