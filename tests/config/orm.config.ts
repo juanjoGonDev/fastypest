@@ -1,15 +1,14 @@
 import { DataSource } from "typeorm";
 import { Simple } from "../entities";
 
-const databaseType: any = process.env.DATABASE_TYPE;
 const dataBaseSource = new DataSource({
-  type: databaseType || "mysql",
-  port: 3306,
+  type: (process.env.DATABASE_TYPE as any) || "mysql",
+  port: Number(process.env.DB_PORT) || 3306,
   host: "localhost",
-  username: "root",
-  password: "password",
+  username: String(process.env.DB_USER) || "root",
+  password: String(process.env.DB_PASSWORD) || "password",
   entities: [Simple],
-  database: "test",
+  database: String(process.env.DB_NAME) || "test",
   synchronize: true,
 });
 

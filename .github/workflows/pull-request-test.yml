@@ -63,10 +63,10 @@ jobs:
       data-base:
         image: ${{matrix.image}}
         env:
-          DB_USER: root
-          DB_PASSWORD: password
-          DB_NAME: test
-          DB_PORT: 3306
+          - "DB_USER=${{env.DB_USER}}"
+          - "DB_PASSWORD=${{env.DB_PASSWORD}}"
+          - "DB_NAME=${{env.DB_NAME}}"
+          - "DB_PORT=${{env.DB_PORT}}"
 
     steps:
       - name: Check repository
