@@ -1,0 +1,83 @@
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: Node.js CI
+
+on:
+  pull_request:
+    branches: ["main"]
+env:
+  NODE_VERSION: "16.x"
+  DB_USER: "root"
+  DB_PASSWORD: "password"
+  DB_NAME: "test"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+      - run: npm ci
+
+      - name: Run build
+        run: npm run build
+
+  check-eslint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    needs: build
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+      - name: Run eslint
+        run: npm run eslint
+
+  run-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    needs: build
+    strategy:
+      matrix:
+        data-base:
+          [postgres, cockroachdb, mariadb, mysql, oracle, mssql, sqlite]
+        image:
+          [
+            postgres:latest,
+            cockroachdb/cockroach:v19.2.4,
+            mariadb/server:10.4.13-bionic,
+            mysql/mysql-server:8.0.20,
+            oracle/database-instantclient:19.3.0.0.0-1,
+            mcr.microsoft.com/mssql/server:2019-CU4-ubuntu-18.04,
+            mcr.microsoft.com/sqlite/sqlite3,
+          ]
+
+    services:
+      data-base:
+        image: ${{matrix.image}}
+        options: >-
+          --user=${{env.DB_USER}}
+          --password=${{env.DB_PASSWORD}}
+          --database=${{env.DB_NAME}}
+          --port=3306
+        ports:
+          - 3306
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+      - name: Run test
+        run: DATABASE_TYPE=${{matrix.data-base}} npm run test
