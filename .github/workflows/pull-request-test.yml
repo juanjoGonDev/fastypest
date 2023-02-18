@@ -63,10 +63,31 @@ jobs:
       data-base:
         image: ${{matrix.image}}
         env:
-          - "DB_USER=${{env.DB_USER}}"
-          - "DB_PASSWORD=${{env.DB_PASSWORD}}"
-          - "DB_NAME=${{env.DB_NAME}}"
-          - "DB_PORT=${{env.DB_PORT}}"
+          MYSQL_ROOT_PASSWORD: ${{env.DB_PASSWORD}}
+          MYSQL_USER: ${{env.DB_USER}}
+          MYSQL_PASSWORD: ${{env.DB_PASSWORD}}
+          MYSQL_DATABASE: ${{env.DB_NAME}}
+          POSTGRES_USER: ${{env.DB_USER}}
+          POSTGRES_PASSWORD: ${{env.DB_PASSWORD}}
+          POSTGRES_DB: ${{env.DB_NAME}}
+          COCKROACH_USER: ${{env.DB_USER}}
+          COCKROACH_PASSWORD: ${{env.DB_PASSWORD}}
+          COCKROACH_DATABASE: ${{env.DB_NAME}}
+          MARIADB_ROOT_PASSWORD: ${{env.DB_PASSWORD}}
+          MARIADB_USER: ${{env.DB_USER}}
+          MARIADB_PASSWORD: ${{env.DB_PASSWORD}}
+          MARIADB_DATABASE: ${{env.DB_NAME}}
+          ACCEPT_EULA: Y
+          SA_PASSWORD: ${{env.DB_PASSWORD}}
+          MSSQL_PID: Developer
+          ORACLE_ALLOW_REMOTE: true
+          ORACLE_HOME: /opt/oracle/product/19c/dbhome_1
+          ORACLE_SID: XE
+          ORACLE_PWD: ${{env.DB_PASSWORD}}
+          ORACLE_CHARACTERSET: AL32UTF8
+
+        ports:
+          - ${{env.DB_PORT}}:${{env.DB_PORT}}
 
     steps:
       - name: Check repository
