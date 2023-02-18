@@ -67,10 +67,34 @@ jobs:
               --health-interval=10s
               --health-timeout=5s
               --health-retries=3
-          # - name: postgress
-          #   image: "postgres:latest"
-          # - name: mariadb
-          #   image: "mariadb/server:10.4.13-bionic"
+
+          - name: postgress
+            image: "postgres:latest"
+            env:
+              POSTGRES_PASSWORD: password
+              POSTGRES_USER: testuser
+              POSTGRES_DB: test
+            ports:
+              - 5432:5432
+            options: >-
+              --health-cmd="pg_isready"
+              --health-interval=10s
+              --health-timeout=5s
+              --health-retries=3
+
+          - name: mariadb
+            image: "bitnami/mariadb:latest"
+            env:
+              MARIADB_ROOT_PASSWORD: password
+              MARIADB_DATABASE: test
+              MARIADB_ROOT_HOST: "%"
+            ports:
+              - 3306:3306
+            options: >-
+              --health-cmd="mysqladmin ping"
+              --health-interval=10s
+              --health-timeout=5s
+              --health-retries=3
 
     services:
       data-base:

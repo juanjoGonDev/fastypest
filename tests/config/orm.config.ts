@@ -11,6 +11,8 @@ const dataBaseSource = new DataSource({
   synchronize: true,
 });
 
+console.log({ envDB_TYPE: process.env.DATABASE_TYPE });
+
 export const initialize = () => dataBaseSource.initialize();
 
 export const getConnection = () => dataBaseSource;
