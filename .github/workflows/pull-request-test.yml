@@ -65,21 +65,29 @@ jobs:
 
     services:
       data-base:
-        image: ${{lookup(images_map, matrix.image)}}
-        options: ${{lookup(options_map, matrix.image)}}
+        image: ${{env.images_map[matrix.image]}}
+        options: ${{env.options_map[matrix.image]}}
 
-    options_map:
-      postgress: "-e POSTGRES_USER=${{env.DB_USER}} -e POSTGRES_PASSWORD=${{env.DB_PASSWORD}} -e POSTGRES_DB=${{env.DB_NAME}} -p 5432:5432"
-      mysql: "-e MYSQL_ROOT_PASSWORD=${{env.DB_PASSWORD}} -e MYSQL_USER=${{env.DB_USER}} -e MYSQL_PASSWORD=${{env.DB_PASSWORD}} -e MYSQL_DATABASE=${{env.DB_NAME}} -e MYSQL_ALLOW_EMPTY_PASSWORD=1 -p 3306:3306"
-      mssql: "-e ACCEPT_EULA=Y -e SA_PASSWORD=${{env.DB_PASSWORD}} -p 1433:1433"
-    images_map:
-      postgress: "postgres:latest"
-      cockroachdb: "cockroachdb/cockroach:v19.2.4"
-      mariadb: "mariadb/server:10.4.13-bionic"
-      mysql: "mysql/mysql-server:latest"
-      oracle: "oracle/database-instantclient:19.3.0.0.0-1"
-      mssql: "mcr.microsoft.com/mssql/server:2019-CU4-ubuntu-18.04"
-      sqlite: "mcr.microsoft.com/sqlite/sqlite3"
+      env:
+        options_map: |
+          {  
+            "postgress": "-e POSTGRES_USER=${{env.DB_USER}} -e POSTGRES_PASSWORD=${{env.DB_PASSWORD}} -e POSTGRES_DB=${{env.DB_NAME}} -p 5432:5432",
+            "mysql": "-e MYSQL_ROOT_PASSWORD=${{env.DB_PASSWORD}} -e MYSQL_USER=${{env.DB_USER}} -e MYSQL_PASSWORD=${{env.DB_PASSWORD}} -e MYSQL_DATABASE=${{env.DB_NAME}} -e MYSQL_ALLOW_EMPTY_PASSWORD=1 -p 3306:3306",
+            "mssql": "-e ACCEPT_EULA=Y -e SA_PASSWORD=${{env.DB_PASSWORD}} -p 1433:1433",
+            "cockroachdb": "-p 26257:26257 -p 8080:8080",
+            "oracle": "-p 1521:1521 -e ORACLE_PWD=${{env.DB_PASSWORD}}",
+            "sqlite": "-v /var/lib/sqlite:/var/lib/sqlite"
+          }
+        images_map: |
+          {
+            "postgress": "postgres:latest",
+            "cockroachdb": "cockroachdb/cockroach:v19.2.4",
+            "mariadb": "mariadb/server:10.4.13-bionic",
+            "mysql": "mysql/mysql-server:latest",
+            "oracle": "oracle/database-instantclient:19.3.0.0.0-1",
+            "mssql": "mcr.microsoft.com/mssql/server:2019-CU4-ubuntu-18.04",
+            "sqlite": "mcr.microsoft.com/sqlite/sqlite3"
+          }
 
     steps:
       - name: Check repository
