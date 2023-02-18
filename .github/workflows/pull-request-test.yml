@@ -47,6 +47,7 @@ jobs:
     timeout-minutes: 2
     needs: build
     strategy:
+      fail-fast: false
       matrix:
         image:
           [
@@ -85,9 +86,6 @@ jobs:
           ORACLE_SID: XE
           ORACLE_PWD: ${{env.DB_PASSWORD}}
           ORACLE_CHARACTERSET: AL32UTF8
-
-        options: >-
-          "-p ${{env.DB_PORT}}:${{env.DB_PORT}}"
 
     steps:
       - name: Check repository
