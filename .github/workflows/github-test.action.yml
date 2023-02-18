@@ -1,6 +1,5 @@
-name: Pr test
+name: Pull Request tests
 on:
-  workflow_dispatch:
   pull_request:
     branches: ["main"]
 env:
@@ -19,7 +18,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: npm
       - run: npm ci
 
       - name: Run build
@@ -35,7 +34,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: npm
       - name: Run eslint
         run: npm run eslint
 
@@ -66,8 +65,6 @@ jobs:
           --password=${{env.DB_PASSWORD}}
           --database=${{env.DB_NAME}}
           --port=3306
-        ports:
-          - 3306
 
     steps:
       - uses: actions/checkout@v3
@@ -75,6 +72,6 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: npm
       - name: Run test
         run: DATABASE_TYPE=${{matrix.data-base}} npm run test
