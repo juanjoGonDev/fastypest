@@ -3,7 +3,7 @@ import { Simple } from "../entities";
 
 const dataBaseSource = new DataSource({
   type: (process.env.DATABASE_TYPE as any) || "mysql",
-  host: "localhost",
+  host: "127.0.0.1",
   username: "root",
   password: "password",
   entities: [Simple],
