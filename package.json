@@ -2,6 +2,8 @@
   "name": "fastypest",
   "version": "1.0.0",
   "description": "Restores the database automatically after each test. Allows serial execution of tests without having to delete and restore the database having to stop the application",
+  "main": "dist/index",
+  "types": "dist/index",
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "tsc",
@@ -23,7 +25,8 @@
     "speed",
     "up",
     "tests",
-    "jest"
+    "jest",
+    "fastypest"
   ],
   "author": "juanjo96Dev",
   "license": "ISC",
