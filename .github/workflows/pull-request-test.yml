@@ -50,11 +50,11 @@ jobs:
     needs: build
     env:
       mysql:
-        MYSQL_ROOT_PASSWORD: password
-        MYSQL_ALLOW_EMPTY_PASSWORD: 1
-        MYSQL_DATABASE: test
-        MYSQL_ROOT_HOST: "%"
-        MYSQL_AUTHENTICATION_PLUGIN: mysql_native_password
+        - MYSQL_ROOT_PASSWORD: password
+        - MYSQL_ALLOW_EMPTY_PASSWORD: 1
+        - MYSQL_DATABASE: test
+        - MYSQL_ROOT_HOST: "%"
+        - MYSQL_AUTHENTICATION_PLUGIN: mysql_native_password
     strategy:
       fail-fast: false
       matrix:
