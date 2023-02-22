@@ -1,0 +1,11 @@
+.vscode
+.github
+node_modules
+src
+tests
+.eslintrc
+.eslintignore
+jest.config.json
+tsconfig.compiler.json
+tsconfig.json
+*.tgz
