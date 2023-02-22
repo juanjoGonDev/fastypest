@@ -52,8 +52,9 @@ jobs:
       fail-fast: false
       matrix:
         database:
-          - name: mysql
-            image: "bitnami/mysql:latest"
+          - name: mysql - 5.7
+            type: mysql
+            image: "mysql:5.7"
             env:
               MYSQL_ROOT_PASSWORD: password
               MYSQL_ALLOW_EMPTY_PASSWORD: 1
@@ -68,7 +69,40 @@ jobs:
               --health-timeout=5s
               --health-retries=3
 
-          - name: postgres
+          - name: mysql - latest
+            type: mysql
+            image: "mysql:latest"
+            env:
+              MYSQL_ROOT_PASSWORD: password
+              MYSQL_ALLOW_EMPTY_PASSWORD: 1
+              MYSQL_DATABASE: test
+              MYSQL_ROOT_HOST: "%"
+              MYSQL_AUTHENTICATION_PLUGIN: mysql_native_password
+            ports:
+              - 3306:3306
+            options: >-
+              --health-cmd="mysqladmin ping"
+              --health-interval=10s
+              --health-timeout=5s
+              --health-retries=3
+
+          - name: postgres - 12.14
+            type: postgres
+            image: "postgres:12.14"
+            env:
+              POSTGRES_PASSWORD: password
+              POSTGRES_USER: root
+              POSTGRES_DB: test
+            ports:
+              - 5432:5432
+            options: >-
+              --health-cmd="pg_isready"
+              --health-interval=12s
+              --health-timeout=7s
+              --health-retries=3
+
+          - name: postgres - latest
+            type: postgres
             image: "postgres"
             env:
               POSTGRES_PASSWORD: password
@@ -82,8 +116,24 @@ jobs:
               --health-timeout=7s
               --health-retries=3
 
-          - name: mariadb
-            image: "bitnami/mariadb:latest"
+          - name: mariadb - latest
+            type: mariadb
+            image: "mariadb:latest"
+            env:
+              MARIADB_ROOT_PASSWORD: password
+              MARIADB_DATABASE: test
+              MARIADB_ROOT_HOST: "%"
+            ports:
+              - 3306:3306
+            options: >-
+              --health-cmd="mysqladmin ping"
+              --health-interval=10s
+              --health-timeout=5s
+              --health-retries=3
+
+          - name: mariadb - 10.4
+            type: mariadb
+            image: "mariadb:10.4"
             env:
               MARIADB_ROOT_PASSWORD: password
               MARIADB_DATABASE: test
@@ -116,5 +166,5 @@ jobs:
 
       - name: Run test
         env:
-          DB_TYPE: ${{ matrix.database.name }}
+          DB_TYPE: ${{ matrix.database.type }}
         run: npm run test
