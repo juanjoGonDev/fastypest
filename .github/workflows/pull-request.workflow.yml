@@ -54,7 +54,7 @@ jobs:
         database:
           - name: mysql - 5.7
             type: mysql
-            image: "mysql:5.7"
+            image: "bitnami/mysql:5.7"
             env:
               MYSQL_ROOT_PASSWORD: password
               MYSQL_ALLOW_EMPTY_PASSWORD: 1
@@ -71,7 +71,7 @@ jobs:
 
           - name: mysql - latest
             type: mysql
-            image: "mysql:latest"
+            image: "bitnami/mysql:latest"
             env:
               MYSQL_ROOT_PASSWORD: password
               MYSQL_ALLOW_EMPTY_PASSWORD: 1
@@ -116,9 +116,9 @@ jobs:
               --health-timeout=7s
               --health-retries=3
 
-          - name: mariadb - latest
+          - name: mariadb - 10.4
             type: mariadb
-            image: "mariadb:latest"
+            image: "mariadb:10.4"
             env:
               MARIADB_ROOT_PASSWORD: password
               MARIADB_DATABASE: test
@@ -131,9 +131,9 @@ jobs:
               --health-timeout=5s
               --health-retries=3
 
-          - name: mariadb - 10.4
+          - name: mariadb - latest
             type: mariadb
-            image: "mariadb:10.4"
+            image: "mariadb:latest"
             env:
               MARIADB_ROOT_PASSWORD: password
               MARIADB_DATABASE: test
