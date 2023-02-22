@@ -1,7 +1,7 @@
 {
-  "name": "typeorm-test-boost",
+  "name": "fastypest",
   "version": "1.0.0",
-  "description": "Restores the database automatically after each test. Allows serial execution of tests without having to delete and reseat the database",
+  "description": "Restores the database automatically after each test. Allows serial execution of tests without having to delete and restore the database having to stop the application",
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "tsc",
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/juanjo96Dev/typeorm-test-boost.git"
+    "url": "git+https://github.com/juanjo96Dev/fastypest.git"
   },
   "keywords": [
     "typeorm",
@@ -28,9 +28,9 @@
   "author": "juanjo96Dev",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/juanjo96Dev/typeorm-test-boost/issues"
+    "url": "https://github.com/juanjo96Dev/fastypest/issues"
   },
-  "homepage": "https://github.com/juanjo96Dev/typeorm-test-boostb#readme",
+  "homepage": "https://github.com/juanjo96Dev/fastypestb#readme",
   "devDependencies": {
     "@types/dotenv": "^8.2.0",
     "@types/jest": "^29.4.0",

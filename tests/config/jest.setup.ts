@@ -1,20 +1,20 @@
 import { DataSource } from "typeorm";
-import { TypeormTestBoost } from "../../src/index";
+import { Fastypest } from "../../src/index";
 import { seed } from "../seeds/seed";
 import { initialize } from "./orm.config";
 
-let boost: TypeormTestBoost;
+let fastypest: Fastypest;
 let connection: DataSource;
 
 beforeAll(async () => {
   connection = await initialize();
   await seed(connection);
-  boost = new TypeormTestBoost(connection);
-  await boost.init();
+  fastypest = new Fastypest(connection);
+  await fastypest.init();
 });
 
 afterEach(async () => {
-  await boost.restoreData();
+  await fastypest.restoreData();
 });
 
 afterAll(async () => {

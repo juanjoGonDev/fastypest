@@ -1,1 +1,1 @@
-export * from "./core/typeorm-test.boost";
+export * from "./core/fastypest";

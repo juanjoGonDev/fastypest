@@ -5,7 +5,7 @@ import {
   EntityManager,
 } from "typeorm";
 
-export class TypeormTestBoost {
+export class Fastypest {
   private manager: EntityManager;
   private database: DataSourceOptions["database"];
   private type: DataSourceOptions["type"];
