@@ -13,20 +13,20 @@ export class TypeormTestBoost {
 
   constructor(connection: DataSource | Connection) {
     this.manager = connection.manager;
-    this.database = connection.options.database;
-    this.type = connection.options.type;
+    ({ database: this.database, type: this.type } = connection.options);
   }
 
   async init() {
     await this.manager.transaction(async (em) => {
-      (await em.query(this.getTables())).map((row: Record<string, string>) =>
-        this.tables.add(row.tableName)
-      );
+      (await em.query(this.getTables())).map((row: Record<string, string>) => {
+        this.tables.add(row.name);
+      });
 
       await Promise.all(
-        [...this.tables].map(async (tableName) =>
-          em.query(this.getTemporaryTableQueries(tableName).createTempTable)
-        )
+        [...this.tables].map(async (tableName) => {
+          const query = this.getTemporaryTableQueries(tableName);
+          await em.query(query.createTempTable);
+        })
       );
     });
   }
@@ -117,24 +117,24 @@ export class TypeormTestBoost {
       case "mariadb":
       case "mssql":
       case "cockroachdb":
-        return `SELECT table_name as tableName 
+        return `SELECT table_name AS name
                 FROM information_schema.tables
                 WHERE table_schema = '${this.database}'
-                AND table_type = 'BASE TABLE';`;
+                AND table_type = 'BASE TABLE'`;
       case "postgres":
-        return `SELECT table_name as tableName 
-                FROM information_schema.tables
-                WHERE table_catalog = '${this.database}'
-                AND table_type = 'BASE TABLE';`;
+        return `SELECT table_name AS name
+                  FROM information_schema.tables 
+                 WHERE table_schema = CURRENT_SCHEMA()
+                   AND table_type = 'BASE TABLE'`;
       case "sqlite":
-        return `SELECT name as tableName 
+        return `SELECT name
                 FROM sqlite_master
                 WHERE type = 'table'
-                AND name NOT LIKE 'sqlite_%';`;
+                AND name NOT LIKE 'sqlite_%'`;
       case "oracle":
-        return `SELECT table_name as tableName 
+        return `SELECT table_name AS name
                 FROM all_tables
-                WHERE owner = '${this.database}';`;
+                WHERE owner = '${this.database}'`;
       default:
         throw new Error(`Unsupported database type: ${this.type}`);
     }
@@ -147,10 +147,11 @@ export class TypeormTestBoost {
       case "postgres":
       case "cockroachdb":
         return {
-          createTempTable: `CREATE TEMPORARY TABLE ${tempName} ON COMMIT DROP AS SELECT * FROM ${tableName}`,
-          dropTempTable: `DROP TABLE ${tempName}`,
-          restoreOriginalData: `INSERT INTO ${tableName} SELECT * FROM ${tempName}`,
-          truncateOriginalData: `TRUNCATE TABLE ${tableName} RESTART IDENTITY CASCADE`,
+          createTempTable: `CREATE TEMPORARY TABLE ${tempName} AS SELECT * FROM ${tableName}`,
+          dropTempTable: `DROP TABLE IF EXISTS ${tempName}`,
+          restoreOriginalData: `INSERT INTO ${tableName} SELECT * FROM ${tempName};
+          `,
+          truncateOriginalData: `TRUNCATE TABLE ${tableName}`,
         };
       case "mariadb":
       case "mysql":

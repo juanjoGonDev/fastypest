@@ -4,7 +4,8 @@ import { seedCount, simple } from "../seeds";
 
 describe("Simple", () => {
   const connection = getConnection();
-  const randomSimpleIndex = Math.floor(Math.random() * simple.length);
+  const randomSimpleIndex = Math.floor(Math.random() * seedCount);
+  const simpleRepository = connection.getRepository(Simple);
 
   describe("Changes with typeorm methods", () => {
     describe("Restore all data", () => {
@@ -13,10 +14,7 @@ describe("Simple", () => {
       });
 
       it('"Simple" table must be empty', async () => {
-        await connection
-          .createQueryBuilder(Simple, "simple")
-          .delete()
-          .execute();
+        await simpleRepository.clear();
         expect(await getSimpleCount()).toBe(0);
       });
 
@@ -27,13 +25,17 @@ describe("Simple", () => {
 
     describe("Modify value", () => {
       it("Row must be modified", async () => {
-        const update = await connection
-          .createQueryBuilder(Simple, "simple")
-          .update({ name: "seed updated" })
+        const newName = "seed updated";
+        await simpleRepository
+          .createQueryBuilder("simple")
+          .update({ name: newName })
           .where({ id: randomSimpleIndex })
           .execute();
 
-        expect(update.affected).toBeGreaterThan(0);
+        const rowUpdated = await getRowByName(newName);
+
+        expect(rowUpdated).toBeDefined();
+        expect(rowUpdated?.id).toBe(randomSimpleIndex);
       });
 
       it(`Row with index ${randomSimpleIndex} must have initial name`, async () => {
@@ -43,19 +45,21 @@ describe("Simple", () => {
     });
 
     describe("Delete new rows", () => {
+      const name = "new manual seed";
+
       it("New row must be defined", async () => {
-        await connection
-          .createQueryBuilder(Simple, "simple")
+        await simpleRepository
+          .createQueryBuilder("simple")
           .insert()
-          .values({ name: "new manual seed" })
+          .values({ name })
           .execute();
 
-        const newRow = await getRowByName("new manual seed");
+        const newRow = await getRowByName(name);
         expect(newRow).toBeDefined();
       });
 
       it("New row must be undefined", async () => {
-        const newRow = await getRowByName("new manual seed");
+        const newRow = await getRowByName(name);
         expect(newRow).toBeNull();
       });
     });
@@ -79,12 +83,13 @@ describe("Simple", () => {
 
     describe("Modify value", () => {
       it("Row must be modified", async () => {
+        const newName = "seed updated";
         await connection.query(
-          `UPDATE simple SET name = 'seed updated' WHERE id = ${randomSimpleIndex}`
+          `UPDATE simple SET name = '${newName}' WHERE id = ${randomSimpleIndex}`
         );
 
         const row = await getRow(randomSimpleIndex);
-        expect(row?.name).toBe("seed updated");
+        expect(row?.name).toBe(newName);
       });
 
       it(`Row with index ${randomSimpleIndex} must have initial name`, async () => {
@@ -94,29 +99,25 @@ describe("Simple", () => {
     });
 
     describe("Delete new rows", () => {
-      it("New row must be defined", async () => {
-        await connection.query(
-          'INSERT INTO simple (name) VALUE ("new manual seed")'
-        );
+      const name = "new manual seed";
 
-        const newRow = await getRowByName("new manual seed");
+      it("New row must be defined", async () => {
+        await connection.query(`INSERT INTO simple (name) VALUES ('${name}')`);
+
+        const newRow = await getRowByName(name);
         expect(newRow).toBeDefined();
       });
 
       it("New row must be undefined", async () => {
-        const newRow = await getRowByName("new manual seed");
+        const newRow = await getRowByName(name);
         expect(newRow).toBeNull();
       });
     });
   });
 
-  const getSimpleCount = () => {
-    return connection.createQueryBuilder(Simple, "simple").getCount();
-  };
+  const getSimpleCount = () => simpleRepository.count();
 
-  const getRow = (id: number) =>
-    connection.createQueryBuilder(Simple, "simple").where({ id }).getOne();
+  const getRow = (id: number) => simpleRepository.findOneBy({ id });
 
-  const getRowByName = (name: string) =>
-    connection.createQueryBuilder(Simple, "simple").where({ name }).getOne();
+  const getRowByName = (name: string) => simpleRepository.findOneBy({ name });
 });
