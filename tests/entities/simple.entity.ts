@@ -8,7 +8,7 @@ export class Simple {
   @Column()
   name!: string;
 
-  @Column({ default: null })
+  @Column({ default: null, onUpdate: "CURRENT_TIMESTAMP" })
   updateDate!: Date;
 
   @Column({ default: () => "CURRENT_TIMESTAMP" })

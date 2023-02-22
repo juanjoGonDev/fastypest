@@ -1,5 +1,5 @@
 {
-  "name": "typeorm-test-restore-db",
+  "name": "typeorm-test-boost",
   "version": "1.0.0",
   "description": "Restores the database automatically after each test. Allows serial execution of tests without having to delete and reseat the database",
   "scripts": {
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/juanjo96Dev/typeorm-test-restore-db.git"
+    "url": "git+https://github.com/juanjo96Dev/typeorm-test-boost.git"
   },
   "keywords": [
     "typeorm",
@@ -28,9 +28,9 @@
   "author": "juanjo96Dev",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/juanjo96Dev/typeorm-test-restore-db/issues"
+    "url": "https://github.com/juanjo96Dev/typeorm-test-boost/issues"
   },
-  "homepage": "https://github.com/juanjo96Dev/typeorm-test-restore-db#readme",
+  "homepage": "https://github.com/juanjo96Dev/typeorm-test-boostb#readme",
   "devDependencies": {
     "@types/dotenv": "^8.2.0",
     "@types/jest": "^29.4.0",
