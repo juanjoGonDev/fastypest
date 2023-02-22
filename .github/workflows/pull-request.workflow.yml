@@ -69,7 +69,7 @@ jobs:
               --health-retries=3
 
           - name: postgres
-            image: "postgres/postgres:latest"
+            image: "postgres"
             env:
               POSTGRES_PASSWORD: password
               POSTGRES_USER: root
