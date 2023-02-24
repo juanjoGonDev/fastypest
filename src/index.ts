@@ -1,1 +1,1 @@
-export * from "./core/fastypest";
+export * from "./core";
