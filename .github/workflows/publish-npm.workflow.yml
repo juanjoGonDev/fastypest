@@ -3,6 +3,9 @@ on:
   release:
     type: [published]
 
+env:
+  NODE_VERSION: "16.x"
+
 jobs:
   release:
     name: 🆕 Release
@@ -13,9 +16,9 @@ jobs:
       - name: 🟢 node
         uses: actions/setup-node@v3
         with:
-          node-version: "12.x"
+          node-version: "${{ env.NODE_VERSION }}"
           registry-url: "https://registry.npmjs.org/"
-
+          cache: npm
       - name: 📦 npm ci
         run: npm ci
 
