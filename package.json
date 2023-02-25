@@ -35,7 +35,6 @@
   },
   "homepage": "https://github.com/juanjo96Dev/fastypestb#readme",
   "devDependencies": {
-    "@types/dotenv": "^8.2.0",
     "@types/jest": "^29.4.0",
     "@types/node": "^18.13.0",
     "@typescript-eslint/eslint-plugin": "^5.52.0",
