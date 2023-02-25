@@ -1,7 +1,7 @@
 name: 🚀 Publish to npm
 on:
   release:
-    type: [published]
+    types: [published]
 
 env:
   NODE_VERSION: "16.x"

@@ -1,14 +1,14 @@
 import { Connection, DataSource, EntityManager } from "typeorm";
-import { ScriptSQL } from "./sql-script";
+import { SQLScript } from "./sql-script";
 
 export class Fastypest {
   private manager: EntityManager;
   private tables: Set<string> = new Set();
-  private scriptSQL: ScriptSQL;
+  private scriptSQL: SQLScript;
 
   constructor(connection: DataSource | Connection) {
     this.manager = connection.manager;
-    this.scriptSQL = new ScriptSQL(connection.options.type);
+    this.scriptSQL = new SQLScript(connection.options.type);
   }
 
   async init() {

@@ -4,7 +4,7 @@ import { QueryPath } from "./types";
 
 type DBTypes = DataSourceOptions["type"];
 
-export class ScriptSQL {
+export class SQLScript {
   queries: Queries;
   constructor(private readonly type: DBTypes) {
     if (!(this.type in DB_QUERIES)) {

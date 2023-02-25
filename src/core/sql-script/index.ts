@@ -1,1 +1,1 @@
-export * from "./script-sql";
+export * from "./sql-script";
