@@ -33,7 +33,7 @@
   "bugs": {
     "url": "https://github.com/juanjo96Dev/fastypest/issues"
   },
-  "homepage": "https://github.com/juanjo96Dev/fastypestb#readme",
+  "homepage": "https://github.com/juanjo96Dev/fastypest#readme",
   "devDependencies": {
     "@types/jest": "^29.4.0",
     "@types/node": "^18.13.0",
