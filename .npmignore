@@ -1,6 +1,7 @@
 .vscode
 .github
 node_modules
+scripts
 src
 tests
 .eslintrc

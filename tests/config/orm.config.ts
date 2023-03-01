@@ -9,7 +9,8 @@ const dataBaseSource = new DataSource({
   entities: [Simple],
   database: "test",
   synchronize: true,
-  logging: false,
+  logging: true,
+  logger: "file",
 });
 
 export const initialize = () => dataBaseSource.initialize();

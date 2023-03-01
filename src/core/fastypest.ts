@@ -1,19 +1,18 @@
 import { Connection, DataSource, EntityManager } from "typeorm";
 import { SQLScript } from "./sql-script";
 
-export class Fastypest {
+export class Fastypest extends SQLScript {
   private manager: EntityManager;
   private tables: Set<string> = new Set();
-  private scriptSQL: SQLScript;
 
   constructor(connection: DataSource | Connection) {
+    super(connection.options.type);
     this.manager = connection.manager;
-    this.scriptSQL = new SQLScript(connection.options.type);
   }
 
   async init() {
     await this.manager.transaction(async (em) => {
-      (await em.query(this.scriptSQL.getQuery("getTables"))).map(
+      (await em.query(this.getQuery("getTables"))).map(
         (row: Record<string, string>) => {
           this.tables.add(row.name);
         }
@@ -21,9 +20,7 @@ export class Fastypest {
 
       await Promise.all(
         [...this.tables].map(async (tableName) => {
-          await em.query(
-            this.scriptSQL.getQuery("createTempTable", { tableName })
-          );
+          await em.query(this.getQuery("createTempTable", { tableName }));
         })
       );
     });
@@ -31,18 +28,16 @@ export class Fastypest {
 
   async restoreData() {
     await this.manager.transaction(async (em) => {
-      await em.query(this.scriptSQL.getQuery("foreignKey.disable"));
+      await em.query(this.getQuery("foreignKey.disable"));
 
       await Promise.all(
         [...this.tables].map(async (tableName) => {
-          await em.query(
-            this.scriptSQL.getQuery("truncateTable", { tableName })
-          );
-          await em.query(this.scriptSQL.getQuery("restoreData", { tableName }));
+          await em.query(this.getQuery("truncateTable", { tableName }));
+          await em.query(this.getQuery("restoreData", { tableName }));
         })
       );
 
-      await em.query(this.scriptSQL.getQuery("foreignKey.enable"));
+      await em.query(this.getQuery("foreignKey.enable"));
     });
   }
 
@@ -51,9 +46,7 @@ export class Fastypest {
       await Promise.all(
         [...this.tables].map(async (tableName) => {
           await em.query(
-            await em.query(
-              this.scriptSQL.getQuery("dropTempTable", { tableName })
-            )
+            await em.query(this.getQuery("dropTempTable", { tableName }))
           );
         })
       );
