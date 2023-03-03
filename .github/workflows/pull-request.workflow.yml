@@ -196,3 +196,14 @@ jobs:
         env:
           DB_TYPE: ${{ matrix.database.type }}
         run: npm run test
+
+  delete_cache:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    needs: run-test
+    steps:
+      - name: Delete cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          delete: true
