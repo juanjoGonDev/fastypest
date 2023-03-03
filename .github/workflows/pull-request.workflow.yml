@@ -78,6 +78,7 @@ jobs:
               COCKROACH_INSECURE: "true"
             ports:
               - 26257:26257
+            options:
 
           - name: mysql - 5.7
             type: mysql
