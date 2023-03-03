@@ -51,6 +51,36 @@ jobs:
       fail-fast: false
       matrix:
         database:
+          - name: cockroachdb - 20.2.4
+            type: cockroachdb
+            image: "cockroachdb/cockroach:v20.2.4"
+            env:
+              COCKROACH_PASSWORD: password
+              COCKROACH_DATABASE: test
+              COCKROACH_INSECURE: "true"
+            ports:
+              - 26257:26257
+            options: >-
+              --health-cmd="cockroach sql --insecure --host=localhost --execute='SELECT 1'" 
+              --health-interval=10s 
+              --health-timeout=5s 
+              --health-retries=3
+
+          - name: cockroachdb - latest
+            type: cockroachdb
+            image: "cockroachdb/cockroach:latest"
+            env:
+              COCKROACH_PASSWORD: password
+              COCKROACH_DATABASE: test
+              COCKROACH_INSECURE: "true"
+            ports:
+              - 26257:26257
+            options: >-
+              --health-cmd="cockroach sql --insecure --host=localhost --execute='SELECT 1'" 
+              --health-interval=10s 
+              --health-timeout=5s 
+              --health-retries=3
+
           - name: mysql - 5.7
             type: mysql
             image: "bitnami/mysql:5.7"
