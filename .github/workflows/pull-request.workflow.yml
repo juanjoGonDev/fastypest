@@ -198,6 +198,7 @@ jobs:
         run: npm run test
 
   delete_cache:
+    name: Delete cache
     runs-on: ubuntu-latest
     timeout-minutes: 1
     needs: run-test
