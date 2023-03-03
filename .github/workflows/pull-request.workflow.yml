@@ -16,6 +16,7 @@ jobs:
   build:
     name: 🚧 Build Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
+    continue-on-error: true
     timeout-minutes: 2
     strategy:
       matrix:
@@ -27,7 +28,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-          cache: "npm"
+          cache: npm
       - name: 💾 Cache node modules
         id: cache-npm
         uses: actions/cache@v3
@@ -65,7 +66,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 2
     needs: build
-    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
