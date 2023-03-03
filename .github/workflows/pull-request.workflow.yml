@@ -20,7 +20,7 @@ jobs:
     timeout-minutes: 2
     strategy:
       matrix:
-        node-version: [14.x, 16.x, 18.x]
+        node-version: [15.x, 16.x, 18.x]
     steps:
       - name: ✅ Check repository
         uses: actions/checkout@v3
