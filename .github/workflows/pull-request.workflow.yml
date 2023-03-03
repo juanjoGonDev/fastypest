@@ -51,17 +51,18 @@ jobs:
       fail-fast: false
       matrix:
         database:
-          - name: cockroachdb - 20.2.4
+          - name: cockroachdb - latest-v20.2
             type: cockroachdb
-            image: "cockroachdb/cockroach:v20.2.4"
+            image: "cockroachdb/cockroach:latest-v20.2"
             env:
+              COCKROACH_USERNAME: root
               COCKROACH_PASSWORD: password
               COCKROACH_DATABASE: test
               COCKROACH_INSECURE: "true"
             ports:
               - 26257:26257
             options: >-
-              --health-cmd="cockroach sql --insecure --host=localhost --execute='SELECT 1'" 
+              --health-cmd="cockroach sql --insecure 
               --health-interval=10s 
               --health-timeout=5s 
               --health-retries=3
@@ -76,7 +77,7 @@ jobs:
             ports:
               - 26257:26257
             options: >-
-              --health-cmd="cockroach sql --insecure --host=localhost --execute='SELECT 1'" 
+              --health-cmd="cockroach sql --insecure
               --health-interval=10s 
               --health-timeout=5s 
               --health-retries=3
