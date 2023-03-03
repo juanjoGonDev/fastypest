@@ -3,6 +3,8 @@ name: Pull Request workflow
 on:
   pull_request:
     branches: ["main"]
+    types: [opened, reopened, ready_for_review, synchronize]
+
 env:
   NODE_VERSION: "16.x"
 
@@ -76,11 +78,6 @@ jobs:
               COCKROACH_INSECURE: "true"
             ports:
               - 26257:26257
-            options: >-
-              --health-cmd="cockroach sql --insecure
-              --health-interval=10s 
-              --health-timeout=5s 
-              --health-retries=3
 
           - name: mysql - 5.7
             type: mysql
