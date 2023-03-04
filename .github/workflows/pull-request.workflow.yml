@@ -73,22 +73,20 @@ jobs:
       fail-fast: false
       matrix:
         database:
-          - name: cockroachdb - 21.2.4
+          - name: cockroachdb - latest
             type: cockroachdb
-            use-service: false
-            image: cockroachdb/cockroach:v21.2.4
-            port: 26257
-            run: |
-              docker pull cockroachdb/cockroach:v21.2.4
-              docker run -d --name roach --hostname roach \
-                -p 26257:26257 -p 8080:8080 \
-                -e "COCKROACH_INSECURE=true" \
-                -e "COCKROACH_USER=root" \
-                -e "COCKROACH_PASSWORD=password" \
-                cockroachdb/cockroach:v21.2.4 start-single-node --insecure
-              sudo apt update && sudo apt install wait-for-it -y
-              wait-for-it -h localhost -p 26257
-              docker exec roach bash -c "echo 'CREATE DATABASE test;' | cockroach sql --insecure"
+            service:
+              image: cockroachdb/cockroach
+              command: start-single-node --insecure
+              restart: always
+              ports:
+                - "26257:26257"
+                - "8080:8080"
+              environment:
+                COCKROACH_INSECURE: true
+                COCKROACH_USER: root
+                COCKROACH_PASSWORD: password
+                COCKROACH_DATABASE: "test"
 
           - name: mysql - 5.7
             type: mysql
@@ -200,9 +198,6 @@ jobs:
       data-base: ${{matrix.database.service}}
 
     steps:
-      - if: ${{matrix.database.use-service == false}}
-        name: 🐋 Start a single instance with docker
-        run: ${{ matrix.database.run }}
       - name: 🔶 Check repository
         uses: actions/checkout@v3
       - name: 🟢 Use Node.js ${{ env.NODE_VERSION }}
