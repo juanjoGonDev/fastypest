@@ -175,8 +175,8 @@ jobs:
               --health-retries=3
 
     services:
-      if: ${{matrix.database.type != 'cockroachdb'}}
       data-base:
+        if: ${{matrix.database.type != 'cockroachdb'}}
         image: ${{ matrix.database.image }}
         env: ${{ matrix.database.env }}
         ports: ${{ matrix.database.ports }}
