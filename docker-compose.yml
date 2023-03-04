@@ -6,8 +6,8 @@ services:
     command: --default-authentication-plugin=mysql_native_password
     restart: always
     environment:
-      MYSQL_DATABASE: "test"
-      MYSQL_ROOT_PASSWORD: "password"
+      MYSQL_DATABASE: test
+      MYSQL_ROOT_PASSWORD: password
       MYSQL_ALLOW_EMPTY_PASSWORD: 1
     ports:
       - "3306:3306"
@@ -19,9 +19,9 @@ services:
     image: postgres
     restart: always
     environment:
-      POSTGRES_DB: "test"
-      POSTGRES_USER: "root"
-      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: test
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
     ports:
       - "5432:5432"
     expose:
@@ -32,8 +32,8 @@ services:
     image: mariadb
     restart: always
     environment:
-      MYSQL_DATABASE: "test"
-      MYSQL_ROOT_PASSWORD: "password"
+      MYSQL_DATABASE: test
+      MYSQL_ROOT_PASSWORD: password
       MYSQL_ALLOW_EMPTY_PASSWORD: 1
     ports:
       - "3307:3307"
@@ -41,12 +41,14 @@ services:
       - "3307"
 
   cockroachdb:
-    container_name: fastypest-cockroachdb
-    image: cockroachdb/cockroach:v21.2.4
-    command: start-single-node --insecure --database=test
+    image: cockroachdb/cockroach
+    command: start-single-node --insecure
+    restart: always
     ports:
       - "26257:26257"
       - "8080:8080"
-    volumes:
-      - ./cockroach-data:/cockroach/cockroach-data
-    restart: unless-stopped
+    environment:
+      COCKROACH_INSECURE: true
+      COCKROACH_USER: root
+      COCKROACH_PASSWORD: password
+      COCKROACH_DATABASE: test

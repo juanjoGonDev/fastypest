@@ -9,7 +9,7 @@
     "build": "tsc",
     "eslint": "eslint . --fix --config .eslintrc",
     "test": "jest --runInBand --config ./jest.config.json",
-    "prepare:docker": "ts-node -r tsconfig-paths/register scripts/prepare-docker.ts"
+    "docker": "ts-node -r tsconfig-paths/register scripts/prepare-docker.ts"
   },
   "repository": {
     "type": "git",
