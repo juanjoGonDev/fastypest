@@ -190,7 +190,7 @@ jobs:
       data-base: ${{matrix.database.service}}
 
     steps:
-      - if: ${{matrix.database.use-service || true == false}}
+      - if: ${{(matrix.database.use-service || true) == false}}
         name: 🐋 Start a single instance with docker
         run: ${{ matrix.database.run }}
       - name: 🔶 Check repository
