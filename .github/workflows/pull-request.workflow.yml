@@ -75,7 +75,7 @@ jobs:
             image: cockroachdb/cockroach:v21.2.4
             run: |
               echo cockroach
-              docker pull $cockroachdb/cockroach:v21.2.4
+              docker pull cockroachdb/cockroach:v21.2.4
               docker run -d --name roach --hostname roach -p 26257:26257 -p 8080:8080 cockroachdb/cockroach:v21.2.4 start-single-node --insecure
               sudo apt update && sudo apt install wait-for-it -y
               wait-for-it -h localhost -p 26257
