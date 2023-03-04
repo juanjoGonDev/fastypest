@@ -71,14 +71,15 @@ jobs:
         database:
           - name: cockroachdb - 21.2.4
             type: cockroachdb
+            service: false
             image: cockroachdb/cockroach:v21.2.4
             run: |
-              echo $CONTAINER_ENTRYPOINT
+              echo cockroach
               docker pull $cockroachdb/cockroach:v21.2.4
               docker run -d --name roach --hostname roach -p 26257:26257 -p 8080:8080 cockroachdb/cockroach:v21.2.4 start-single-node --insecure
               sudo apt update && sudo apt install wait-for-it -y
               wait-for-it -h localhost -p 26257
-              docker exec roach bash -c "echo 'CREATE DATABASE sequelize_test;' | $CONTAINER_ENTRYPOINT sql --insecure"
+              docker exec roach bash -c "echo 'CREATE DATABASE sequelize_test;' | cockroach sql --insecure"
 
           - name: mysql - 5.7
             type: mysql
@@ -184,10 +185,8 @@ jobs:
       data-base: ${{matrix.database.service}}
 
     steps:
-      - if: ${{matrix.database.type == 'cockroachdb'}}
+      - if: ${{matrix.database.service == 'false'}}
         name: 🐋 Start a single instance (${{ matrix.database.image }}) with docker
-        env:
-          CONTAINER_ENTRYPOINT: ${{ 'cockroach' }}
         run: ${{ matrix.database.run }}
       - name: 🔶 Check repository
         uses: actions/checkout@v3
