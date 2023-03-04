@@ -42,10 +42,11 @@ services:
 
   cockroachdb:
     container_name: fastypest-cockroachdb
-    image: cockroachdb/cockroach
-    restart: always
-    command: start --insecure
+    image: cockroachdb/cockroach:v21.2.4
+    command: start-single-node --insecure --database=test
     ports:
       - "26257:26257"
-    expose:
-      - "26257"
+      - "8080:8080"
+    volumes:
+      - ./cockroach-data:/cockroach/cockroach-data
+    restart: unless-stopped

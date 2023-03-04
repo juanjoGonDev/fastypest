@@ -73,12 +73,13 @@ jobs:
             type: cockroachdb
             use-service: false
             image: cockroachdb/cockroach:v21.2.4
+            port: 26257
             run: |
               echo cockroach
               docker pull cockroachdb/cockroach:v21.2.4
-              docker run -d --name roach --hostname roach -p 5432:5432 cockroachdb/cockroach:v21.2.4 start-single-node --insecure
+              docker run -d --name roach --hostname roach -p 26257:26257 cockroachdb/cockroach:v21.2.4 start-single-node --insecure
               sudo apt update && sudo apt install wait-for-it -y
-              wait-for-it -h localhost -p 5432
+              wait-for-it -h localhost -p 26257
               docker exec roach bash -c "echo 'CREATE DATABASE sequelize_test;' | cockroach sql --insecure"
 
           - name: mysql - 5.7
@@ -207,4 +208,5 @@ jobs:
       - name: 🧪 Testing
         env:
           DB_TYPE: ${{ matrix.database.type }}
+          DB_PORT: ${{ matrix.database.port }}
         run: npm run test
