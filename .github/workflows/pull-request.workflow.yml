@@ -1,4 +1,4 @@
-name: Pull Request workflow
+name: 🧪 Pull Request workflow
 
 on:
   pull_request:
@@ -70,25 +70,9 @@ jobs:
       fail-fast: false
       matrix:
         database:
-          - name: cockroachdb - latest-v20.2
-            type: cockroachdb
-            image: "cockroachdb/cockroach:latest-v20.2"
-            env:
-              COCKROACH_USERNAME: root
-              COCKROACH_PASSWORD: password
-              COCKROACH_DATABASE: test
-              COCKROACH_INSECURE: "true"
-            ports:
-              - 26257:26257
-            options: >-
-              --health-cmd="cockroach sql --insecure 
-              --health-interval=10s 
-              --health-timeout=5s 
-              --health-retries=3
-
           - name: cockroachdb - latest
             type: cockroachdb
-            image: "cockroachdb/cockroach:latest"
+            image: "timveil/cockroachdb-single-node:latest"
             env:
               COCKROACH_PASSWORD: password
               COCKROACH_DATABASE: test
