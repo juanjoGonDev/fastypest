@@ -87,6 +87,8 @@ jobs:
                 - 26257:26257
                 - 8080:8080
               options: >-
+                --insecure
+                start-single-node
                 --health-cmd="cockroach sql --insecure -e SELECT 1"
                 --health-interval=10s
                 --health-timeout=5s
