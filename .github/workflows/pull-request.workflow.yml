@@ -77,7 +77,7 @@ jobs:
             run: |
               echo cockroach
               docker pull cockroachdb/cockroach:v21.2.4
-              docker run -d --name roach --hostname roach -p 26257:26257 cockroachdb/cockroach:v21.2.4 start-single-node --insecure
+              docker run -d --name roach --hostname roach -p 26257:26257 cockroachdb/cockroach:v21.2.4 start-single-node --insecure  --database=test
               sudo apt update && sudo apt install wait-for-it -y
               wait-for-it -h localhost -p 26257
               docker exec roach bash -c "echo 'CREATE DATABASE sequelize_test;' | cockroach sql --insecure"
