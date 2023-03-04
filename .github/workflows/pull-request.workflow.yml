@@ -71,7 +71,7 @@ jobs:
         database:
           - name: cockroachdb - 21.2.4
             type: cockroachdb
-            service: false
+            use-service: false
             image: cockroachdb/cockroach:v21.2.4
             run: |
               echo cockroach
@@ -185,7 +185,7 @@ jobs:
       data-base: ${{matrix.database.service}}
 
     steps:
-      - if: ${{matrix.database.service == 'false'}}
+      - if: ${{matrix.database.use-service == 'false'}}
         name: 🐋 Start a single instance (${{ matrix.database.image }}) with docker
         run: ${{ matrix.database.run }}
       - name: 🔶 Check repository
