@@ -175,9 +175,9 @@ jobs:
               --health-timeout=5s
               --health-retries=3
 
-    if: matrix.database.service != 'false'
     services:
       data-base:
+        if: matrix.database.service != 'false'
         image: ${{ matrix.database.image }}
         env: ${{ matrix.database.env }}
         ports: ${{ matrix.database.ports }}
