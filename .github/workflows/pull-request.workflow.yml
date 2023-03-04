@@ -71,8 +71,8 @@ jobs:
         database:
           - name: cockroachdb - 21.2.4
             type: cockroachdb
-            env:
-              CONTAINER_ENTRYPOINT: ${{ 'cockroach' }}
+            service: false
+            image: cockroachdb/cockroach:v21.2.4
             run: |
               echo $CONTAINER_ENTRYPOINT
               docker pull $cockroachdb/cockroach:v21.2.4
@@ -175,15 +175,20 @@ jobs:
               --health-timeout=5s
               --health-retries=3
 
+    if: matrix.database.service != 'false'
     services:
       data-base:
         image: ${{ matrix.database.image }}
         env: ${{ matrix.database.env }}
         ports: ${{ matrix.database.ports }}
         options: ${{ matrix.database.options }}
-        run: ${{ matrix.database.run }}
 
     steps:
+      - if: matrix.database.service == 'false'
+        name: 🐋 Start a single instance (${{ matrix.database.image }}) with docker
+        env:
+          CONTAINER_ENTRYPOINT: ${{ 'cockroach' }}
+        run: ${{ matrix.database.run }}
       - name: 🔶 Check repository
         uses: actions/checkout@v3
       - name: 🟢 Use Node.js ${{ env.NODE_VERSION }}
