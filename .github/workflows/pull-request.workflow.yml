@@ -85,10 +85,10 @@ jobs:
                 -e "COCKROACH_INSECURE=true" \
                 -e "COCKROACH_USER=root" \
                 -e "COCKROACH_PASSWORD=password" \
-                -e "COCKROACH_DATABASE=test" \
                 cockroachdb/cockroach:v21.2.4 start-single-node --insecure
               sudo apt update && sudo apt install wait-for-it -y
               wait-for-it -h localhost -p 26257
+              docker exec roach bash -c "echo 'CREATE DATABASE test;' | cockroach sql --insecure"
 
           - name: mysql - 5.7
             type: mysql
