@@ -184,7 +184,7 @@ jobs:
         options: ${{ matrix.database.options }}
 
     steps:
-      - if: matrix.database.service == 'false'
+      - if: { { matrix.database.service == 'false' } }
         name: 🐋 Start a single instance (${{ matrix.database.image }}) with docker
         env:
           CONTAINER_ENTRYPOINT: ${{ 'cockroach' }}
