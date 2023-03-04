@@ -73,22 +73,24 @@ jobs:
       fail-fast: false
       matrix:
         database:
-          - name: cockroachdb - 21.2.4
+          - name: cockroachdb - latest
             type: cockroachdb
-            use-service: false
-            image: cockroachdb/cockroach:v21.2.4
-            port: 26257
-            run: |
-              docker pull cockroachdb/cockroach:v21.2.4
-              docker run -d --name roach --hostname roach \
-                -p 26257:26257 -p 8080:8080 \
-                -e "COCKROACH_INSECURE=true" \
-                -e "COCKROACH_USER=root" \
-                -e "COCKROACH_PASSWORD=password" \
-                cockroachdb/cockroach:v21.2.4 start-single-node --insecure
-              sudo apt update && sudo apt install wait-for-it -y
-              wait-for-it -h localhost -p 26257
-              docker exec roach bash -c "echo 'CREATE DATABASE test;' | cockroach sql --insecure"
+            use-service: true
+            service:
+              image: "cockroachdb/cockroach"
+              env:
+                COCKROACH_INSECURE: true
+                COCKROACH_USER: root
+                COCKROACH_PASSWORD: password
+                COCKROACH_DATABASE: test
+              ports:
+                - 26257:26257
+                - 8080:8080
+              options: >-
+                --health-cmd="cockroach sql --insecure -e SELECT 1"
+                --health-interval=10s
+                --health-timeout=5s
+                --health-retries=3
 
           - name: mysql - 5.7
             type: mysql
