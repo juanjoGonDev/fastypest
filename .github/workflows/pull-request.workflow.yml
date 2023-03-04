@@ -82,7 +82,8 @@ jobs:
                 COCKROACH_USER: root
                 COCKROACH_PASSWORD: password
                 COCKROACH_DATABASE: test
-              command: start-single-node --insecure
+              entrypoint:
+                ["/cockroach/cockroach", "start-single-node", "--insecure"]
               ports:
                 - 26257:26257
                 - 8080:8080
