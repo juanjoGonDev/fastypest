@@ -174,8 +174,8 @@ jobs:
               --health-timeout=5s
               --health-retries=3
 
+    if: ${{matrix.database.type != 'cockroachdb'}}
     services:
-      if: matrix.database.type != 'cockroachdb'
       data-base:
         image: ${{ matrix.database.image }}
         env: ${{ matrix.database.env }}
