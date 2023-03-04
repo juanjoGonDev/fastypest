@@ -176,7 +176,7 @@ jobs:
 
     services:
       data-base:
-        if: ${{matrix.database.type != 'cockroachdb'}}
+        unless: matrix.database.type == 'cockroachdb'
         image: ${{ matrix.database.image }}
         env: ${{ matrix.database.env }}
         ports: ${{ matrix.database.ports }}
