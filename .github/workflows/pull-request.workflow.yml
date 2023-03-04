@@ -75,7 +75,6 @@ jobs:
         database:
           - name: cockroachdb - latest
             type: cockroachdb
-            use-service: true
             service:
               image: "cockroachdb/cockroach"
               env:
@@ -86,8 +85,9 @@ jobs:
               ports:
                 - 26257:26257
                 - 8080:8080
-              options: >-
-                --entrypoint /cockroach/cockroach start-single-node --insecure
+              options: |
+                start-single-node --insecure
+                >-
                 --health-cmd="cockroach sql --insecure -e SELECT 1"
                 --health-interval=10s
                 --health-timeout=5s
@@ -95,7 +95,6 @@ jobs:
 
           - name: mysql - 5.7
             type: mysql
-            use-service: true
             service:
               image: "bitnami/mysql:5.7"
               env:
@@ -114,7 +113,6 @@ jobs:
 
           - name: mysql - latest
             type: mysql
-            use-service: true
             service:
               image: "bitnami/mysql:latest"
               env:
@@ -133,7 +131,6 @@ jobs:
 
           - name: postgres - 12.14
             type: postgres
-            use-service: true
             service:
               image: "postgres:12.14"
               env:
@@ -150,7 +147,6 @@ jobs:
 
           - name: postgres - latest
             type: postgres
-            use-service: true
             service:
               image: "postgres"
               env:
@@ -167,7 +163,6 @@ jobs:
 
           - name: mariadb - 10.4
             type: mariadb
-            use-service: true
             service:
               image: "mariadb:10.4"
               env:
@@ -184,7 +179,6 @@ jobs:
 
           - name: mariadb - latest
             type: mariadb
-            use-service: true
             service:
               image: "mariadb:latest"
               env:
@@ -203,9 +197,6 @@ jobs:
       data-base: ${{matrix.database.service}}
 
     steps:
-      - if: ${{matrix.database.use-service == false}}
-        name: 🐋 Start a single instance with docker
-        run: ${{ matrix.database.run }}
       - name: 🔶 Check repository
         uses: actions/checkout@v3
       - name: 🟢 Use Node.js ${{ env.NODE_VERSION }}
