@@ -186,7 +186,7 @@ jobs:
 
     steps:
       - if: ${{matrix.database.use-service == false}}
-        name: 🐋 Start a single instance (${{ matrix.database.image }}) with docker
+        name: 🐋 Start a single instance with docker
         run: ${{ matrix.database.run }}
       - name: 🔶 Check repository
         uses: actions/checkout@v3
