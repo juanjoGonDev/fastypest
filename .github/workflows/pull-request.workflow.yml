@@ -174,8 +174,8 @@ jobs:
               --health-timeout=5s
               --health-retries=3
 
-    if: ${{matrix.database.type != 'cockroachdb'}}
     services:
+      if: ${{matrix.database.type != 'cockroachdb'}}
       data-base:
         image: ${{ matrix.database.image }}
         env: ${{ matrix.database.env }}
@@ -183,7 +183,7 @@ jobs:
         options: ${{ matrix.database.options }}
 
     steps:
-      - if: matrix.database.type == 'cockroachdb'
+      - if: ${{matrix.database.type == 'cockroachdb'}}
         name: 🐋 Start a single instance (${{ matrix.database.image }}) with docker
         env:
           CONTAINER_ENTRYPOINT: ${{ 'cockroach' }}
