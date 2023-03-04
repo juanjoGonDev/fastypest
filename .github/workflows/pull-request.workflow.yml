@@ -71,7 +71,6 @@ jobs:
         database:
           - name: cockroachdb - 21.2.4
             type: cockroachdb
-            service: false
             image: cockroachdb/cockroach:v21.2.4
             run: |
               echo $CONTAINER_ENTRYPOINT
@@ -177,14 +176,14 @@ jobs:
 
     services:
       data-base:
-        if: matrix.database.service != 'false'
+        if: matrix.database.type != 'cockroachdb'
         image: ${{ matrix.database.image }}
         env: ${{ matrix.database.env }}
         ports: ${{ matrix.database.ports }}
         options: ${{ matrix.database.options }}
 
     steps:
-      - if: matrix.database.service == 'false'
+      - if: matrix.database.type == 'cockroachdb'
         name: 🐋 Start a single instance (${{ matrix.database.image }}) with docker
         env:
           CONTAINER_ENTRYPOINT: ${{ 'cockroach' }}
