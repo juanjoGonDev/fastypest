@@ -77,15 +77,16 @@ jobs:
             type: cockroachdb
             service:
               image: cockroachdb/cockroach
-              run: start-single-node --insecure
+              command: start-single-node --insecure
+              restart: always
               ports:
                 - "26257:26257"
                 - "8080:8080"
-              env:
+              environment:
                 COCKROACH_INSECURE: true
                 COCKROACH_USER: root
                 COCKROACH_PASSWORD: password
-                COCKROACH_DATABASE: test
+                COCKROACH_DATABASE: "test"
 
           - name: mysql - 5.7
             type: mysql
