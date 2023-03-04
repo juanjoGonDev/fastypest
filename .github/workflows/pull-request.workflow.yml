@@ -1,4 +1,4 @@
-name: 🧪 Pull Request workflow
+name: 🧪 Pull Request tests
 
 on:
   pull_request:
@@ -16,7 +16,6 @@ jobs:
   build:
     name: 🚧 Build Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
-    continue-on-error: true
     timeout-minutes: 2
     strategy:
       matrix:
@@ -70,20 +69,17 @@ jobs:
       fail-fast: false
       matrix:
         database:
-          - name: cockroachdb - latest
+          - name: cockroachdb - 21.2.4
             type: cockroachdb
-            image: "timveil/cockroachdb-single-node:latest"
             env:
-              COCKROACH_PASSWORD: password
-              COCKROACH_DATABASE: test
-              COCKROACH_INSECURE: "true"
-            ports:
-              - 26257:26257
-            options: >-
-              --health-cmd="cockroach sql --insecure 
-              --health-interval=10s 
-              --health-timeout=5s 
-              --health-retries=3
+              CONTAINER_ENTRYPOINT: ${{ 'cockroach' }}
+            run: |
+              echo $CONTAINER_ENTRYPOINT
+              docker pull $cockroachdb/cockroach:v21.2.4
+              docker run -d --name roach --hostname roach -p 26257:26257 -p 8080:8080 cockroachdb/cockroach:v21.2.4 start-single-node --insecure
+              sudo apt update && sudo apt install wait-for-it -y
+              wait-for-it -h localhost -p 26257
+              docker exec roach bash -c "echo 'CREATE DATABASE sequelize_test;' | $CONTAINER_ENTRYPOINT sql --insecure"
 
           - name: mysql - 5.7
             type: mysql
@@ -185,6 +181,7 @@ jobs:
         env: ${{ matrix.database.env }}
         ports: ${{ matrix.database.ports }}
         options: ${{ matrix.database.options }}
+        run: ${{ matrix.database.run }}
 
     steps:
       - name: 🔶 Check repository
