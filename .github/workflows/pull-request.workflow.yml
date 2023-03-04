@@ -82,12 +82,13 @@ jobs:
                 COCKROACH_USER: root
                 COCKROACH_PASSWORD: password
                 COCKROACH_DATABASE: test
-              entrypoint:
-                ["/cockroach/cockroach", "start-single-node", "--insecure"]
               ports:
                 - 26257:26257
                 - 8080:8080
               options: >-
+                --entrypoint=/cockroach/cockroach
+                start-single-node
+                --insecure
                 --health-cmd="cockroach sql --insecure -e SELECT 1"
                 --health-interval=10s
                 --health-timeout=5s
