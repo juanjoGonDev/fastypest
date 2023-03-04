@@ -71,6 +71,7 @@ jobs:
         database:
           - name: cockroachdb - 21.2.4
             type: cockroachdb
+            use-service: false
             image: cockroachdb/cockroach:v21.2.4
             port: 26257
             run: |
@@ -87,6 +88,7 @@ jobs:
 
           - name: mysql - 5.7
             type: mysql
+            use-service: true
             service:
               image: "bitnami/mysql:5.7"
               env:
@@ -105,6 +107,7 @@ jobs:
 
           - name: mysql - latest
             type: mysql
+            use-service: true
             service:
               image: "bitnami/mysql:latest"
               env:
@@ -123,6 +126,7 @@ jobs:
 
           - name: postgres - 12.14
             type: postgres
+            use-service: true
             service:
               image: "postgres:12.14"
               env:
@@ -139,6 +143,7 @@ jobs:
 
           - name: postgres - latest
             type: postgres
+            use-service: true
             service:
               image: "postgres"
               env:
@@ -155,6 +160,7 @@ jobs:
 
           - name: mariadb - 10.4
             type: mariadb
+            use-service: true
             service:
               image: "mariadb:10.4"
               env:
@@ -171,6 +177,7 @@ jobs:
 
           - name: mariadb - latest
             type: mariadb
+            use-service: true
             service:
               image: "mariadb:latest"
               env:
@@ -189,7 +196,7 @@ jobs:
       data-base: ${{matrix.database.service}}
 
     steps:
-      - if: ${{contains(matrix.database, 'run')}}
+      - if: ${{matrix.database.use-service == false}}
         name: 🐋 Start a single instance with docker
         run: ${{ matrix.database.run }}
       - name: 🔶 Check repository
