@@ -6,7 +6,7 @@ on:
     types: [opened, reopened, ready_for_review, synchronize]
 
 env:
-  NODE_VERSION: "16.x"
+  NODE_VERSION: "18.x"
 
 concurrency:
   group: ${{ github.head_ref }}
@@ -14,19 +14,16 @@ concurrency:
 
 jobs:
   build:
-    name: 🚧 Build Node ${{ matrix.node-version }}
+    name: 🚧 Build Node
     runs-on: ubuntu-latest
     timeout-minutes: 2
-    strategy:
-      matrix:
-        node-version: [16.x, 17.x, 18.x]
     steps:
       - name: 🔶 Check repository
         uses: actions/checkout@v3
-      - name: 🟢 Use Node.js ${{ matrix.node-version }}
+      - name: 🟢 Use Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
       - name: 💾 Cache node modules
         id: cache-npm
