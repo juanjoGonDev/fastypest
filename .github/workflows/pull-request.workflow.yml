@@ -73,13 +73,13 @@ jobs:
       fail-fast: false
       matrix:
         database:
-          - name: cockroachdb - 22.1.15
+          - name: cockroachdb - 22.2.0
             type: cockroachdb
             use-service: false
-            image: cockroachdb/cockroach:v22.1.15
+            image: cockroachdb/cockroach:v22.2.0
             port: 26257
             run: |
-              docker pull cockroachdb/cockroach:v22.1.15
+              docker pull cockroachdb/cockroach:v22.2.0
               docker run -d --name roach --hostname roach \
                 -p 26257:26257 -p 8080:8080 \
                 -e "COCKROACH_INSECURE=true" \
@@ -145,11 +145,11 @@ jobs:
                 --health-timeout=5s
                 --health-retries=3
 
-          - name: postgres - 12.14
+          - name: postgres - 9.0
             type: postgres
             use-service: true
             service:
-              image: "postgres:12.14"
+              image: "postgres:9.0"
               env:
                 POSTGRES_PASSWORD: password
                 POSTGRES_USER: root
@@ -179,11 +179,11 @@ jobs:
                 --health-timeout=7s
                 --health-retries=3
 
-          - name: mariadb - 10.4
+          - name: mariadb - 10.0
             type: mariadb
             use-service: true
             service:
-              image: "mariadb:10.4"
+              image: "mariadb:10.0"
               env:
                 MARIADB_ROOT_PASSWORD: password
                 MARIADB_DATABASE: test

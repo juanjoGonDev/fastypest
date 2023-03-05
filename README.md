@@ -11,9 +11,10 @@ With this library, you can run your test suites without having to stop and resto
 
 Currently compatible with:
 
-- Mysql
-- MariaDB
-- Postgres
+- <a href="https://www.npmjs.com/fastypest"><img alt="Mysql >= v5.7 supported" src="https://img.shields.io/badge/Mysql-%3E%3D5.7-informational"></a>
+- <a href="https://www.npmjs.com/fastypest"><img alt="MariaDB >= v10.0 supported" src="https://img.shields.io/badge/MariaDB-%3E%3D10.0-yellowgreen"></a>
+- <a href="https://www.npmjs.com/fastypest"><img alt="Postgres >= v9.0 supported" src="https://img.shields.io/badge/Postgres-%3E%3D9.0-green"></a>
+- <a href="https://www.npmjs.com/fastypest"><img alt="cockroachdb >= v22.2.0 supported" src="https://img.shields.io/badge/Cockroachdb-%3E%3D22.2.0-blue"></a>
 
 Install with npm
 
