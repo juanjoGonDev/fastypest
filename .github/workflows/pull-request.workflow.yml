@@ -158,9 +158,9 @@ jobs:
                 - 5432:5432
               options: >-
                 --health-cmd="pg_isready"
-                --health-interval=12s
-                --health-timeout=7s
-                --health-retries=3
+                --health-interval=20s
+                --health-timeout=10s
+                --health-retries=5
 
           - name: postgres - latest
             type: postgres
@@ -192,9 +192,9 @@ jobs:
                 - 3306:3306
               options: >-
                 --health-cmd="mysqladmin ping"
-                --health-interval=10s
-                --health-timeout=5s
-                --health-retries=3
+                --health-interval=20s
+                --health-timeout=10s
+                --health-retries=5
 
           - name: mariadb - latest
             type: mariadb
