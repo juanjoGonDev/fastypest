@@ -1,169 +1,241 @@
-name: Pull Request workflow
+name: 🧪 Pull Request tests
 
 on:
   pull_request:
     branches: ["main"]
+    types: [opened, reopened, ready_for_review, synchronize]
+
 env:
   NODE_VERSION: "16.x"
 
+concurrency:
+  group: ${{ github.head_ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
+    name: 🚧 Build Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     timeout-minutes: 2
+    strategy:
+      matrix:
+        node-version: [15.x, 16.x, 18.x]
     steps:
-      - name: Check repository
+      - name: 🔶 Check repository
         uses: actions/checkout@v3
-      - name: Use Node.js ${{ env.NODE_VERSION }}
+      - name: 🟢 Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: ${{ matrix.node-version }}
           cache: npm
-      - name: npm ci
+      - name: 💾 Cache node modules
+        id: cache-npm
+        uses: actions/cache@v3
+        with:
+          path: |
+            node_modules
+          key: node_modules-${{ hashFiles('package-lock.json') }}
+      - if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
+        name: ⚙️ npm ci
         run: npm ci
-
-      - name: Run build
+      - name: ⌛ Run build
         run: npm run build
 
   check-eslint:
+    name: 📜 Check format
     runs-on: ubuntu-latest
     timeout-minutes: 2
     needs: build
     steps:
-      - name: Check repository
+      - name: 🔶 Check repository
         uses: actions/checkout@v3
-      - name: Use Node.js ${{ env.NODE_VERSION }}
+      - name: 🟢 Use Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-      - name: npm ci
-        run: npm ci
+      - name: 💾 Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            node_modules
+          key: node_modules-${{ hashFiles('package-lock.json') }}
 
-      - name: Run eslint
+      - name: ✔️ Run eslint
         run: npm run eslint
 
   run-test:
-    name: Test - ${{ matrix.database.name }}
+    name: 🗂️ ${{ matrix.database.name }}
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 5
     needs: build
     strategy:
       fail-fast: false
       matrix:
         database:
+          - name: cockroachdb - 22.2.0
+            type: cockroachdb
+            use-service: false
+            image: cockroachdb/cockroach:v22.2.0
+            port: 26257
+            run: |
+              docker pull cockroachdb/cockroach:v22.2.0
+              docker run -d --name roach --hostname roach \
+                -p 26257:26257 -p 8080:8080 \
+                -e "COCKROACH_INSECURE=true" \
+                -e "COCKROACH_USER=root" \
+                -e "COCKROACH_PASSWORD=password" \
+                cockroachdb/cockroach:v22.2.0 start-single-node --insecure
+              sudo apt update && sudo apt install wait-for-it -y
+              wait-for-it -h localhost -p 26257
+              docker exec roach bash -c "echo 'CREATE DATABASE test;' | cockroach sql --insecure"
+
+          - name: cockroachdb - latest
+            type: cockroachdb
+            use-service: false
+            image: cockroachdb/cockroach:latest
+            port: 26257
+            run: |
+              docker pull cockroachdb/cockroach:latest
+              docker run -d --name roach --hostname roach \
+                -p 26257:26257 -p 8080:8080 \
+                -e "COCKROACH_INSECURE=true" \
+                -e "COCKROACH_USER=root" \
+                -e "COCKROACH_PASSWORD=password" \
+                cockroachdb/cockroach:latest start-single-node --insecure
+              sudo apt update && sudo apt install wait-for-it -y
+              wait-for-it -h localhost -p 26257
+              docker exec roach bash -c "echo 'CREATE DATABASE test;' | cockroach sql --insecure"
+
           - name: mysql - 5.7
             type: mysql
-            image: "bitnami/mysql:5.7"
-            env:
-              MYSQL_ROOT_PASSWORD: password
-              MYSQL_ALLOW_EMPTY_PASSWORD: 1
-              MYSQL_DATABASE: test
-              MYSQL_ROOT_HOST: "%"
-              MYSQL_AUTHENTICATION_PLUGIN: mysql_native_password
-            ports:
-              - 3306:3306
-            options: >-
-              --health-cmd="mysqladmin ping"
-              --health-interval=10s
-              --health-timeout=5s
-              --health-retries=3
+            use-service: true
+            service:
+              image: "bitnami/mysql:5.7"
+              env:
+                MYSQL_ROOT_PASSWORD: password
+                MYSQL_ALLOW_EMPTY_PASSWORD: 1
+                MYSQL_DATABASE: test
+                MYSQL_ROOT_HOST: "%"
+                MYSQL_AUTHENTICATION_PLUGIN: mysql_native_password
+              ports:
+                - 3306:3306
+              options: >-
+                --health-cmd="mysqladmin ping"
+                --health-interval=10s
+                --health-timeout=5s
+                --health-retries=3
 
           - name: mysql - latest
             type: mysql
-            image: "bitnami/mysql:latest"
-            env:
-              MYSQL_ROOT_PASSWORD: password
-              MYSQL_ALLOW_EMPTY_PASSWORD: 1
-              MYSQL_DATABASE: test
-              MYSQL_ROOT_HOST: "%"
-              MYSQL_AUTHENTICATION_PLUGIN: mysql_native_password
-            ports:
-              - 3306:3306
-            options: >-
-              --health-cmd="mysqladmin ping"
-              --health-interval=10s
-              --health-timeout=5s
-              --health-retries=3
+            use-service: true
+            service:
+              image: "bitnami/mysql:latest"
+              env:
+                MYSQL_ROOT_PASSWORD: password
+                MYSQL_ALLOW_EMPTY_PASSWORD: 1
+                MYSQL_DATABASE: test
+                MYSQL_ROOT_HOST: "%"
+                MYSQL_AUTHENTICATION_PLUGIN: mysql_native_password
+              ports:
+                - 3306:3306
+              options: >-
+                --health-cmd="mysqladmin ping"
+                --health-interval=10s
+                --health-timeout=5s
+                --health-retries=3
 
-          - name: postgres - 12.14
+          - name: postgres - 9.4.6
             type: postgres
-            image: "postgres:12.14"
-            env:
-              POSTGRES_PASSWORD: password
-              POSTGRES_USER: root
-              POSTGRES_DB: test
-            ports:
-              - 5432:5432
-            options: >-
-              --health-cmd="pg_isready"
-              --health-interval=12s
-              --health-timeout=7s
-              --health-retries=3
+            use-service: true
+            service:
+              image: "bitnami/postgresql:9.4.6"
+              env:
+                POSTGRES_PASSWORD: password
+                POSTGRES_USER: root
+                POSTGRES_DB: test
+              ports:
+                - 5432:5432
+              options: >-
+                --health-cmd="pg_isready"
+                --health-interval=12s
+                --health-timeout=7s
+                --health-retries=3
 
           - name: postgres - latest
             type: postgres
-            image: "postgres"
-            env:
-              POSTGRES_PASSWORD: password
-              POSTGRES_USER: root
-              POSTGRES_DB: test
-            ports:
-              - 5432:5432
-            options: >-
-              --health-cmd="pg_isready"
-              --health-interval=12s
-              --health-timeout=7s
-              --health-retries=3
+            use-service: true
+            service:
+              image: "postgres"
+              env:
+                POSTGRES_PASSWORD: password
+                POSTGRES_USER: root
+                POSTGRES_DB: test
+              ports:
+                - 5432:5432
+              options: >-
+                --health-cmd="pg_isready"
+                --health-interval=12s
+                --health-timeout=7s
+                --health-retries=3
 
-          - name: mariadb - 10.4
+          - name: mariadb - 10.11
             type: mariadb
-            image: "mariadb:10.4"
-            env:
-              MARIADB_ROOT_PASSWORD: password
-              MARIADB_DATABASE: test
-              MARIADB_ROOT_HOST: "%"
-            ports:
-              - 3306:3306
-            options: >-
-              --health-cmd="mysqladmin ping"
-              --health-interval=10s
-              --health-timeout=5s
-              --health-retries=3
+            use-service: true
+            service:
+              image: "mariadb:10.11"
+              env:
+                MARIADB_ROOT_PASSWORD: password
+                MARIADB_DATABASE: test
+                MARIADB_ROOT_HOST: "%"
+              ports:
+                - 3306:3306
+              options: >-
+                --health-cmd="mysqladmin ping"
+                --health-interval=12s
+                --health-timeout=7s
+                --health-retries=3
 
           - name: mariadb - latest
             type: mariadb
-            image: "mariadb:latest"
-            env:
-              MARIADB_ROOT_PASSWORD: password
-              MARIADB_DATABASE: test
-              MARIADB_ROOT_HOST: "%"
-            ports:
-              - 3306:3306
-            options: >-
-              --health-cmd="mysqladmin ping"
-              --health-interval=10s
-              --health-timeout=5s
-              --health-retries=3
+            use-service: true
+            service:
+              image: "mariadb:latest"
+              env:
+                MARIADB_ROOT_PASSWORD: password
+                MARIADB_DATABASE: test
+                MARIADB_ROOT_HOST: "%"
+              ports:
+                - 3306:3306
+              options: >-
+                --health-cmd="mysqladmin ping"
+                --health-interval=10s
+                --health-timeout=5s
+                --health-retries=3
 
     services:
-      data-base:
-        image: ${{ matrix.database.image }}
-        env: ${{ matrix.database.env }}
-        ports: ${{ matrix.database.ports }}
-        options: ${{ matrix.database.options }}
+      data-base: ${{matrix.database.service}}
 
     steps:
-      - name: Check repository
+      - if: ${{matrix.database.use-service == false}}
+        name: 🐋 Start a single instance with docker
+        run: ${{ matrix.database.run }}
+      - name: 🔶 Check repository
         uses: actions/checkout@v3
-      - name: Use Node.js ${{ env.NODE_VERSION }}
+      - name: 🟢 Use Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-      - name: npm ci
-        run: npm ci
+      - name: 💾 Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            node_modules
+          key: node_modules-${{ hashFiles('package-lock.json') }}
 
-      - name: Run test
+      - name: 🧪 Testing
         env:
           DB_TYPE: ${{ matrix.database.type }}
+          DB_PORT: ${{ matrix.database.port }}
         run: npm run test

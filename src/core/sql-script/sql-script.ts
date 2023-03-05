@@ -18,7 +18,7 @@ export class SQLScript {
     this.queries = DB_QUERIES[this.type as AllowedDataBases];
   }
 
-  getQuery(
+  protected getQuery(
     queryPath: QueryPath<Queries>,
     values?: Record<string, string>
   ): string {

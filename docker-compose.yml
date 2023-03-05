@@ -1,0 +1,54 @@
+version: "3.8"
+services:
+  mysql:
+    container_name: fastypest-mysql
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_DATABASE: test
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_ALLOW_EMPTY_PASSWORD: 1
+    ports:
+      - "3306:3306"
+    expose:
+      - "3306"
+
+  postgres:
+    container_name: fastypest-postgres
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: test
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    expose:
+      - "5432"
+
+  mariadb:
+    container_name: fastypest-mariadb
+    image: mariadb
+    restart: always
+    environment:
+      MYSQL_DATABASE: test
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_ALLOW_EMPTY_PASSWORD: 1
+    ports:
+      - "3307:3307"
+    expose:
+      - "3307"
+
+  cockroachdb:
+    image: cockroachdb/cockroach
+    command: start-single-node --insecure
+    restart: always
+    ports:
+      - "26257:26257"
+      - "8080:8080"
+    environment:
+      COCKROACH_INSECURE: true
+      COCKROACH_USER: root
+      COCKROACH_PASSWORD: password
+      COCKROACH_DATABASE: test

@@ -1,14 +1,18 @@
 {
   "name": "fastypest",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Restores the database automatically after each test. Allows serial execution of tests without having to delete and restore the database having to stop the application",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "engines": {
+    "node": ">=15.x"
+  },
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "tsc",
     "eslint": "eslint . --fix --config .eslintrc",
-    "test": "jest --runInBand --config ./jest.config.json"
+    "test": "jest --runInBand --config ./jest.config.json",
+    "docker": "ts-node -r tsconfig-paths/register scripts/prepare-docker.ts"
   },
   "repository": {
     "type": "git",
@@ -33,11 +37,13 @@
   "bugs": {
     "url": "https://github.com/juanjo96Dev/fastypest/issues"
   },
-  "homepage": "https://github.com/juanjo96Dev/fastypestb#readme",
+  "homepage": "https://github.com/juanjo96Dev/fastypest#readme",
   "devDependencies": {
+    "@types/cross-spawn": "^6.0.2",
     "@types/jest": "^29.4.0",
     "@types/node": "^18.13.0",
     "@typescript-eslint/eslint-plugin": "^5.52.0",
+    "cross-spawn": "^7.0.3",
     "eslint": "^8.34.0",
     "eslint-config-standard-with-typescript": "^34.0.0",
     "eslint-plugin-import": "^2.27.5",
