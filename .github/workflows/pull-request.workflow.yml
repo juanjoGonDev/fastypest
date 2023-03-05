@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   build:
-    name: 🚧 Build Node ${{ env.NODE_VERSION }}
+    name: 🚧 Build Node
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
