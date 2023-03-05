@@ -145,11 +145,11 @@ jobs:
                 --health-timeout=5s
                 --health-retries=3
 
-          - name: postgres - 11.19-alpine
+          - name: postgres - 9.4.6
             type: postgres
             use-service: true
             service:
-              image: "postgres:11.19-alpine"
+              image: "bitnami/postgresql:9.4.6"
               env:
                 POSTGRES_PASSWORD: password
                 POSTGRES_USER: root
