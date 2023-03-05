@@ -85,7 +85,7 @@ jobs:
                 -e "COCKROACH_INSECURE=true" \
                 -e "COCKROACH_USER=root" \
                 -e "COCKROACH_PASSWORD=password" \
-                cockroachdb/cockroach:v22.1.15 start-single-node --insecure
+                cockroachdb/cockroach:v22.2.0 start-single-node --insecure
               sudo apt update && sudo apt install wait-for-it -y
               wait-for-it -h localhost -p 26257
               docker exec roach bash -c "echo 'CREATE DATABASE test;' | cockroach sql --insecure"
