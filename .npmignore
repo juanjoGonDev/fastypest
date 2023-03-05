@@ -1,6 +1,7 @@
 .vscode
 .github
 node_modules
+scripts
 src
 tests
 .eslintrc
@@ -8,4 +9,5 @@ tests
 jest.config.json
 tsconfig.compiler.json
 tsconfig.json
+docker-compose.yml
 *.tgz

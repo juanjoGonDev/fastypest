@@ -72,7 +72,7 @@ describe("Simple", () => {
       });
 
       it('"Simple" table must be empty', async () => {
-        await connection.query("DELETE FROM simple");
+        await connection.query("DELETE FROM simple WHERE id <> 0");
         expect(await getSimpleCount()).toBe(0);
       });
 

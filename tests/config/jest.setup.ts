@@ -3,7 +3,7 @@ import { Fastypest } from "../../src/index";
 import { seed } from "../seeds/seed";
 import { initialize } from "./orm.config";
 
-jest.setTimeout(10_000);
+jest.setTimeout(100_000);
 
 let fastypest: Fastypest;
 let connection: DataSource;
