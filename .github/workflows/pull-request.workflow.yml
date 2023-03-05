@@ -16,7 +16,6 @@ jobs:
   build:
     name: 🚧 Build Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
-    continue-on-error: true
     timeout-minutes: 2
     strategy:
       matrix:
