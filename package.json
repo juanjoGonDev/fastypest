@@ -5,7 +5,10 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "engines": {
-    "node": ">=15.x"
+    "node": ">=15.0.0"
+  },
+  "volta": {
+    "node": "15.0.0"
   },
   "scripts": {
     "prebuild": "rimraf dist",
