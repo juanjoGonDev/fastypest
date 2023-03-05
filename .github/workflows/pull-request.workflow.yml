@@ -67,7 +67,7 @@ jobs:
   run-test:
     name: 🗂️ ${{ matrix.database.name }}
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 5
     needs: build
     strategy:
       fail-fast: false
@@ -145,11 +145,11 @@ jobs:
                 --health-timeout=5s
                 --health-retries=3
 
-          - name: postgres - 9.0
+          - name: postgres - 11.19-alpine
             type: postgres
             use-service: true
             service:
-              image: "postgres:9.0"
+              image: "postgres:11.19-alpine"
               env:
                 POSTGRES_PASSWORD: password
                 POSTGRES_USER: root
@@ -158,9 +158,9 @@ jobs:
                 - 5432:5432
               options: >-
                 --health-cmd="pg_isready"
-                --health-interval=20s
-                --health-timeout=10s
-                --health-retries=5
+                --health-interval=12s
+                --health-timeout=7s
+                --health-retries=3
 
           - name: postgres - latest
             type: postgres
@@ -179,11 +179,11 @@ jobs:
                 --health-timeout=7s
                 --health-retries=3
 
-          - name: mariadb - 10.0
+          - name: mariadb - 10.11
             type: mariadb
             use-service: true
             service:
-              image: "mariadb:10.0"
+              image: "mariadb:10.11"
               env:
                 MARIADB_ROOT_PASSWORD: password
                 MARIADB_DATABASE: test
@@ -192,9 +192,9 @@ jobs:
                 - 3306:3306
               options: >-
                 --health-cmd="mysqladmin ping"
-                --health-interval=20s
-                --health-timeout=10s
-                --health-retries=5
+                --health-interval=12s
+                --health-timeout=7s
+                --health-retries=3
 
           - name: mariadb - latest
             type: mariadb
