@@ -1,11 +1,14 @@
+import { seedCount } from "../config";
 import { getConnection } from "../config/orm.config";
 import { Simple } from "../entities";
-import { seedCount, simple } from "../seeds";
+import { simple } from "../seeds";
+import { ConnectionUtil } from "../utils";
 
 describe("Simple", () => {
   const connection = getConnection();
   const randomSimpleIndex = Math.floor(Math.random() * seedCount);
   const simpleRepository = connection.getRepository(Simple);
+  const connectionUtil = new ConnectionUtil();
 
   describe("Changes with typeorm methods", () => {
     describe("Restore all data", () => {
@@ -14,7 +17,11 @@ describe("Simple", () => {
       });
 
       it('"Simple" table must be empty', async () => {
-        await simpleRepository.clear();
+        await connectionUtil.transaction(async (em) => {
+          const repository = em.getRepository(Simple);
+          await repository.clear();
+        });
+
         expect(await getSimpleCount()).toBe(0);
       });
 
@@ -72,7 +79,10 @@ describe("Simple", () => {
       });
 
       it('"Simple" table must be empty', async () => {
-        await connection.query("DELETE FROM simple WHERE id <> 0");
+        await connectionUtil.transaction(async (em) => {
+          await em.query("DELETE FROM simple WHERE id <> 0");
+        });
+
         expect(await getSimpleCount()).toBe(0);
       });
 

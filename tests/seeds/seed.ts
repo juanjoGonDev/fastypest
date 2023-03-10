@@ -4,14 +4,16 @@ import {
   EntityManager,
   EntityTarget,
 } from "typeorm";
-import { SQLScript } from "../../src/core/sql-script";
-import { Simple } from "../entities";
+import { SQLScript } from "../../dist/core/sql-script";
+import { Simple, User } from "../entities";
 import { simple } from "./simple.seed";
+import { user } from "./user.seed";
 
 export const seed = async (connection: DataSource) => {
   const seed = new Seed(connection.options.type);
   await connection.manager.transaction(async (em) => {
     await seed.seed(em, Simple, simple);
+    await seed.seed(em, User, user);
   });
 };
 
