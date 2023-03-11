@@ -6,7 +6,7 @@ type DBTypes = DataSourceOptions["type"];
 
 export class SQLScript {
   queries: Queries;
-  constructor(private readonly type: DBTypes) {
+  constructor(readonly type: DBTypes) {
     if (!(this.type in DB_QUERIES)) {
       throw new Error(
         `The database type provided is not supported. Please choose from the following: ${Object.keys(
@@ -18,7 +18,7 @@ export class SQLScript {
     this.queries = DB_QUERIES[this.type as AllowedDataBases];
   }
 
-  protected getQuery(
+  getQuery(
     queryPath: QueryPath<Queries>,
     values?: Record<string, string>
   ): string {

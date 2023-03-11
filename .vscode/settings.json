@@ -5,6 +5,7 @@
     "source.organizeImports": true
   },
   "cSpell.words": [
+    "cockroachdb",
     "Fastypest",
     "typeorm"
   ],

@@ -11,25 +11,6 @@ describe("Simple", () => {
   const connectionUtil = new ConnectionUtil();
 
   describe("Changes with typeorm methods", () => {
-    describe("Restore all data", () => {
-      it('"simple" table must have the same number of data as at the beginning', async () => {
-        expect(await getSimpleCount()).toBe(seedCount);
-      });
-
-      it('"Simple" table must be empty', async () => {
-        await connectionUtil.transaction(async (em) => {
-          const repository = em.getRepository(Simple);
-          await repository.clear();
-        });
-
-        expect(await getSimpleCount()).toBe(0);
-      });
-
-      it('After restore, "simple" table must have the same number of data as at the beginning', async () => {
-        expect(await getSimpleCount()).toBe(seedCount);
-      });
-    });
-
     describe("Modify value", () => {
       it("Row must be modified", async () => {
         const newName = "seed updated";
@@ -73,14 +54,19 @@ describe("Simple", () => {
   });
 
   describe("Changes with queries", () => {
-    describe("Restore", () => {
+    describe("Restore all data", () => {
       it('"simple" table must have the same number of data as at the beginning', async () => {
         expect(await getSimpleCount()).toBe(seedCount);
       });
 
       it('"Simple" table must be empty', async () => {
         await connectionUtil.transaction(async (em) => {
-          await em.query("DELETE FROM simple WHERE id <> 0");
+          const simple = em.connection.getMetadata(Simple);
+          await em.query(
+            connectionUtil.getQuery("truncateTable", {
+              tableName: simple.tableName,
+            })
+          );
         });
 
         expect(await getSimpleCount()).toBe(0);

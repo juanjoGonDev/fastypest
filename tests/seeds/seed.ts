@@ -1,39 +1,33 @@
-import {
-  DataSource,
-  DataSourceOptions,
-  EntityManager,
-  EntityTarget,
-} from "typeorm";
-import { SQLScript } from "../../dist/core/sql-script";
+import { DataSource, EntityManager, EntityTarget } from "typeorm";
+import { Fastypest } from "../../dist";
 import { Simple, User } from "../entities";
 import { simple } from "./simple.seed";
 import { user } from "./user.seed";
 
 export const seed = async (connection: DataSource) => {
-  const seed = new Seed(connection.options.type);
+  const seed = new Seed(connection);
   await connection.manager.transaction(async (em) => {
+    const foreignKeyManager = await seed.foreignKeyManager(em);
+    await foreignKeyManager.disable();
+
     await seed.seed(em, Simple, simple);
     await seed.seed(em, User, user);
+
+    await foreignKeyManager.enable();
   });
 };
 
-class Seed extends SQLScript {
-  constructor(dbType: DataSourceOptions["type"]) {
-    super(dbType);
+class Seed extends Fastypest {
+  constructor(dataSource: DataSource) {
+    super(dataSource);
   }
 
   async seed(em: EntityManager, target: EntityTarget<any>, data: object[]) {
     const repository = em.getRepository(target);
-    const queries = {
-      truncate: this.getQuery("truncateTable", {
-        tableName: repository.metadata.tableName,
-      }),
-      fk_enable: this.getQuery("foreignKey.enable"),
-      fk_disable: this.getQuery("foreignKey.disable"),
-    };
-    await em.query(queries.fk_disable);
-    await em.query(queries.truncate);
+    const truncateQuery = this.getQuery("truncateTable", {
+      tableName: repository.metadata.tableName,
+    });
+    await em.query(truncateQuery);
     await repository.insert(data);
-    await em.query(queries.fk_disable);
   }
 }

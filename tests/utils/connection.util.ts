@@ -1,11 +1,11 @@
 import { DataSource, EntityManager } from "typeorm";
-import { SQLScript } from "../../dist/core/sql-script";
+import { Fastypest } from "../../dist";
 import { getConnection } from "../config";
 
-export class ConnectionUtil extends SQLScript {
+export class ConnectionUtil extends Fastypest {
   private connection: DataSource;
   constructor() {
-    super(getConnection().options.type);
+    super(getConnection());
     this.connection = getConnection();
   }
 
@@ -13,9 +13,10 @@ export class ConnectionUtil extends SQLScript {
     handler: (entityManager: EntityManager) => Promise<unknown>
   ) {
     await this.connection.transaction(async (em) => {
-      await em.query(this.getQuery("foreignKey.disable"));
+      const foreignKeyManager = await this.foreignKeyManager(em);
+      await foreignKeyManager.disable();
       await handler(em);
-      await em.query(this.getQuery("foreignKey.enable"));
+      await foreignKeyManager.enable();
     });
   }
 }
