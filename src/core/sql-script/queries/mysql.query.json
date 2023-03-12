@@ -1,4 +1,5 @@
 {
+  "dependencyTree": "-- NOT USED",
   "foreignKey": {
     "disable": "SET FOREIGN_KEY_CHECKS=0",
     "enable": "SET FOREIGN_KEY_CHECKS=1"

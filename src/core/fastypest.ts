@@ -32,37 +32,51 @@ export class Fastypest extends SQLScript {
 
   async restoreData() {
     await this.manager.transaction(async (em) => {
-      const foreignKeyManager = await this.foreignKeyManager(em);
-      await foreignKeyManager.disable();
+      const restoreManager = await this.restoreManager(em);
+      await restoreManager.foreignKey.disable();
+      const tables = [
+        ...((await restoreManager.dependencyTree()) || this.tables),
+      ];
 
-      await Promise.all(
-        [...this.tables].map(async (tableName) => {
-          await em.query(this.getQuery("truncateTable", { tableName }));
-          await em.query(this.getQuery("restoreData", { tableName }));
-        })
-      );
+      for (const tableName of tables) {
+        await em.query(this.getQuery("truncateTable", { tableName }));
+        await em.query(this.getQuery("restoreData", { tableName }));
+      }
 
-      await foreignKeyManager.enable();
+      await restoreManager.foreignKey.enable();
     });
   }
 
-  async foreignKeyManager(em: EntityManager) {
+  async restoreManager(em: EntityManager) {
     if (this.tables.size === 0) {
       await this.detectTables(em);
     }
 
+    const manager = {
+      foreignKey: {
+        disable: async () => Promise.resolve({}),
+        enable: async () => Promise.resolve({}),
+      },
+      dependencyTree: async () => Promise.resolve(undefined),
+    };
+
     switch (this.type) {
-      case "postgres":
-        return {
-          disable: async () => Promise.resolve({}),
-          enable: async () => Promise.resolve({}),
-        };
-      default:
-        return {
-          disable: async () => em.query(this.getQuery("foreignKey.disable")),
-          enable: async () => em.query(this.getQuery("foreignKey.enable")),
-        };
+      case "cockroachdb":
+        const dependencyTree = await em.query(this.getQuery("dependencyTree"));
+        manager.dependencyTree = async () =>
+          new Set(
+            dependencyTree.map((row: Record<string, string>) => row.table_name)
+          ) as any;
+        break;
+      case "mariadb":
+      case "mysql":
+        manager.foreignKey.disable = async () =>
+          em.query(this.getQuery("foreignKey.disable"));
+        manager.foreignKey.enable = async () =>
+          em.query(this.getQuery("foreignKey.enable"));
     }
+
+    return manager;
   }
 
   async clearTempTables() {

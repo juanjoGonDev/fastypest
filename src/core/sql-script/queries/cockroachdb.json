@@ -1,11 +1,12 @@
 {
+  "dependencyTree": "WITH RECURSIVE dependency_tree AS (SELECT table_name, 0 AS level FROM information_schema.tables WHERE table_schema = 'public' AND table_name NOT IN (SELECT DISTINCT ccu.table_name FROM information_schema.table_constraints tc JOIN information_schema.constraint_column_usage ccu ON ccu.constraint_name = tc.constraint_name WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = 'public') UNION ALL SELECT ccu.table_name, dt.level + 1 AS level FROM information_schema.table_constraints tc JOIN information_schema.constraint_column_usage ccu ON ccu.constraint_name = tc.constraint_name JOIN dependency_tree dt ON dt.table_name = tc.table_name WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_schema = 'public') SELECT table_name FROM dependency_tree ORDER BY level DESC, table_name",
   "foreignKey": {
-    "disable": "SET sql_safe_updates = 'off'",
-    "enable": "SET sql_safe_updates = 'on'"
+    "disable": "SET session sql.defaults.disable_fk_enforcement = 'on'",
+    "enable": "SET session sql.defaults.disable_fk_enforcement = 'off'"
   },
   "getTables": "SELECT table_name AS name FROM information_schema.tables WHERE table_catalog = CURRENT_DATABASE() AND table_schema = 'public' AND table_type = 'BASE TABLE'",
-  "createTempTable": "SET experimental_enable_temp_tables=on; CREATE TEMPORARY TABLE {{tableName}}_temp AS SELECT * FROM {{tableName}}",
-  "dropTempTable": "DROP TABLE IF EXISTS {{tableName}}_temp",
-  "restoreData": "INSERT INTO {{tableName}} SELECT * FROM {{tableName}}_temp; SELECT setval(pg_get_serial_sequence('{{tableName}}', 'id'), (SELECT COALESCE(MAX(id), 0) FROM {{tableName}}))",
-  "truncateTable": "TRUNCATE TABLE {{tableName}}; ALTER SEQUENCE {{tableName}}_id_seq RESTART WITH 1;"
+  "createTempTable": "SET experimental_enable_temp_tables=on; CREATE TEMPORARY TABLE \"{{tableName}}_temp\" AS SELECT * FROM \"{{tableName}}\"",
+  "dropTempTable": "DROP TABLE IF EXISTS \"{{tableName}}_temp\"",
+  "restoreData": "INSERT INTO \"{{tableName}}\" SELECT * FROM \"{{tableName}}_temp\"; SELECT setval(pg_get_serial_sequence('\"{{tableName}}\"', 'id'), (SELECT COALESCE(MAX(id), 0) FROM \"{{tableName}}\"))",
+  "truncateTable": "TRUNCATE TABLE \"{{tableName}}\" CASCADE; ALTER SEQUENCE {{tableName}}_id_seq RESTART WITH 1;"
 }

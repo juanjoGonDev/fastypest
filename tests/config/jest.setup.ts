@@ -10,7 +10,7 @@ let connection: DataSource;
 
 beforeAll(async () => {
   connection = await initialize();
-  await seed(connection);
+  await seed();
   fastypest = new Fastypest(connection);
   await fastypest.init();
 });

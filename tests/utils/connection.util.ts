@@ -1,4 +1,4 @@
-import { DataSource, EntityManager } from "typeorm";
+import { DataSource, EntityManager, EntityTarget } from "typeorm";
 import { Fastypest } from "../../dist";
 import { getConnection } from "../config";
 
@@ -13,10 +13,19 @@ export class ConnectionUtil extends Fastypest {
     handler: (entityManager: EntityManager) => Promise<unknown>
   ) {
     await this.connection.transaction(async (em) => {
-      const foreignKeyManager = await this.foreignKeyManager(em);
-      await foreignKeyManager.disable();
+      const restoreManager = await this.restoreManager(em);
+      await restoreManager.foreignKey.disable();
       await handler(em);
-      await foreignKeyManager.enable();
+      await restoreManager.foreignKey.enable();
     });
+  }
+
+  async seed(em: EntityManager, target: EntityTarget<any>, data: object[]) {
+    const repository = em.getRepository(target);
+    const truncateQuery = this.getQuery("truncateTable", {
+      tableName: repository.metadata.tableName,
+    });
+    await em.query(truncateQuery);
+    await repository.insert(data);
   }
 }
