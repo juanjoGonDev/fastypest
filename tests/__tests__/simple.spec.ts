@@ -1,28 +1,16 @@
+import { seedCount } from "../config";
 import { getConnection } from "../config/orm.config";
 import { Simple } from "../entities";
-import { seedCount, simple } from "../seeds";
+import { simple } from "../seeds";
+import { ConnectionUtil } from "../utils";
 
 describe("Simple", () => {
   const connection = getConnection();
   const randomSimpleIndex = Math.floor(Math.random() * seedCount);
   const simpleRepository = connection.getRepository(Simple);
+  const connectionUtil = new ConnectionUtil();
 
   describe("Changes with typeorm methods", () => {
-    describe("Restore all data", () => {
-      it('"simple" table must have the same number of data as at the beginning', async () => {
-        expect(await getSimpleCount()).toBe(seedCount);
-      });
-
-      it('"Simple" table must be empty', async () => {
-        await simpleRepository.clear();
-        expect(await getSimpleCount()).toBe(0);
-      });
-
-      it('After restore, "simple" table must have the same number of data as at the beginning', async () => {
-        expect(await getSimpleCount()).toBe(seedCount);
-      });
-    });
-
     describe("Modify value", () => {
       it("Row must be modified", async () => {
         const newName = "seed updated";
@@ -66,13 +54,21 @@ describe("Simple", () => {
   });
 
   describe("Changes with queries", () => {
-    describe("Restore", () => {
+    describe("Restore all data", () => {
       it('"simple" table must have the same number of data as at the beginning', async () => {
         expect(await getSimpleCount()).toBe(seedCount);
       });
 
       it('"Simple" table must be empty', async () => {
-        await connection.query("DELETE FROM simple WHERE id <> 0");
+        await connectionUtil.transaction(async (em) => {
+          const simple = em.connection.getMetadata(Simple);
+          await em.query(
+            connectionUtil.getQuery("truncateTable", {
+              tableName: simple.tableName,
+            })
+          );
+        });
+
         expect(await getSimpleCount()).toBe(0);
       });
 

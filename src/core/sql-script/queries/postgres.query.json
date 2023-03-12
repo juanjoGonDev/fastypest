@@ -1,11 +1,12 @@
 {
+  "dependencyTree": "-- NOT USED",
   "foreignKey": {
-    "disable": "SET CONSTRAINTS ALL DEFERRED",
-    "enable": "SET CONSTRAINTS ALL IMMEDIATE"
+    "disable": "-- NOT USED",
+    "enable": "-- NOT USED"
   },
   "getTables": "SELECT table_name AS name FROM information_schema.tables  WHERE table_schema = CURRENT_SCHEMA() AND table_type = 'BASE TABLE'",
-  "createTempTable": "CREATE TEMPORARY TABLE {{tableName}}_temp AS SELECT * FROM {{tableName}}",
-  "dropTempTable": "DROP TABLE IF EXISTS {{tableName}}_temp",
-  "restoreData": "INSERT INTO {{tableName}} SELECT * FROM {{tableName}}_temp; SELECT SETVAL(pg_get_serial_sequence('{{tableName}}', 'id'), (SELECT COALESCE(MAX(id), 0) FROM {{tableName}}))",
-  "truncateTable": "TRUNCATE TABLE {{tableName}} RESTART IDENTITY"
+  "createTempTable": "CREATE TEMPORARY TABLE \"{{tableName}}_temp\" AS SELECT * FROM \"{{tableName}}\"",
+  "dropTempTable": "DROP TABLE IF EXISTS \"{{tableName}}_temp\"",
+  "restoreData": "INSERT INTO \"{{tableName}}\" SELECT * FROM \"{{tableName}}_temp\"; SELECT SETVAL(pg_get_serial_sequence('{{tableName}}', 'id'), (SELECT COALESCE(MAX(id), 0) FROM \"{{tableName}}\"))",
+  "truncateTable": "TRUNCATE TABLE \"{{tableName}}\" RESTART IDENTITY CASCADE"
 }

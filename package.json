@@ -1,6 +1,6 @@
 {
   "name": "fastypest",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Restores the database automatically after each test. Allows serial execution of tests without having to delete and restore the database having to stop the application",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,6 +14,7 @@
     "prebuild": "rimraf dist",
     "build": "tsc",
     "eslint": "eslint . --fix --config .eslintrc",
+    "pretest": "tsc",
     "test": "jest --runInBand --config ./jest.config.json",
     "docker": "ts-node -r tsconfig-paths/register scripts/prepare-docker.ts"
   },

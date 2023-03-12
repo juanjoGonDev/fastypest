@@ -12,11 +12,7 @@ export class Fastypest extends SQLScript {
 
   async init() {
     await this.manager.transaction(async (em) => {
-      (await em.query(this.getQuery("getTables"))).map(
-        (row: Record<string, string>) => {
-          this.tables.add(row.name);
-        }
-      );
+      await this.detectTables(em);
 
       await Promise.all(
         [...this.tables].map(async (tableName) => {
@@ -26,32 +22,83 @@ export class Fastypest extends SQLScript {
     });
   }
 
+  async detectTables(em: EntityManager) {
+    (await em.query(this.getQuery("getTables"))).map(
+      (row: Record<string, string>) => {
+        this.tables.add(row.name);
+      }
+    );
+  }
+
   async restoreData() {
     await this.manager.transaction(async (em) => {
-      await em.query(this.getQuery("foreignKey.disable"));
+      const restoreManager = await this.restoreManager(em);
+      await restoreManager.foreignKey.disable();
+      const dependencyTree = await restoreManager.dependencyTree();
+      const tables = [...(dependencyTree || this.tables)];
 
-      await Promise.all(
-        [...this.tables].map(async (tableName) => {
-          await em.query(this.getQuery("truncateTable", { tableName }));
-          await em.query(this.getQuery("restoreData", { tableName }));
-        })
-      );
+      await this.restoreOrder(em, tables, dependencyTree ? "sorted" : "random");
 
-      await em.query(this.getQuery("foreignKey.enable"));
+      await restoreManager.foreignKey.enable();
     });
   }
 
-  async clearTempTables() {
-    await this.manager.transaction(async (em) => {
-      await Promise.all(
-        [...this.tables].map(async (tableName) => {
-          await em.query(
-            await em.query(this.getQuery("dropTempTable", { tableName }))
-          );
-        })
-      );
-    });
+  private async restoreOrder(
+    em: EntityManager,
+    tables: string[],
+    type: "sorted" | "random" = "random"
+  ) {
+    switch (type) {
+      case "sorted":
+        for (const tableName of tables) {
+          await em.query(this.getQuery("truncateTable", { tableName }));
+          await em.query(this.getQuery("restoreData", { tableName }));
+        }
+        break;
+      default:
+        await Promise.all(
+          tables.map(async (tableName) => {
+            await em.query(this.getQuery("truncateTable", { tableName }));
+            await em.query(this.getQuery("restoreData", { tableName }));
+          })
+        );
+        break;
+    }
+  }
 
+  async restoreManager(em: EntityManager) {
+    if (this.tables.size === 0) {
+      await this.detectTables(em);
+    }
+
+    const manager = {
+      foreignKey: {
+        disable: async () => Promise.resolve({}),
+        enable: async () => Promise.resolve({}),
+      },
+      dependencyTree: async () => Promise.resolve(undefined),
+    };
+
+    switch (this.type) {
+      case "cockroachdb":
+        const dependencyTree = await em.query(this.getQuery("dependencyTree"));
+        manager.dependencyTree = async () =>
+          new Set(
+            dependencyTree.map((row: Record<string, string>) => row.table_name)
+          ) as any;
+        break;
+      case "mariadb":
+      case "mysql":
+        manager.foreignKey.disable = async () =>
+          em.query(this.getQuery("foreignKey.disable"));
+        manager.foreignKey.enable = async () =>
+          em.query(this.getQuery("foreignKey.enable"));
+    }
+
+    return manager;
+  }
+
+  async clearTempTables() {
     this.tables.clear();
   }
 }

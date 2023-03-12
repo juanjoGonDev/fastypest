@@ -1,37 +1,12 @@
-import {
-  DataSource,
-  DataSourceOptions,
-  EntityManager,
-  EntityTarget,
-} from "typeorm";
-import { SQLScript } from "../../src/core/sql-script";
-import { Simple } from "../entities";
+import { Simple, User } from "../entities";
+import { ConnectionUtil } from "../utils";
 import { simple } from "./simple.seed";
+import { user } from "./user.seed";
 
-export const seed = async (connection: DataSource) => {
-  const seed = new Seed(connection.options.type);
-  await connection.manager.transaction(async (em) => {
-    await seed.seed(em, Simple, simple);
+export const seed = async () => {
+  const connectionUtil = new ConnectionUtil();
+  await connectionUtil.transaction(async (em) => {
+    await connectionUtil.seed(em, Simple, simple);
+    await connectionUtil.seed(em, User, user);
   });
 };
-
-class Seed extends SQLScript {
-  constructor(dbType: DataSourceOptions["type"]) {
-    super(dbType);
-  }
-
-  async seed(em: EntityManager, target: EntityTarget<any>, data: object[]) {
-    const repository = em.getRepository(target);
-    const queries = {
-      truncate: this.getQuery("truncateTable", {
-        tableName: repository.metadata.tableName,
-      }),
-      fk_enable: this.getQuery("foreignKey.enable"),
-      fk_disable: this.getQuery("foreignKey.disable"),
-    };
-    await em.query(queries.fk_disable);
-    await em.query(queries.truncate);
-    await repository.insert(data);
-    await em.query(queries.fk_disable);
-  }
-}

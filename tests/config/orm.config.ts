@@ -1,5 +1,5 @@
 import { DataSource, DataSourceOptions } from "typeorm";
-import { Simple } from "../entities";
+import { Simple, User } from "../entities";
 
 const env = process.env;
 
@@ -8,7 +8,7 @@ const options: Record<string, any> = {
   host: "127.0.0.1",
   username: "root",
   password: "password",
-  entities: [Simple],
+  entities: [Simple, User],
   database: "test",
   synchronize: true,
   logging: true,
