@@ -34,17 +34,36 @@ export class Fastypest extends SQLScript {
     await this.manager.transaction(async (em) => {
       const restoreManager = await this.restoreManager(em);
       await restoreManager.foreignKey.disable();
-      const tables = [
-        ...((await restoreManager.dependencyTree()) || this.tables),
-      ];
+      const dependencyTree = await restoreManager.dependencyTree();
+      const tables = [...(dependencyTree || this.tables)];
 
-      for (const tableName of tables) {
-        await em.query(this.getQuery("truncateTable", { tableName }));
-        await em.query(this.getQuery("restoreData", { tableName }));
-      }
+      await this.restoreOrder(em, tables, dependencyTree ? "sorted" : "random");
 
       await restoreManager.foreignKey.enable();
     });
+  }
+
+  private async restoreOrder(
+    em: EntityManager,
+    tables: string[],
+    type: "sorted" | "random" = "random"
+  ) {
+    switch (type) {
+      case "sorted":
+        for (const tableName of tables) {
+          await em.query(this.getQuery("truncateTable", { tableName }));
+          await em.query(this.getQuery("restoreData", { tableName }));
+        }
+        break;
+      default:
+        await Promise.all(
+          tables.map(async (tableName) => {
+            await em.query(this.getQuery("truncateTable", { tableName }));
+            await em.query(this.getQuery("restoreData", { tableName }));
+          })
+        );
+        break;
+    }
   }
 
   async restoreManager(em: EntityManager) {
