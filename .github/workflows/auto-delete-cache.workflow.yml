@@ -2,7 +2,7 @@ name: 🗑️ Delete old cache
 
 on:
   schedule:
-    - cron: "13 0 * * *"
+    - cron: "21 23 * * *"
 
 jobs:
   delete-cache:
