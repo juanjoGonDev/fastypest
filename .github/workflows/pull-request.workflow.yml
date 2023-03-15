@@ -61,6 +61,17 @@ jobs:
       - name: ✔️ Run eslint
         run: npm run eslint
 
+  all-test-ok:
+    name: ✅ Check all test
+    runs-on: ubuntu-latest
+    needs: run-test
+    if: ${{ success() }}
+    outputs:
+      success: ${{ steps.all-ok.outputs.success }}
+    steps:
+      - id: all-ok
+        run: echo "success=true" >> $GITHUB_OUTPUT
+
   run-test:
     name: 🗂️ ${{ matrix.database.name }}
     runs-on: ubuntu-latest
