@@ -44,7 +44,7 @@
   "homepage": "https://github.com/juanjo96Dev/fastypest#readme",
   "devDependencies": {
     "@types/cross-spawn": "^6.0.2",
-    "@types/jest": "^29.4.0",
+    "@types/jest": "^29.4.4",
     "@types/node": "^18.15.3",
     "@typescript-eslint/eslint-plugin": "^5.55.0",
     "cross-spawn": "^7.0.3",
