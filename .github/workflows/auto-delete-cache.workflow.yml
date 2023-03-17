@@ -1,8 +1,9 @@
 name: 🗑️ Delete old cache
 
 on:
+  workflow_dispatch:
   schedule:
-    - cron: "21 23 * * *"
+    - cron: "0 0 * * *"
 
 jobs:
   delete-cache:
