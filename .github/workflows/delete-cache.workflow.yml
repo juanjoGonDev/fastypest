@@ -25,6 +25,7 @@ jobs:
           gh api \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${GITHUB_REPOSITORY}/actions/caches \
             -q '.actions_caches[]
                 | { id, last_accessed_at }
                 | select(.last_accessed_at <= "'"${{ steps.subtract-days.outputs.date }}"'")
