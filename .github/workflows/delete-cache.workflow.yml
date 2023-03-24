@@ -1,6 +1,11 @@
 name: 🗑️ Delete old cache
 on:
   workflow_dispatch:
+    inputs:
+      expired-days:
+        description: "Clear cache that has not been used for x days"
+        default: "7"
+        require: true
   schedule:
     - cron: "0 0 * * *"
 
@@ -8,9 +13,9 @@ jobs:
   delete-cache:
     runs-on: ubuntu-latest
     steps:
-      - name: 🕐 Calculate 7 days ago
+      - name: 🕐 Calculate ${{ inputs.expired-days }} days ago
         id: subtract-days
-        run: echo "date=$(date -u -d '7 days ago' +%Y-%m-%d)" >> $GITHUB_OUTPUT
+        run: echo "date=$(date -u -d '${{ inputs.expired-days }} days ago' +%Y-%m-%d)" >> $GITHUB_OUTPUT
 
       - name: 🧹 Delete old cache
         id: delete-old-cache
