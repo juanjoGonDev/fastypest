@@ -23,15 +23,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh api \
-          -H "Accept: application/vnd.github+json" \
-          /repos/OWNER/REPO/actions/caches \
-          -q '.actions_caches[]
-              | { id, last_accessed_at }
-              | select(.last_accessed_at < ${{ steps.subtract-days.outputs.date }})
-              | {id}
-              | .[]' \
-          --paginate | xargs -I {} \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            -q '.actions_caches[]
+                | { id, last_accessed_at }
+                | select(.last_accessed_at < ${{ steps.subtract-days.outputs.date }})
+                | {id}
+                | .[]' \
+            --paginate | xargs -I {} \
           gh api \
             --method DELETE \
             -H "Accept: application/vnd.github.v3+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
             /repos/OWNER/REPO/actions/caches/{}
