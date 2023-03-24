@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: 🕐 Calculate ${{ inputs.expired-days }} days ago
         id: subtract-days
-        run: echo "date=$(date -u -d '${{ inputs.expired-days }} days ago' +%Y-%m-%d)" >> $GITHUB_OUTPUT
+        run: echo "date=$(date -u -d '${{ inputs.expired-days }} days ago' +%Y-%m-%dT%H:%M:%SZ%z)" >> $GITHUB_OUTPUT
 
       - name: 🧹 Delete old cache
         id: delete-old-cache
