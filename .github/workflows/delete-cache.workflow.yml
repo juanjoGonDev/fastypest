@@ -24,13 +24,14 @@ jobs:
         run: |
           gh api \
             -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
             -q '.actions_caches[]
                 | { id, last_accessed_at }
                 | select(.last_accessed_at <= ${{ steps.subtract-days.outputs.date }})
-                | {id}
-                | .[]' \
-            --paginate | xargs -I {} \
+            --paginate | jq -r '.[] | .id' | xargs -I {} \
+          sh -c 'echo "Deleting cache with id {}"; \
           gh api \
             --method DELETE \
             -H "Accept: application/vnd.github.v3+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
             /repos/OWNER/REPO/actions/caches/{}
