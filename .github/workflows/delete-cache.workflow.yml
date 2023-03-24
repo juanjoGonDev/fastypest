@@ -20,7 +20,7 @@ jobs:
       - name: 🧹 Delete old cache
         id: delete-old-cache
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh api \
           -H "Accept: application/vnd.github+json" \
