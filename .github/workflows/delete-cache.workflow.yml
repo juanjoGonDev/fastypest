@@ -5,7 +5,7 @@ on:
       expired-days:
         description: "Clear cache that has not been used for x days"
         default: "7"
-        require: true
+        require: false
   schedule:
     - cron: "0 0 * * *"
 
