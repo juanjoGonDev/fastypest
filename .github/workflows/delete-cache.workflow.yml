@@ -13,9 +13,9 @@ jobs:
   delete-cache:
     runs-on: ubuntu-latest
     steps:
-      - name: 🕐 Calculate ${{ inputs.expired-days || "7" }} days ago
+      - name: 🕐 Calculate ${{ inputs.expired-days || 7 }} days ago
         id: subtract-days
-        run: echo "date=$(date -u -d '${{ inputs.expired-days || "7" }} days ago' +%Y-%m-%dT%H:%M:%SZ%z)" >> $GITHUB_OUTPUT
+        run: echo "date=$(date -u -d '${{ inputs.expired-days || 7 }} days ago' +%Y-%m-%dT%H:%M:%SZ%z)" >> $GITHUB_OUTPUT
 
       - name: 🧹 Delete old cache
         id: delete-old-cache
