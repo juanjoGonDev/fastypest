@@ -4,21 +4,20 @@ on:
     inputs:
       expired-days:
         description: "Clear cache that has not been used for x days"
-        default: ${{ env.default-expired-days }}
+        default: "7"
         require: true
   schedule:
     - cron: "0 0 * * *"
-
-env:
-  default-expired-days: "7"
+      inputs:
+        expired-days: 7
 
 jobs:
   delete-cache:
     runs-on: ubuntu-latest
     steps:
-      - name: 🕐 Calculate ${{ env.default-expired-days || inputs.expired-days }} days ago
+      - name: 🕐 Calculate ${{ inputs.expired-days }} days ago
         id: subtract-days
-        run: echo "date=$(date -u -d '${{ env.default-expired-days || inputs.expired-days }} days ago' +%Y-%m-%dT%H:%M:%SZ%z)" >> $GITHUB_OUTPUT
+        run: echo "date=$(date -u -d '${{ inputs.expired-days }} days ago' +%Y-%m-%dT%H:%M:%SZ%z)" >> $GITHUB_OUTPUT
 
       - name: 🧹 Delete old cache
         id: delete-old-cache
