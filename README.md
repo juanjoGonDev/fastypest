@@ -25,7 +25,10 @@ npm i -D fastypest
 
 To use it, you must have inserted all the seeds beforehand, and before starting the tests, you must initialize it by indicating the typeorm connection configuration. You must execute restoreData after each test, so that the database is returned to its initial state.
 
-Example of use with jest:
+Example of use with jest
+
+> **Note**
+> (I recommend using it in a [setupFilesAfterEnv](https://jestjs.io/es-ES/docs/configuration#setupfilesafterenv-array) file):
 
 ```typescript
 beforeAll(async () => {
