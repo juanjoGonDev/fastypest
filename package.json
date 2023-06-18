@@ -20,7 +20,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/juanjo96Dev/fastypest.git"
+    "url": "git+https://github.com/juanjoGonDev/fastypest.git"
   },
   "keywords": [
     "typeorm",
@@ -36,12 +36,12 @@
     "jest",
     "fastypest"
   ],
-  "author": "juanjo96Dev",
+  "author": "juanjoGonDev",
   "license": "GPL",
   "bugs": {
-    "url": "https://github.com/juanjo96Dev/fastypest/issues"
+    "url": "https://github.com/juanjoGonDev/fastypest/issues"
   },
-  "homepage": "https://github.com/juanjo96Dev/fastypest#readme",
+  "homepage": "https://github.com/juanjoGonDev/fastypest#readme",
   "devDependencies": {
     "@types/cross-spawn": "^6.0.2",
     "@types/jest": "^29.5.2",
