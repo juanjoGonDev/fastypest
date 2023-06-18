@@ -1,6 +1,6 @@
 <h1 align="center">FASTYPEST</h1>
 <p align="center">
-  <a href="https://www.npmjs.com/fastypest" target="_blank"><img alt="GitHub package.json version" src="https://img.shields.io/github/package-json/v/juanjo96dev/fastypest?logo=github&logoColor=fff&label=GitHub+package"></a>
+  <a href="https://www.npmjs.com/fastypest" target="_blank"><img alt="GitHub package.json version" src="https://img.shields.io/github/package-json/v/juanjoGonDev/fastypest?logo=github&logoColor=fff&label=GitHub+package"></a>
   <a href="https://www.npmjs.com/fastypest" target="_blank"><img alt="npm" src="https://img.shields.io/npm/v/fastypest?logo=npm&logoColor=fff&label=NPM+package"></a>
   <a href="https://www.npmjs.com/fastypest" target="_blank"><img alt="npm peer dependency version" src="https://img.shields.io/npm/dependency-version/fastypest/peer/typeorm"></a>
   <a href="https://www.npmjs.com/fastypest" target="_blank"><img alt="Node version" src="https://img.shields.io/node/v/fastypest"></a>
