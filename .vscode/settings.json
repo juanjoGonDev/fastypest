@@ -1,13 +1,9 @@
 {
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
-    "source.fixAll": true,
-    "source.organizeImports": true
+    "source.fixAll": "always",
+    "source.organizeImports": "always"
   },
-  "cSpell.words": [
-    "cockroachdb",
-    "Fastypest",
-    "typeorm"
-  ],
+  "cSpell.words": ["cockroachdb", "Fastypest", "typeorm"],
   "files.trimFinalNewlines": true
 }

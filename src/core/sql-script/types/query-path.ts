@@ -7,7 +7,7 @@ type JsonKeys<T> = T extends object
   : "";
 
 type FlattenJson<T, K = JsonKeys<T>> = K extends keyof T
-  ? T[K] extends Record<string, any>
+  ? T[K] extends Record<string, string | object>
     ? `${string & K}.${FlattenJson<T[K]>}`
     : K
   : never;

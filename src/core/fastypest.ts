@@ -1,6 +1,14 @@
 import { Connection, DataSource, EntityManager } from "typeorm";
 import { SQLScript } from "./sql-script";
 
+interface Manager {
+  foreignKey: {
+    disable: () => Promise<string | object>;
+    enable: () => Promise<string | object>;
+  };
+  dependencyTree: () => Promise<Set<string> | undefined>;
+}
+
 export class Fastypest extends SQLScript {
   private manager: EntityManager;
   private tables: Set<string> = new Set();
@@ -71,7 +79,7 @@ export class Fastypest extends SQLScript {
       await this.detectTables(em);
     }
 
-    const manager = {
+    const manager: Manager = {
       foreignKey: {
         disable: async () => Promise.resolve({}),
         enable: async () => Promise.resolve({}),
@@ -85,7 +93,7 @@ export class Fastypest extends SQLScript {
         manager.dependencyTree = async () =>
           new Set(
             dependencyTree.map((row: Record<string, string>) => row.table_name)
-          ) as any;
+          ) as Set<string>;
         break;
       case "mariadb":
       case "mysql":
