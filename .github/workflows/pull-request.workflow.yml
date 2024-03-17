@@ -208,7 +208,7 @@ jobs:
             type: mariadb
             use-service: true
             service:
-              image: "mariadb:latest"
+              image: "mariadb"
               env:
                 MARIADB_ROOT_PASSWORD: password
                 MARIADB_DATABASE: test
