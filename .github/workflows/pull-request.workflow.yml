@@ -215,11 +215,12 @@ jobs:
                 MARIADB_ROOT_HOST: "%"
               ports:
                 - 3306:3306
-              options: >-
-                --health-cmd="mysqladmin ping --silent"
-                --health-interval=12s
-                --health-timeout=7s
-                --health-retries=3
+              healthcheck:
+                test: [ "CMD", "healthcheck.sh", "--connect", "--innodb_initialized" ]
+                start_period: 1m
+                interval: 10s
+                timeout: 5s
+                retries: 3
 
     services:
       data-base: ${{matrix.database.service}}
