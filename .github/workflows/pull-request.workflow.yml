@@ -208,7 +208,7 @@ jobs:
             type: mariadb
             use-service: true
             service:
-              image: "mariadb"
+              image: "mariadb:latest"
               env:
                 MARIADB_ROOT_PASSWORD: password
                 MARIADB_DATABASE: test
@@ -217,8 +217,8 @@ jobs:
                 - 3306:3306
               options: >-
                 --health-cmd="mysqladmin ping"
-                --health-interval=10s
-                --health-timeout=5s
+                --health-interval=15s
+                --health-timeout=7s
                 --health-retries=3
 
     services:
