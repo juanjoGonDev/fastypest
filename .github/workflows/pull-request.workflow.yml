@@ -25,6 +25,8 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
+      - name: ⚙️ Install Yarn
+        run: npm install -g yarn
       - name: 💾 Cache node modules
         id: cache-yarn
         uses: actions/cache@v3
