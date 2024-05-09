@@ -6,7 +6,7 @@ on:
     types: [opened, reopened, ready_for_review, synchronize]
 
 env:
-  NODE_VERSION: "18.x"
+  NODE_VERSION: "18.18.0"
 
 concurrency:
   group: ${{ github.head_ref }}
