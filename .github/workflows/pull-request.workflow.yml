@@ -24,7 +24,10 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: yarn
+      - name: ⚙️ Install Yarn
+        run: |
+          curl -o- -L https://yarnpkg.com/install.sh | bash
+          echo "$(yarn global bin)" >> $GITHUB_PATH
       - name: ⚙️ Install Yarn
         run: npm install -g yarn
       - name: 💾 Cache node modules
