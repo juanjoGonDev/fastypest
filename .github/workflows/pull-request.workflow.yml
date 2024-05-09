@@ -253,6 +253,8 @@ jobs:
           key: node_modules-${{ hashFiles('package-lock.json') }}
       - name: ⚙️ yarn install
         run: yarn install --frozen-lockfile
+      - name: ⌛ Run build
+        run: yarn run build
       - name: 🧪 Testing
         env:
           DB_TYPE: ${{ matrix.database.type }}
