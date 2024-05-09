@@ -19,7 +19,7 @@ export class Fastypest extends SQLScript {
   }
 
   async init() {
-    await this.manager.transaction(async (em) => {
+    await this.manager.transaction(async (em: EntityManager) => {
       await this.detectTables(em);
 
       await Promise.all(
@@ -39,7 +39,7 @@ export class Fastypest extends SQLScript {
   }
 
   async restoreData() {
-    await this.manager.transaction(async (em) => {
+    await this.manager.transaction(async (em: EntityManager) => {
       const restoreManager = await this.restoreManager(em);
       await restoreManager.foreignKey.disable();
       const dependencyTree = await restoreManager.dependencyTree();

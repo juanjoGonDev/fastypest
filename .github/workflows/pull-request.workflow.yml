@@ -24,19 +24,21 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+          cache: yarn
       - name: 💾 Cache node modules
-        id: cache-npm
+        id: cache-yarn
         uses: actions/cache@v3
         with:
           path: |
             node_modules
-          key: node_modules-${{ hashFiles('package-lock.json') }}
-      - if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
-        name: ⚙️ npm ci
-        run: npm ci
+            **/node_modules
+            ~/.cache/yarn
+          key: yarn-${{ hashFiles('yarn.lock') }}
+      - if: ${{ steps.cache-yarn.outputs.cache-hit != 'true' }}
+        name: ⚙️ yarn install
+        run: yarn install --frozen-lockfile
       - name: ⌛ Run build
-        run: npm run build
+        run: yarn run build
 
   check-eslint:
     name: 📜 Check format
@@ -50,16 +52,19 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+          cache: yarn
       - name: 💾 Cache node modules
         uses: actions/cache@v3
         with:
           path: |
             node_modules
-          key: node_modules-${{ hashFiles('package-lock.json') }}
-
+            **/node_modules
+            ~/.cache/yarn
+          key: yarn-${{ hashFiles('yarn.lock') }}
+      - name: ⚙️ yarn install
+        run: yarn install --frozen-lockfile
       - name: ✔️ Run eslint
-        run: npm run eslint
+        run: yarn run eslint
 
   all-test-ok:
     name: ✅ Check all test
@@ -234,16 +239,17 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+          cache: yarn
       - name: 💾 Cache node modules
         uses: actions/cache@v3
         with:
           path: |
             node_modules
           key: node_modules-${{ hashFiles('package-lock.json') }}
-
+      - name: ⚙️ yarn install
+        run: yarn install --frozen-lockfile
       - name: 🧪 Testing
         env:
           DB_TYPE: ${{ matrix.database.type }}
           DB_PORT: ${{ matrix.database.port }}
-        run: npm run test
+        run: yarn run test

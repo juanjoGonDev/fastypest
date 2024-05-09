@@ -4,6 +4,17 @@
     "source.fixAll": "always",
     "source.organizeImports": "always"
   },
-  "cSpell.words": ["cockroachdb", "Fastypest", "typeorm"],
-  "files.trimFinalNewlines": true
+  "cSpell.words": [
+    "cockroachdb",
+    "Fastypest",
+    "typeorm"
+  ],
+  "files.trimFinalNewlines": true,
+  "typescript.tsdk": ".yarn/sdks/typescript/lib",
+  "search.exclude": {
+    "**/.yarn": true,
+    "**/.pnp.*": true
+  },
+  "eslint.nodePath": ".yarn/sdks",
+  "typescript.enablePromptUseWorkspaceTsdk": true
 }

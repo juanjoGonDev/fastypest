@@ -11,3 +11,4 @@ tsconfig.compiler.json
 tsconfig.json
 docker-compose.yml
 *.tgz
+.yarn

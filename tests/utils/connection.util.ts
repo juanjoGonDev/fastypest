@@ -1,5 +1,5 @@
 import { DataSource, EntityManager, EntityTarget } from "typeorm";
-import { Fastypest } from "../../dist";
+import { Fastypest } from "../../dist/core";
 import { getConnection } from "../config";
 
 export class ConnectionUtil extends Fastypest {
