@@ -30,17 +30,7 @@ jobs:
           echo "$(yarn global bin)" >> $GITHUB_PATH
       - name: ⚙️ Install Yarn
         run: npm install -g yarn
-      - name: 💾 Cache node modules
-        id: cache-yarn
-        uses: actions/cache@v3
-        with:
-          path: |
-            node_modules
-            **/node_modules
-            ~/.cache/yarn
-          key: yarn-${{ hashFiles('yarn.lock') }}
-      - if: ${{ steps.cache-yarn.outputs.cache-hit != 'true' }}
-        name: ⚙️ yarn install
+      - name: ⚙️ yarn install
         run: yarn install --frozen-lockfile
       - name: ⌛ Run build
         run: yarn run build
@@ -58,14 +48,6 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
-      - name: 💾 Cache node modules
-        uses: actions/cache@v3
-        with:
-          path: |
-            node_modules
-            **/node_modules
-            ~/.cache/yarn
-          key: yarn-${{ hashFiles('yarn.lock') }}
       - name: ⚙️ yarn install
         run: yarn install --frozen-lockfile
       - name: ✔️ Run eslint
@@ -245,12 +227,6 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
-      - name: 💾 Cache node modules
-        uses: actions/cache@v3
-        with:
-          path: |
-            node_modules
-          key: node_modules-${{ hashFiles('package-lock.json') }}
       - name: ⚙️ yarn install
         run: yarn install --frozen-lockfile
       - name: ⌛ Run build
