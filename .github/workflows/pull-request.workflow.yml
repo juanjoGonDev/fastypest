@@ -19,17 +19,11 @@ jobs:
     timeout-minutes: 2
     steps:
       - name: 🔶 Check repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: 🟢 Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - name: ⚙️ Install Yarn
-        run: |
-          curl -o- -L https://yarnpkg.com/install.sh | bash
-          echo "$(yarn global bin)" >> $GITHUB_PATH
-      - name: ⚙️ Install Yarn
-        run: npm install -g yarn
       - name: ⚙️ yarn install
         run: yarn install --frozen-lockfile
       - name: ⌛ Run build
@@ -42,9 +36,9 @@ jobs:
     needs: build
     steps:
       - name: 🔶 Check repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: 🟢 Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
@@ -221,9 +215,9 @@ jobs:
         name: 🐋 Start a single instance with docker
         run: ${{ matrix.database.run }}
       - name: 🔶 Check repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: 🟢 Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
