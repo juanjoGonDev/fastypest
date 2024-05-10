@@ -25,9 +25,10 @@ jobs:
           node-version: "${{ env.NODE_VERSION }}"
       - name: ⚙️ Install dependencies
         run: yarn install --frozen-lockfile
-      - name: Create release branch
+      - name: 🍃 Create release branch
         run: |
           git checkout -b release/${{ github.run_number }}
+          git push origin release/${{ github.run_number }}
       - name: 🆙 Bump version and create a git tag
         id: bump_version
         uses: phips28/gh-action-bump-version@master
