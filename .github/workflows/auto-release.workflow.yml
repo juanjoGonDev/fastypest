@@ -58,13 +58,3 @@ jobs:
           git checkout main
           git branch -D release/${{ github.run_number }}
           git push origin --delete release/${{ github.run_number }}
-      # - name: 📦 Create Release
-      #   id: create_release
-      #   uses: actions/create-release@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     tag_name: ${{ steps.bump_version.outputs.newTag }}
-      #     release_name: Release ${{ steps.bump_version.outputs.newTag }}
-      #     draft: false
-      #     prerelease: false
