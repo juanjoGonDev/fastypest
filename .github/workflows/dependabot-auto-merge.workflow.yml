@@ -27,6 +27,9 @@ jobs:
       - name ✅ Approve PR
         if: steps.check-is-approved.outputs.result == 'false'
         run: gh pr review $PR_URL --approve -b "I'm **approving** this pull request because **it includes a bump of the version**"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   dependabot:
     runs-on: ubuntu-latest
     if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' }}
