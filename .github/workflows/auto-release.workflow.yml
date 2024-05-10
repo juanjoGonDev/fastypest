@@ -52,7 +52,7 @@ jobs:
           git reset --soft HEAD~1
           git commit -m "CI: bumps version to ${{ steps.bump_version.outputs.newTag }} [skip ci]"
           git remote set-url origin https://x-access-token:${{ secrets.PAT }}@github.com/${GITHUB_REPOSITORY}.git
-          git push origin release/${{ github.run_number }}
+          git push --force origin release/${{ github.run_number }}
       - name: 🔀 Create Pull Request
         uses: peter-evans/create-pull-request@v3
         with:
