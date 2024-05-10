@@ -12,6 +12,9 @@ jobs:
     steps:
       - name: ✅ Approve patch
         run: gh pr review $PR_URL --approve -b "I'm **approving** this pull request because **it includes a patch minor update**"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: ⏱️ Wait for PR approval
         uses: actions/github-script@v5
         timeout-minutes: 5
@@ -40,8 +43,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.bump_version.outputs.newTag }}
-          release_name: Release ${{ steps.bump_version.outputs.newTag }}
+          tag_name: $(git describe --tags --abbrev=0)
+          release_name: Release $(git describe --tags --abbrev=0)
           draft: false
           prerelease: false
   dependabot:
