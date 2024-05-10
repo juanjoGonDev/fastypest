@@ -10,7 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     if: contains(github.event.pull_request.labels.*.name, 'auto-release')
     steps:
-      - name: ✅ Approve patch
+      - name: 🔎 Check is approved
+        id: check-is-approved
         uses: actions/github-script@v5
         with:
           script: |
@@ -21,16 +22,11 @@ jobs:
               pull_number: prNumber
             });
             const alreadyApproved = reviews.data.some(review => review.state === 'APPROVED');
-            if (!alreadyApproved) {
-              await github.rest.pulls.createReview({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: prNumber,
-                event: 'APPROVE',
-                body: "I'm **approving** this pull request because **it includes a patch minor update**"
-              });
-            }
+            return alreadyApproved;
           github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name ✅ Approve PR
+        if: steps.check-is-approved.outputs.result == 'false'
+        run: gh pr review $PR_URL --approve -b "I'm **approving** this pull request because **it includes a bump of the version**"
   dependabot:
     runs-on: ubuntu-latest
     if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' }}
