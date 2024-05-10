@@ -45,7 +45,8 @@ jobs:
           commit-message: "CI: bumps version to {{version}} [skip ci]"
       - name: 🔄 Reset commit author and create PR
         run: |
-          git checkout origin release/${{ github.run_number }}
+          git fetch origin
+          git checkout release/${{ github.run_number }}
           git pull origin release/${{ github.run_number }}
           git reset --soft HEAD~1
           git commit -m "CI: bumps version to ${{ steps.bump_version.outputs.newTag }} [skip ci]"
