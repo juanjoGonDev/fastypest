@@ -30,7 +30,7 @@ jobs:
                   body: "I'm **approving** this pull request because **it includes a patch minor update**"
                 });
               }
-    github-token: ${{ secrets.GITHUB_TOKEN }}
+            github-token: ${{ secrets.GITHUB_TOKEN }}
   dependabot:
     runs-on: ubuntu-latest
     if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' }}
