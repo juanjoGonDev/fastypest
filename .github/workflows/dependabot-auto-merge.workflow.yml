@@ -14,7 +14,7 @@ jobs:
         uses: vietanhduong/auto-approve-action@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          pr-number: "1"
+          pr-number: ${{ github.event.pull_request.number }}
           comment-body: |
             # Auto Approved
             ## This PR has been approved by the auto-approve-action
