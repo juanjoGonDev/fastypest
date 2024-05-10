@@ -24,7 +24,7 @@ jobs:
             const alreadyApproved = reviews.data.some(review => review.state === 'APPROVED');
             return alreadyApproved;
           github-token: ${{ secrets.GITHUB_TOKEN }}
-      - name ✅ Approve PR
+      - name: ✅ Approve PR
         if: steps.check-is-approved.outputs.result == 'false'
         run: gh pr review $PR_URL --approve -b "I'm **approving** this pull request because **it includes a bump of the version**"
         env:
