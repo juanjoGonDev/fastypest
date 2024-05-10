@@ -57,7 +57,7 @@ jobs:
         uses: actions/github-script@v5
         timeout-minutes: 5
         env:
-          PULL_REQUEST_NUMBER: ${{ steps.create_pr.outputs.pr_number }}
+          PULL_REQUEST_NUMBER: ${{ fromJson(steps.create_pr.outputs.metadata).pull_request.number }}
         with:
           script: |
             const timeout = 5 * 60 * 1000; // 5 minutes
