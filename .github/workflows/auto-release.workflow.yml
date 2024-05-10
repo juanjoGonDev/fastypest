@@ -28,6 +28,10 @@ jobs:
       - name: 🍃 Create release branch
         run: |
           git checkout -b release/${{ github.run_number }}
+          EXISTS=$(git ls-remote --heads origin release/${{ github.run_number }} | wc -l)
+          if [ $EXISTS -eq 1 ]; then
+            git pull origin release/${{ github.run_number }}
+          fi
           git push origin release/${{ github.run_number }}
       - name: 🆙 Bump version and create a git tag
         id: bump_version
@@ -52,18 +56,8 @@ jobs:
         if: ${{ failure() }}
         run: |
           git checkout main
-          git branch -d release/${{ github.run_number }}
+          git branch -D release/${{ github.run_number }}
           git push origin --delete release/${{ github.run_number }}
-      - name: 🔓 Enable auto-merge for Dependabot PRs
-        run: gh pr merge --auto --squash "$PR_URL"
-        env:
-          PR_URL: ${{ steps.create_pull_request.outputs.pull-request-url }}
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      - name: ✅ Approve PR
-        run: gh pr review $PR_URL --approve -b "I'm **approving** this pull request because **it includes a patch update**"
-        env:
-          PR_URL: ${{ steps.create_pull_request.outputs.pull-request-url }}
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       # - name: 📦 Create Release
       #   id: create_release
       #   uses: actions/create-release@v1

@@ -6,6 +6,19 @@ permissions:
   pull-requests: write
 
 jobs:
+  auto-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🕵️ Check PR author
+        id: check_author
+        run: |
+          echo "PR author: ${{ github.event.pull_request.user.login }}"
+          if [ "${{ github.event.pull_request.user.login }}" == "dependabot[bot]" ]; then
+            echo "::set-output name=allowed_author::true"
+          else
+            echo "::set-output name=allowed_author::false"
+          fi
+
   dependabot:
     runs-on: ubuntu-latest
     if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' }}
