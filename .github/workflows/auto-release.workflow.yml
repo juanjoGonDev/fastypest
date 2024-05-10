@@ -49,7 +49,7 @@ jobs:
           token: ${{ secrets.PAT }}
           base: main
           branch: release/${{ github.run_number }}
-          title: "Bump version to v${{ steps.bump_version.outputs.newTag }}"
+          title: "Bump version to ${{ steps.bump_version.outputs.newTag }}"
           body: "The version of the code has been bumped to **${{ steps.bump_version.outputs.newTag }}**"
           labels: "auto-release"
       - name: Get PR number
@@ -106,12 +106,15 @@ jobs:
           release_name: Release ${{ steps.bump_version.outputs.newTag }}
           draft: false
           prerelease: false
-      - name: 🧹 Cleanup on failure
-        if: ${{ failure() }}
+      - name: 🧹 Cleanup on failure or cancellation
+        if: ${{ failure() || cancelled() }}
         run: |
           git checkout main
-          git branch -D release/${{ github.run_number }}
-          git push origin --delete release/${{ github.run_number }}
-          sleep 3
-          git tag -d ${{ steps.bump_version.outputs.newTag }}
-          git push origin :refs/tags/${{ steps.bump_version.outputs.newTag }}
+          if git show-ref --verify --quiet refs/heads/release/${{ github.run_number }}; then
+            git branch -D release/${{ github.run_number }}
+            git push origin --delete release/${{ github.run_number }}
+          fi
+          if git show-ref --verify --quiet refs/tags/${{ steps.bump_version.outputs.newTag }}; then
+            git tag -d ${{ steps.bump_version.outputs.newTag }}
+            git push origin :refs/tags/${{ steps.bump_version.outputs.newTag }}
+          fi
