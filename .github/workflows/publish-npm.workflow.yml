@@ -18,14 +18,20 @@ jobs:
         with:
           node-version: "${{ env.NODE_VERSION }}"
           registry-url: "https://registry.npmjs.org/"
-          cache: npm
-      - name: 📦 npm ci
-        run: npm ci
-
+          cache: yarn
+      - name: 💾 Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            node_modules
+            **/node_modules
+            ~/.cache/yarn
+          key: yarn-${{ hashFiles('yarn.lock') }}
+      - name: ⚙️ yarn install
+        run: yarn install --frozen-lockfile
       - name: 🚧 Run build
-        run: npm run build
-
+        run: yarn run build
       - name: 🎉 Publish to npm
-        run: npm publish
+        run: yarn publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_AUTH_TOKEN}}

@@ -2,3 +2,8 @@
 /dist
 *.log
 *.tgz
+
+# yarn
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz

@@ -6,7 +6,7 @@ on:
     types: [opened, reopened, ready_for_review, synchronize]
 
 env:
-  NODE_VERSION: "18.x"
+  NODE_VERSION: "18.20.0"
 
 concurrency:
   group: ${{ github.head_ref }}
@@ -19,24 +19,15 @@ jobs:
     timeout-minutes: 2
     steps:
       - name: 🔶 Check repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: 🟢 Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-      - name: 💾 Cache node modules
-        id: cache-npm
-        uses: actions/cache@v3
-        with:
-          path: |
-            node_modules
-          key: node_modules-${{ hashFiles('package-lock.json') }}
-      - if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
-        name: ⚙️ npm i
-        run: npm i
+      - name: ⚙️ yarn install
+        run: yarn install --frozen-lockfile
       - name: ⌛ Run build
-        run: npm run build
+        run: yarn run build
 
   check-eslint:
     name: 📜 Check format
@@ -45,21 +36,16 @@ jobs:
     needs: build
     steps:
       - name: 🔶 Check repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: 🟢 Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-      - name: 💾 Cache node modules
-        uses: actions/cache@v3
-        with:
-          path: |
-            node_modules
-          key: node_modules-${{ hashFiles('package-lock.json') }}
-
+          cache: yarn
+      - name: ⚙️ yarn install
+        run: yarn install --frozen-lockfile
       - name: ✔️ Run eslint
-        run: npm run eslint
+        run: yarn run eslint
 
   all-test-ok:
     name: ✅ Check all test
@@ -75,7 +61,7 @@ jobs:
   run-test:
     name: 🗂️ ${{ matrix.database.name }}
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 3
     needs: build
     strategy:
       fail-fast: false
@@ -229,21 +215,18 @@ jobs:
         name: 🐋 Start a single instance with docker
         run: ${{ matrix.database.run }}
       - name: 🔶 Check repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: 🟢 Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-      - name: 💾 Cache node modules
-        uses: actions/cache@v3
-        with:
-          path: |
-            node_modules
-          key: node_modules-${{ hashFiles('package-lock.json') }}
-
+          cache: yarn
+      - name: ⚙️ yarn install
+        run: yarn install --frozen-lockfile
+      - name: ⌛ Run build
+        run: yarn run build
       - name: 🧪 Testing
         env:
           DB_TYPE: ${{ matrix.database.type }}
           DB_PORT: ${{ matrix.database.port }}
-        run: npm run test
+        run: yarn run test

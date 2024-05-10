@@ -1,6 +1,6 @@
 import { DataSource } from "typeorm";
 import { initialize } from ".";
-import { Fastypest } from "../../dist";
+import { Fastypest } from "../../dist/core";
 import { seed } from "../seeds";
 
 jest.setTimeout(100_000);
