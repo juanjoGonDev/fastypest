@@ -43,25 +43,14 @@ jobs:
           tag-prefix: "v"
           target-branch: "release/${{ github.run_number }}"
           commit-message: "CI: bumps version to {{version}} [skip ci]"
-      - name: 🔄 Reset commit author
+      - name: 🔄 Reset commit author and create PR
         run: |
-          USER_NAME=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" https://api.github.com/user | jq -r .login)
-          USER_EMAIL=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" https://api.github.com/user | jq -r .email)
-          git config user.name "$USER_NAME"
-          git config user.email "$USER_EMAIL"
+          echo ${{ secrets.PAT }} | gh auth login --with-token
           git reset --soft HEAD~1
           git commit -m "CI: bumps version to ${{ steps.bump_version.outputs.newTag }} [skip ci]"
-          git remote set-url origin https://x-access-token:${{ secrets.PAT }}@github.com/${GITHUB_REPOSITORY}.git
-          git push --force origin release/${{ github.run_number }}
-      - name: 🔀 Create Pull Request
-        uses: peter-evans/create-pull-request@v3
-        with:
-          token: ${{ secrets.PAT }}
-          base: main
-          branch: release/${{ github.run_number }}
-          title: "Bump version to ${{ steps.bump_version.outputs.newTag }}"
-          body: "The version of the code has been bumped to **${{ steps.bump_version.outputs.newTag }}**"
-          labels: "auto-release"
+          gh pr create --title "Bump version to ${{ steps.bump_version.outputs.newTag }}" --body "The version of the code has been bumped to **${{ steps.bump_version.outputs.newTag }}**" --base main --head release/${{ github.run_number }} --label auto-release --auto-merge
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
       - name: 🔢 Get PR number
         id: get_pr_number
         uses: actions/github-script@v5
