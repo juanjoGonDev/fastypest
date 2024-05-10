@@ -20,7 +20,6 @@ jobs:
         timeout-minutes: 5
         with:
           script: |
-            const github = new GitHub(core.getInput('github-token', {required: true}));
             const timeout = 5 * 60 * 1000; // 5 minutes
             const interval = 30 * 1000; // 30 seconds
             const startTime = Date.now();
