@@ -25,7 +25,7 @@ jobs:
             const startTime = Date.now();
             const prNumber = context.issue.number;
             while (Date.now() - startTime < timeout) {
-              const { data: pr } = await github.pulls.get({
+              const { data: pr } = await github.rest.pulls.get({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 pull_number: prNumber
