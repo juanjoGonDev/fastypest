@@ -14,6 +14,8 @@ jobs:
         uses: actions/checkout@v2
       - name: ✅ Approve patch
         uses: vietanhduong/auto-approve-action@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           pr-number: ${{ github.event.pull_request.number }}
