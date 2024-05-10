@@ -14,6 +14,7 @@ env:
 
 jobs:
   release:
+    name: 🚀 Auto release
     runs-on: ubuntu-latest
     steps:
       - name: 📚 checkout
@@ -37,10 +38,14 @@ jobs:
           tag-prefix: "v"
           target-branch: "release/${{ github.run_number }}"
           commit-message: "CI: bumps version to {{version}} [skip ci]"
+      - name: 🔃 Fetch latest changes
+        run: |
+          git fetch origin release/${{ github.run_number }}
+          git reset --hard origin/release/${{ github.run_number }}
       - name: 🪄 Push changes
         run: |
           git push origin release/${{ github.run_number }}
-      - name: 🤖 Create Pull Request
+      - name: 🔀 Create Pull Request
         uses: peter-evans/create-pull-request@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
