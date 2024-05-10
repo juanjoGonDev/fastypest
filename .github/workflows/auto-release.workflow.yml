@@ -51,7 +51,7 @@ jobs:
           git config user.email "$USER_EMAIL"
           git reset --soft HEAD~1
           git commit -m "CI: bumps version to ${{ steps.bump_version.outputs.newTag }} [skip ci]"
-          git remote set-url origin https://x-access-token:${{ secrets.PAT }}@github.com/${GITHUB_REPOSITORY}.git
+          git remote set-url origin https://x-access-token:${{ secrets.PAT }}@github.com/${{GITHUB_REPOSITORY}}.git
           git push --force origin release/${{ github.run_number }}
       - name: 🔀 Create Pull Request
         uses: peter-evans/create-pull-request@v3
@@ -62,7 +62,7 @@ jobs:
           title: "Bump version to ${{ steps.bump_version.outputs.newTag }}"
           body: "The version of the code has been bumped to **${{ steps.bump_version.outputs.newTag }}**"
           labels: "auto-release"
-      - name: Get PR number
+      - name: 🔢 Get PR number
         id: get_pr_number
         uses: actions/github-script@v5
         with:
@@ -74,7 +74,7 @@ jobs:
             });
 
             if (prs.length === 0) {
-              throw new Error('No PR found');
+              throw new Error('PR found');
             }
 
             console.log('PR number:', prs[0].number);
