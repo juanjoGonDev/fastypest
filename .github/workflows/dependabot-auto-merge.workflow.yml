@@ -6,19 +6,44 @@ permissions:
   pull-requests: write
 
 jobs:
-  auto-release:
+  approve-release:
     runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.labels.*.name, 'auto-release')
     steps:
-      - name: 🕵️ Check PR author
-        id: check_author
-        run: |
-          echo "PR author: ${{ github.event.pull_request.user.login }}"
-          if [ "${{ github.event.pull_request.user.login }}" == "dependabot[bot]" ]; then
-            echo "::set-output name=allowed_author::true"
-          else
-            echo "::set-output name=allowed_author::false"
-          fi
-
+      - name: ✅ Approve patch
+        run: gh pr review $PR_URL --approve -b "I'm **approving** this pull request because **it includes a patch minor update**"
+      - name: ⏱️ Wait for PR approval
+        uses: actions/github-script@v5
+        timeout-minutes: 5
+        with:
+          script: |
+            const timeout = 5 * 60 * 1000; // 5 minutes
+            const interval = 30 * 1000; // 30 seconds
+            const startTime = Date.now();
+            const prNumber = context.issue.number;
+            while (Date.now() - startTime < timeout) {
+              const { data: pr } = await github.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber
+              });
+              if (pr.state === 'closed' && pr.merged) {
+                return;
+              }
+              await new Promise(resolve => setTimeout(resolve, interval));
+            }
+            throw new Error('PR approval timed out');
+      - name: 📦 Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        timeout-minutes: 5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.bump_version.outputs.newTag }}
+          release_name: Release ${{ steps.bump_version.outputs.newTag }}
+          draft: false
+          prerelease: false
   dependabot:
     runs-on: ubuntu-latest
     if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' }}
