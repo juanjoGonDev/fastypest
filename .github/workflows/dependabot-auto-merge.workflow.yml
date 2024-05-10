@@ -11,7 +11,7 @@ jobs:
     if: contains(github.event.pull_request.labels.*.name, 'auto-release')
     steps:
       - name: ✅ Approve patch
-        - uses: vietanhduong/auto-approve-action@main
+        uses: vietanhduong/auto-approve-action@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           pr-number: "1"
