@@ -44,6 +44,7 @@ jobs:
           target-branch: "release/${{ github.run_number }}"
           commit-message: "CI: bumps version to {{version}} [skip ci]"
       - name: 🔀 Create Pull Request
+        id: create_pr
         uses: peter-evans/create-pull-request@v3
         with:
           token: ${{ secrets.PAT }}
@@ -52,6 +53,39 @@ jobs:
           title: "Release ${{ steps.bump_version.outputs.newTag }}"
           body: "The version of the code has been bumped to **${{ steps.bump_version.outputs.newTag }}**"
           labels: "auto-release"
+      - name: ⏱️ Wait for PR merged
+        uses: actions/github-script@v5
+        timeout-minutes: 5
+        with:
+          script: |
+            const timeout = 5 * 60 * 1000; // 5 minutes
+            const interval = 30 * 1000; // 30 seconds
+            const startTime = Date.now();
+            const prNumber = steps.create_pr.outputs.pr_number;
+            console.log('PR number:', prNumber);
+            while (Date.now() - startTime < timeout) {
+              const { data: pr } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber
+              });
+              if (pr.state === 'closed' && pr.merged) {
+                return;
+              }
+              await new Promise(resolve => setTimeout(resolve, interval));
+            }
+            throw new Error('PR approval timed out');
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: 📦 Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.bump_version.outputs.newTag }}
+          release_name: Release ${{ steps.bump_version.outputs.newTag }}
+          draft: false
+          prerelease: false
       - name: 🧹 Cleanup on failure
         if: ${{ failure() }}
         run: |
