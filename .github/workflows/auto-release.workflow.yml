@@ -45,7 +45,6 @@ jobs:
           commit-message: "CI: bumps version to {{version}} [skip ci]"
       - name: 🔄 Reset commit author and create PR
         run: |
-          echo ${{ secrets.PAT }} | gh auth login --with-token
           git reset --soft HEAD~1
           git commit -m "CI: bumps version to ${{ steps.bump_version.outputs.newTag }} [skip ci]"
           gh pr create --title "Bump version to ${{ steps.bump_version.outputs.newTag }}" --body "The version of the code has been bumped to **${{ steps.bump_version.outputs.newTag }}**" --base main --head release/${{ github.run_number }} --label auto-release --auto-merge
