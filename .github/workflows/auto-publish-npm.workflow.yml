@@ -1,0 +1,44 @@
+name: 🤖 Auto release
+
+on:
+  schedule:
+    - cron: "0 0 */15 * *"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release"
+        required: false
+
+env:
+  NODE_VERSION: "18.20"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📚 checkout
+        uses: actions/checkout@v3
+      - name: 🟢 node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "${{ env.NODE_VERSION }}"
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Bump version and create a git tag
+        id: bump_version
+        uses: phips28/gh-action-bump-version@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WITH_V: true
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          VERSION_FILE_PATH: "./package.json"
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.bump_version.outputs.newTag }}
+          release_name: Release ${{ steps.bump_version.outputs.newTag }}
+          draft: false
+          prerelease: false
