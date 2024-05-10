@@ -44,7 +44,6 @@ jobs:
           target-branch: "release/${{ github.run_number }}"
           commit-message: "CI: bumps version to {{version}} [skip ci]"
       - name: 🔀 Create Pull Request
-        id: create_pr
         uses: peter-evans/create-pull-request@v3
         with:
           token: ${{ secrets.PAT }}
@@ -53,6 +52,18 @@ jobs:
           title: "Release ${{ steps.bump_version.outputs.newTag }}"
           body: "The version of the code has been bumped to **${{ steps.bump_version.outputs.newTag }}**"
           labels: "auto-release"
+      - name: Get PR number
+        id: get_pr_number
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: 'release/${{ github.run_number }}'
+            });
+            return prs[0].number;
+          github-token: ${{ steps.get_pr_number.outputs.result }}
       - name: ⏱️ Wait for PR merged
         uses: actions/github-script@v5
         timeout-minutes: 5
