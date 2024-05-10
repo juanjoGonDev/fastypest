@@ -64,16 +64,18 @@ jobs:
             });
 
             if (prs.length === 0) {
-              throw new Error('PR found');
+              throw new Error('No PR found');
             }
 
-            return prs[0]?.number;
+            console.log('PR number:', prs[0].number);
+
+            return prs[0].number;
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: ⏱️ Wait for PR merged
         uses: actions/github-script@v5
         timeout-minutes: 5
         env:
-          PULL_REQUEST_NUMBER: ${{ fromJson(steps.create_pr.outputs.metadata).pull_request.number }}
+          PULL_REQUEST_NUMBER: ${{ steps.create_pr.outputs.metadata }}
         with:
           script: |
             const timeout = 5 * 60 * 1000; // 5 minutes
