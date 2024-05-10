@@ -46,7 +46,7 @@ jobs:
       - name: 🔀 Create Pull Request
         uses: peter-evans/create-pull-request@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT }}
           base: main
           branch: release/${{ github.run_number }}
           title: "Release ${{ steps.bump_version.outputs.newTag }}"
