@@ -56,6 +56,8 @@ jobs:
       - name: ⏱️ Wait for PR merged
         uses: actions/github-script@v5
         timeout-minutes: 5
+        env:
+          PULL_REQUEST_NUMBER: ${{ steps.create_pr.outputs.pr_number }}
         with:
           script: |
             const timeout = 5 * 60 * 1000; // 5 minutes
@@ -75,8 +77,6 @@ jobs:
               await new Promise(resolve => setTimeout(resolve, interval));
             }
             throw new Error('PR approval timed out');
-          env:
-            PULL_REQUEST_NUMBER: ${{ steps.create_pr.outputs.pr_number }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: 📦 Create Release
         id: create_release
