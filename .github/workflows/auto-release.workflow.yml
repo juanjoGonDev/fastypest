@@ -45,12 +45,9 @@ jobs:
           commit-message: "CI: bumps version to {{version}} [skip ci]"
       - name: 🔄 Reset commit author and create PR
         run: |
-          USER_NAME=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" https://api.github.com/user | jq -r .login)
-          USER_EMAIL=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" https://api.github.com/user | jq -r .email)
-          git config user.name "$USER_NAME"
-          git config user.email "$USER_EMAIL"
-          git reset --soft HEAD~1
           gh auth login --with-token ${{ secrets.PAT }}
+          git reset --soft HEAD~1
+          git commit -m "CI: bumps version to ${{ steps.bump_version.outputs.newTag }} [skip ci]"
           gh pr create --title "Bump version to ${{ steps.bump_version.outputs.newTag }}" --body "The version of the code has been bumped to **${{ steps.bump_version.outputs.newTag }}**" --base main --head release/${{ github.run_number }} --label auto-release --auto-merge
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
