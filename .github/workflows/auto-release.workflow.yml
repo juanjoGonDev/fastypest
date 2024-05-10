@@ -28,7 +28,10 @@ jobs:
       - name: 🍃 Create release branch
         run: |
           git checkout -b release/${{ github.run_number }}
-          git pull origin release/${{ github.run_number }}
+          EXISTS=$(git ls-remote --heads origin release/${{ github.run_number }} | wc -l)
+          if [ $EXISTS -eq 1 ]; then
+            git pull origin release/${{ github.run_number }}
+          fi
           git push origin release/${{ github.run_number }}
       - name: 🆙 Bump version and create a git tag
         id: bump_version
