@@ -11,7 +11,7 @@ const options: Record<string, any> = {
   entities: [Simple, User],
   database: "test",
   synchronize: true,
-  logging: true,
+  logging: false,
   logger: "file",
 };
 

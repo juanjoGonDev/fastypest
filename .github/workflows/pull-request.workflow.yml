@@ -61,7 +61,7 @@ jobs:
   run-test:
     name: 🗂️ ${{ matrix.database.name }}
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 3
     needs: build
     strategy:
       fail-fast: false
