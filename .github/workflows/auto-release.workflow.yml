@@ -63,7 +63,7 @@ jobs:
               head: 'release/${{ github.run_number }}'
             });
             return prs[0].number;
-          github-token: ${{ steps.get_pr_number.outputs.result }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: ⏱️ Wait for PR merged
         uses: actions/github-script@v5
         timeout-minutes: 5
