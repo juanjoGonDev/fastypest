@@ -62,7 +62,12 @@ jobs:
               repo: context.repo.repo,
               head: 'release/${{ github.run_number }}'
             });
-            return prs[0].number;
+
+            if (prs.length === 0) {
+              throw new Error('PR found');
+            }
+
+            return prs[0]?.number;
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: ⏱️ Wait for PR merged
         uses: actions/github-script@v5
