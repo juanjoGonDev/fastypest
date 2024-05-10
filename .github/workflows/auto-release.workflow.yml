@@ -47,7 +47,8 @@ jobs:
         run: |
           git reset --soft HEAD~1
           git commit -m "CI: bumps version to ${{ steps.bump_version.outputs.newTag }} [skip ci]"
-          gh pr create --title "Bump version to ${{ steps.bump_version.outputs.newTag }}" --body "The version of the code has been bumped to **${{ steps.bump_version.outputs.newTag }}**" --base main --head release/${{ github.run_number }} --label auto-release --auto-merge
+          git push --force origin release/${{ github.run_number }}
+          gh pr create --title "Bump version to ${{ steps.bump_version.outputs.newTag }}" --body "The version of the code has been bumped to **${{ steps.bump_version.outputs.newTag }}**" --base main --head release/${{ github.run_number }} --label auto-release
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
       - name: 🔢 Get PR number
