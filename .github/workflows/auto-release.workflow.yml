@@ -113,5 +113,5 @@ jobs:
           git branch -D release/${{ github.run_number }}
           git push origin --delete release/${{ github.run_number }}
           sleep 3
-          git tag -d v${{ steps.bump_version.outputs.newTag }}
-          git push origin :refs/tags/v${{ steps.bump_version.outputs.newTag }}
+          git tag -d ${{ steps.bump_version.outputs.newTag }}
+          git push origin :refs/tags/${{ steps.bump_version.outputs.newTag }}
