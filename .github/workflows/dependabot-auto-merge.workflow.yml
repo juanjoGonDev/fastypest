@@ -11,15 +11,16 @@ jobs:
     if: contains(github.event.pull_request.labels.*.name, 'auto-release')
     steps:
       - name: ✅ Approve patch
-        run: gh pr review $PR_URL --approve
+        run: gh pr review $PR_URL --approve -b "I'm **approving** this pull request because **it includes a patch minor update**"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{secrets.PAT}}
-      - name: ⏱️ Wait for PR approval
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: ⏱️ Wait for PR merged
         uses: actions/github-script@v5
         timeout-minutes: 5
         with:
           script: |
+            const github = new GitHub(core.getInput('github-token', {required: true}));
             const timeout = 5 * 60 * 1000; // 5 minutes
             const interval = 30 * 1000; // 30 seconds
             const startTime = Date.now();
@@ -36,6 +37,7 @@ jobs:
               await new Promise(resolve => setTimeout(resolve, interval));
             }
             throw new Error('PR approval timed out');
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: 📦 Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -63,16 +65,16 @@ jobs:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: ✅ Approve patch and minor updates
         if: ${{steps.metadata.outputs.update-type == 'version-update:semver-patch' || steps.metadata.outputs.update-type == 'version-update:semver-minor'}}
-        run: gh pr review $PR_URL --approve
+        run: gh pr review $PR_URL --approve -b "I'm **approving** this pull request because **it includes a patch or minor update**"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{secrets.PAT}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: ✅ Approve major updates of development dependencies
         if: ${{steps.metadata.outputs.update-type == 'version-update:semver-major' && steps.metadata.outputs.dependency-type == 'direct:development'}}
-        run: gh pr review $PR_URL --approve"
+        run: gh pr review $PR_URL --approve -b "I'm **approving** this pull request because **it includes a major update of a dependency used only in development**"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{secrets.PAT}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: 💬 Comment on major updates of non-development dependencies
         if: ${{steps.metadata.outputs.update-type == 'version-update:semver-major' && steps.metadata.outputs.dependency-type == 'direct:production'}}
         run: |
