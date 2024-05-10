@@ -54,6 +54,16 @@ jobs:
           git checkout main
           git branch -d release/${{ github.run_number }}
           git push origin --delete release/${{ github.run_number }}
+      - name: 🔓 Enable auto-merge for Dependabot PRs
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ steps.create_pull_request.outputs.pull-request-url }}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: ✅ Approve PR
+        run: gh pr review $PR_URL --approve -b "I'm **approving** this pull request because **it includes a patch update**"
+        env:
+          PR_URL: ${{ steps.create_pull_request.outputs.pull-request-url }}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       # - name: 📦 Create Release
       #   id: create_release
       #   uses: actions/create-release@v1
