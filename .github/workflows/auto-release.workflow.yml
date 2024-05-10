@@ -37,7 +37,7 @@ jobs:
         id: bump_version
         uses: phips28/gh-action-bump-version@master
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT }}
         with:
           version-type: "patch"
           tag-prefix: "v"
@@ -49,7 +49,7 @@ jobs:
           token: ${{ secrets.PAT }}
           base: main
           branch: release/${{ github.run_number }}
-          title: "Release ${{ steps.bump_version.outputs.newTag }}"
+          title: "Bump version to v${{ steps.bump_version.outputs.newTag }}"
           body: "The version of the code has been bumped to **${{ steps.bump_version.outputs.newTag }}**"
           labels: "auto-release"
       - name: Get PR number
