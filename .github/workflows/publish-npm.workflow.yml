@@ -4,7 +4,7 @@ on:
     types: [published]
 
 env:
-  NODE_VERSION: "18.x"
+  NODE_VERSION: "18.20"
 
 jobs:
   release:
@@ -12,21 +12,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📚 checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
       - name: 🟢 node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v3
         with:
           node-version: "${{ env.NODE_VERSION }}"
           registry-url: "https://registry.npmjs.org/"
           cache: yarn
-      - name: 💾 Cache node modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
-            **/node_modules
-            ~/.cache/yarn
-          key: yarn-${{ hashFiles('yarn.lock') }}
       - name: ⚙️ yarn install
         run: yarn install --frozen-lockfile
       - name: 🚧 Run build
