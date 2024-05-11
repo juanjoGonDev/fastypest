@@ -37,13 +37,23 @@ jobs:
         id: bump_version
         uses: phips28/gh-action-bump-version@master
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}}
         with:
           version-type: "patch"
           tag-prefix: "v"
           target-branch: "release/${{ github.run_number }}"
           commit-message: "CI: bumps version to {{version}} [skip ci]"
           push: false
+      - name: 🔄 Create commit with PAT
+        run: |
+          USER_NAME=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" https://api.github.com/user | jq -r '.name')
+          USER_EMAIL=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" https://api.github.com/user | jq -r '.email')
+          git config --global user.name "$USER_NAME"
+          git config --global user.email "$USER_EMAIL"
+          git commit -m "CI: bumps version to ${{ steps.bump_version.outputs.newTag }} [skip ci]"
+          git push origin HEAD:release/${{ github.run_number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
       - name: 🪄 Create pull request
         uses: peter-evans/create-pull-request@v4
         with:
