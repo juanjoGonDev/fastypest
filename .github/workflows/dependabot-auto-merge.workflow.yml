@@ -26,11 +26,10 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: ✅ Approve PR
         if: steps.check-is-approved.outputs.result == 'false'
-        uses: hmarr/auto-approve-action@v4
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          pull-request-number: ${{ github.event.pull_request.number }}
-          review-message: "Auto-approving this PR because it is tagged with auto-release"
+        run: gh pr review $PR_URL --approve -b "I'm **approving** this pull request because **it includes a bump of the version**"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   dependabot:
     runs-on: ubuntu-latest
     if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' }}

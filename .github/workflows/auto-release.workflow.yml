@@ -25,40 +25,33 @@ jobs:
           node-version: "${{ env.NODE_VERSION }}"
       - name: ⚙️ Install dependencies
         run: yarn install --frozen-lockfile
-      - name: 🍃 Create pre-release branch
+      - name: 🍃 Create release branch
         run: |
-          git checkout -b pre-release/${{ github.run_number }}
-          EXISTS=$(git ls-remote --heads origin pre-release/${{ github.run_number }} | wc -l)
+          git checkout -b release/${{ github.run_number }}
+          EXISTS=$(git ls-remote --heads origin release/${{ github.run_number }} | wc -l)
           if [ $EXISTS -eq 1 ]; then
-            git pull origin pre-release/${{ github.run_number }}
+            git pull origin release/${{ github.run_number }}
           fi
-          git push origin pre-release/${{ github.run_number }}
+          git push origin release/${{ github.run_number }}
       - name: 🆙 Bump version and create a git tag
         id: bump_version
-        uses: phips28/gh-action-bump-version@master
+        uses: phips28/gh-action-bump-version@v4
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}}
+          GITHUB_TOKEN: ${{ secrets.PAT }}}
         with:
           version-type: "patch"
           tag-prefix: "v"
-          target-branch: "pre-release/${{ github.run_number }}"
+          target-branch: "release/${{ github.run_number }}"
           commit-message: "CI: bumps version to {{version}} [skip ci]"
-      - name: 🔄 Create release branch and reset commit author
-        run: |
-          git checkout pre-release/${{ github.run_number }}
-          git reset --soft HEAD~1
-          git checkout main
-          git branch -D pre-release/${{ github.run_number }}
-          EXISTS=$(git ls-remote --heads origin pre-release/${{ github.run_number }} | wc -l)
-          if [ $EXISTS -eq 1 ]; then
-            git push origin --delete pre-release/${{ github.run_number }}
-          fi
-          git checkout -b release/${{ github.run_number }}
-          git commit -m "CI: bumps version to ${{ steps.bump_version.outputs.newTag }} [skip ci]"
-          git push --force origin release/${{ github.run_number }}
-          gh pr create --title "Bump version to ${{ steps.bump_version.outputs.newTag }}" --body "The version of the code has been bumped to **${{ steps.bump_version.outputs.newTag }}**" --base main --head release/${{ github.run_number }} --label auto-release
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
+      - name: 🪄 Create pull request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          commit-message: "CI: bumps version to {{version}} [skip ci]"
+          title: "Bump version to {{version}}"
+          body: "Bumps version to {{version}}"
+          branch: "release/${{ github.run_number }}"
+          base: "main"
+          token: ${{ secrets.PAT }}
       - name: 🔢 Get PR number
         id: get_pr_number
         uses: actions/github-script@v5
@@ -127,11 +120,4 @@ jobs:
           if git show-ref --verify --quiet refs/tags/${{ steps.bump_version.outputs.newTag }}; then
             git tag -d ${{ steps.bump_version.outputs.newTag }}
             git push origin :refs/tags/${{ steps.bump_version.outputs.newTag }}
-          fi
-          if git show-ref --verify --quiet refs/heads/pre-release/${{ github.run_number }}; then
-            git branch -D pre-release/${{ github.run_number }}
-            EXISTS=$(git ls-remote --heads origin pre-release/${{ github.run_number }} | wc -l)
-            if [ $EXISTS -eq 1 ]; then
-              git push origin --delete pre-release/${{ github.run_number }}
-            fi
           fi
