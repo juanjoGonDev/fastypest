@@ -52,10 +52,8 @@ jobs:
             exit 1
           fi
           echo ::set-output name=newTag::$NEW_TAG
-      - name: 🔄 Create commit with PAT
-        run: |
-          git commit -m "CI: bumps version to ${{ steps.get_new_tag.outputs.newTag }} [skip ci]"
-          git push origin HEAD:release/${{ github.run_number }}
+      - name: ⬆️ Push changes
+        run: git push origin HEAD:release/${{ github.run_number }}
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
       - name: 📝 Create pull request
