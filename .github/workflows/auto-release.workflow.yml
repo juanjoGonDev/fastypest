@@ -46,12 +46,15 @@ jobs:
       - name: 🪄 Create pull request
         uses: peter-evans/create-pull-request@v4
         with:
-          commit-message: "CI: bumps version to {{version}} [skip ci]"
-          title: "Bump version to {{version}}"
-          body: "Bumps version to {{version}}"
+          commit-message: "CI: bumps version to {{steps.bump_version.outputs.newTag}}"
+          title: "Bump version to {{steps.bump_version.outputs.newTag}}"
+          body: "Bumps version to {{steps.bump_version.outputs.newTag}}"
           branch: "release/${{ github.run_number }}"
           base: "main"
           token: ${{ secrets.PAT }}
+          labels: "auto-release"
+          draft: false
+          signoff: true
       - name: 🔢 Get PR number
         id: get_pr_number
         uses: actions/github-script@v5
