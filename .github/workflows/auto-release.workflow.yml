@@ -19,9 +19,20 @@ jobs:
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v3
+      - name: 🎫 Configure Git
+        run: |
+          USER_NAME=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" https://api.github.com/user | jq -r '.name')
+          USER_EMAIL=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" https://api.github.com/user | jq -r '.email')
+          git config --global user.name "$USER_NAME"
+          git config --global user.email "$USER_EMAIL"
       - name: 🕵️ Check if there are at least 3 new commits
         id: check_commits
         run: |
+          if ! git rev-list --tags --max-count=1 2>/dev/null; then
+            echo "No tags in the repository, exiting"
+            echo ::set-output name=skip::true
+            exit 0
+          fi
           LAST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
           COMMIT_COUNT=$(git rev-list --count $LAST_TAG..HEAD)
           if [ "$COMMIT_COUNT" -lt 3 ]; then
@@ -30,12 +41,6 @@ jobs:
             exit 0
           fi
         shell: bash
-      - name: 🎫 Configure Git
-        run: |
-          USER_NAME=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" https://api.github.com/user | jq -r '.name')
-          USER_EMAIL=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" https://api.github.com/user | jq -r '.email')
-          git config --global user.name "$USER_NAME"
-          git config --global user.email "$USER_EMAIL"
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v3
         with:
