@@ -155,20 +155,32 @@ jobs:
             const newTag = '${{ steps.get_new_tag.outputs.newTag }}';
             const { owner, repo } = context.repo;
             // Delete branch
-            if (await github.rest.git.getRef({ owner, repo, ref: `heads/release/${runNumber}` })) {
-              await github.rest.git.deleteRef({ owner, repo, ref: `heads/release/${runNumber}` });
-              console.log(`Deleted branch release/${runNumber}`);
+            try {
+              if (await github.rest.git.getRef({ owner, repo, ref: `heads/release/${runNumber}` })) {
+                await github.rest.git.deleteRef({ owner, repo, ref: `heads/release/${runNumber}` });
+                console.log(`Deleted branch release/${runNumber}`);
+              }
+            } catch (error) {
+              console.log(`Branch release/${runNumber} not found`);
             }
             // Delete tag
-            if (await github.rest.git.getRef({ owner, repo, ref: `tags/${newTag}` })) {
-              await github.rest.git.deleteRef({ owner, repo, ref: `tags/${newTag}` });
-              console.log(`Deleted tag ${newTag}`);
+            try {
+              if (await github.rest.git.getRef({ owner, repo, ref: `tags/${newTag}` })) {
+                await github.rest.git.deleteRef({ owner, repo, ref: `tags/${newTag}` });
+                console.log(`Deleted tag ${newTag}`);
+              }
+            } catch (error) {
+              console.log(`Tag ${newTag} not found`);
             }
             // Delete release
-            const { data: releases } = await github.rest.repos.listReleases({ owner, repo });
-            const release = releases.find(r => r.tag_name === newTag);
-            if (release) {
-              await github.rest.repos.deleteRelease({ owner, repo, release_id: release.id });
-              console.log(`Deleted release ${newTag}`);
+            try {
+              const { data: releases } = await github.rest.repos.listReleases({ owner, repo });
+              const release = releases.find(r => r.tag_name === newTag);
+              if (release) {
+                await github.rest.repos.deleteRelease({ owner, repo, release_id: release.id });
+                console.log(`Deleted release ${newTag}`);
+              }
+            } catch (error) {
+              console.log(`Release ${newTag} not found`);
             }
           github-token: ${{ secrets.GITHUB_TOKEN }}
