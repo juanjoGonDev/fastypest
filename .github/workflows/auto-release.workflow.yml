@@ -44,6 +44,18 @@ jobs:
           git push --follow-tags origin release/${{ github.run_number }}
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
+      - name: ⏱️ Wait for changes to be registered
+        timeout-minutes: 5
+        run: |
+          while true; do
+            git fetch origin
+            DIFF=$(git diff main..release/${{ github.run_number }})
+            if [ "$DIFF" != "" ]; then
+              break
+            fi
+            echo "Waiting for changes to be registered..."
+            sleep 5s
+          done
       - name: 🏷️ Get new tag
         id: get_new_tag
         run: |
