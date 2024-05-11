@@ -92,7 +92,7 @@ jobs:
           }'
 
           echo ::set-output name=prNumber::$PR_NUMBER
-      - name: ⏱️ Wait for PR to be approved and then squash and merge
+      - name: 🕵️ Check if PR is approved
         uses: actions/github-script@v5
         timeout-minutes: 5
         env:
@@ -112,21 +112,24 @@ jobs:
               });
               const approved = reviews.some(review => review.state === 'APPROVED');
               if (approved) {
-                const { data: merge } = await github.rest.pulls.merge({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  pull_number: prNumber,
-                  merge_method: 'squash'
-                });
-                if (merge.merged) {
-                  console.log(`PR #${prNumber} has been squashed and merged`);
-                  return;
-                }
+                console.log(`PR #${prNumber} has been approved`);
+                return;
               }
               await new Promise(resolve => setTimeout(resolve, interval));
             }
             throw new Error('PR approval timed out');
           github-token: ${{ secrets.PAT }}
+      - name: 🔄 Set up auto merge when all checks have passed
+        uses: pascalgn/automerge-action@v0.14.3
+        env:
+          GITHUB_TOKEN: "${{ secrets.PAT }}"
+          MERGE_LABELS: "auto-release"
+          MERGE_METHOD: "squash"
+          MERGE_COMMIT_MESSAGE: "Automatic squash and merge. PR was approved and all checks passed."
+          MERGE_FORKS: "false"
+          MERGE_RETRIES: "6"
+          MERGE_RETRY_SLEEP: "10000"
+          UPDATE_LABELS: ""
       - name: 📦 Create Release
         id: create_release
         uses: actions/create-release@v1
