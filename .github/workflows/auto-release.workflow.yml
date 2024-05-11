@@ -18,7 +18,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: 🕵️ Check if there are at least 3 new commits from last release
+        id: check_commits
+        run: |
+          COMMITS=$(git log --oneline $(git describe --tags --abbrev=0)..HEAD | wc -l)
+          if [ $COMMITS -lt 3 ]; then
+            echo "There are less than 3 new commits since last release, exiting"
+            exit 78
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: 🎫 Configure Git
         run: |
           USER_NAME=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" https://api.github.com/user | jq -r '.name')
@@ -33,16 +45,6 @@ jobs:
           cache: yarn
       - name: ⚙️ Install dependencies
         run: yarn install --frozen-lockfile
-      - name: 🕵️ Check if there are at least 3 new commits from last release
-        id: check_commits
-        run: |
-          COMMITS=$(git log --oneline $(git describe --tags --abbrev=0)..HEAD | wc -l)
-          if [ $COMMITS -lt 3 ]; then
-            echo "There are less than 3 new commits since last release, exiting"
-            exit 78
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: 🆙 Bump version and create a git tag
         run: |
           git checkout main
