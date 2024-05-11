@@ -35,7 +35,7 @@ jobs:
           git push origin release/${{ github.run_number }}
       - name: 🆙 Bump version and create a git tag
         id: bump_version
-        uses: phips28/gh-action-bump-version@v4
+        uses: phips28/gh-action-bump-version@master
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}}
         with:
