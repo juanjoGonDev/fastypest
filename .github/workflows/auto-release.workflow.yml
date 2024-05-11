@@ -121,18 +121,41 @@ jobs:
             }
             throw new Error('PR approval timed out');
           github-token: ${{ secrets.PAT }}
-      - name: 🔄 Set up auto merge when all checks have passed
-        uses: pascalgn/automerge-action@v0.14.3
+      - name: 🕵️ Check if all checks have passed and merge PR
+        uses: actions/github-script@v5
+        timeout-minutes: 5
         env:
-          GITHUB_TOKEN: "${{ secrets.PAT }}"
-          MERGE_LABELS: "auto-release"
-          MERGE_METHOD: "squash"
-          MERGE_COMMIT_MESSAGE: "Automatic squash and merge. PR was approved and all checks passed."
-          MERGE_FORKS: "false"
-          MERGE_RETRIES: "6"
-          MERGE_RETRY_SLEEP: "10000"
-          UPDATE_LABELS: ""
-      - name: 🚧 Run build
+          PULL_REQUEST_NUMBER: ${{ steps.create_pr.outputs.prNumber }}
+        with:
+          script: |
+            const timeout = 5 * 60 * 1000; // 5 minutes
+            const interval = 5 * 1000; // 5 seconds
+            const startTime = Date.now();
+            const prNumber = process.env.PULL_REQUEST_NUMBER;
+            console.log('PR number:', prNumber);
+            while (Date.now() - startTime < timeout) {
+              const { data: status } = await github.rest.repos.getCombinedStatusForRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `refs/pull/${prNumber}/head`
+              });
+              const allChecksPassed = status.statuses.every(status => status.state === 'success');
+              if (allChecksPassed) {
+                console.log(`All checks for PR #${prNumber} have passed`);
+                await github.rest.pulls.merge({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: prNumber,
+                  merge_method: 'squash'
+                });
+                console.log(`PR #${prNumber} has been merged`);
+                return;
+              }
+              await new Promise(resolve => setTimeout(resolve, interval));
+            }
+            throw new Error('PR checks and merge timed out');
+          github-token: ${{ secrets.PAT }}
+      - name: �🚧 Run build
         run: yarn run build
       - name: 🎉 Publish to npm
         run: npm publish
