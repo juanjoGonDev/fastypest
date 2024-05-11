@@ -25,6 +25,14 @@ jobs:
           USER_EMAIL=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" https://api.github.com/user | jq -r '.email')
           git config --global user.name "$USER_NAME"
           git config --global user.email "$USER_EMAIL"
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "${{ env.NODE_VERSION }}"
+          registry-url: "https://registry.npmjs.org/"
+          cache: yarn
+      - name: ⚙️ Install dependencies
+        run: yarn install --frozen-lockfile
       - name: 🕵️ Check if there are at least 3 new commits from last release
         id: check_commits
         run: |
@@ -35,14 +43,6 @@ jobs:
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "${{ env.NODE_VERSION }}"
-          registry-url: "https://registry.npmjs.org/"
-          cache: yarn
-      - name: ⚙️ Install dependencies
-        run: yarn install --frozen-lockfile
       - name: 🆙 Bump version and create a git tag
         run: |
           git checkout main
