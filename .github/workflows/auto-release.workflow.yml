@@ -24,7 +24,10 @@ jobs:
       - name: 🕵️ Check if there are at least 3 new commits since the last version
         id: check_commits
         run: |
-          COMMITS=$(git log --oneline $(git describe --tags --abbrev=0)..HEAD | wc -l)
+          LAST_TAG=$(git tag -l | sort -V | tail -n 1)
+          echo "Last tag: $LAST_TAG"
+          COMMITS=$(git log --oneline ${LAST_TAG}..HEAD | wc -l)
+          echo "Commits since last tag: $COMMITS"
           if [ $COMMITS -lt 3 ]; then
             echo "There are less than 3 new commits since last release, exiting"
             exit 78
