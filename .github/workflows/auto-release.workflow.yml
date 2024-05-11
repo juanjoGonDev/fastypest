@@ -25,7 +25,6 @@ jobs:
           USER_EMAIL=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" https://api.github.com/user | jq -r '.email')
           git config --global user.name "$USER_NAME"
           git config --global user.email "$USER_EMAIL"
-          git config --global http.extraheader "AUTHORIZATION: bearer ${{ secrets.PAT }}"
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -57,7 +56,6 @@ jobs:
       - name: 📝 Create pull request
         uses: peter-evans/create-pull-request@v4
         with:
-          commit-message: "CI: bumps version to ${{ steps.get_new_tag.outputs.newTag }}"
           title: "Bump version to ${{ steps.get_new_tag.outputs.newTag }}"
           body: "Bumps version to ${{ steps.get_new_tag.outputs.newTag }}"
           branch: "release/${{ github.run_number }}"
