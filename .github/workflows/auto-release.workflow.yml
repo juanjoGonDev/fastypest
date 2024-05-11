@@ -48,13 +48,14 @@ jobs:
         timeout-minutes: 5
         run: |
           while true; do
-            sleep 5s
             git fetch origin
             DIFF=$(git diff main..release/${{ github.run_number }})
+            echo "$DIFF"
             if [ "$DIFF" != "" ]; then
               break
             fi
             echo "Waiting for changes to be registered..."
+            sleep 5s
           done
       - name: 🏷️ Get new tag
         id: get_new_tag
@@ -66,40 +67,36 @@ jobs:
           fi
           echo ::set-output name=newTag::$NEW_TAG
       - name: 📝 Create pull request
-        uses: peter-evans/create-pull-request@v4
-        with:
-          title: "Bump version to ${{ steps.get_new_tag.outputs.newTag }}"
-          body: "Bumps version to ${{ steps.get_new_tag.outputs.newTag }}"
-          branch: "release/${{ github.run_number }}"
-          base: "main"
-          token: ${{ secrets.PAT }}
-          labels: "auto-release"
-          draft: false
-          signoff: true
-      - name: 🔍 Get PR number
-        id: get_pr_number
-        uses: actions/github-script@v5
-        with:
-          script: |
-            const { data: prs } = await github.rest.pulls.list({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              head: 'release/${{ github.run_number }}'
-            });
+        id: create_pr
+        run: |
+          PR_DATA=$(curl \
+            -X POST \
+            -H "Authorization: token ${{ secrets.PAT }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ github.repository }}/pulls \
+            -d '{
+              "title": "Bump version to ${{ steps.get_new_tag.outputs.newTag }}",
+              "body": "Bumps version to ${{ steps.get_new_tag.outputs.newTag }}",
+              "head": "release/${{ github.run_number }}",
+              "base": "main"
+            }')
+          PR_NUMBER=$(echo "$PR_DATA" | jq '.number')
 
-            if (prs.length === 0) {
-              throw new Error('PR found');
-            }
+          curl \
+          -X POST \
+          -H "Authorization: token ${{ secrets.PAT }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/${{ github.repository }}/issues/$PR_NUMBER/labels \
+          -d '{
+            "labels": ["auto-release"]
+          }'
 
-            console.log('PR number:', prs[0].number);
-
-            return prs[0].number;
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          echo ::set-output name=prNumber::$PR_NUMBER
       - name: ⏱️ Wait for PR to be merged
         uses: actions/github-script@v5
         timeout-minutes: 5
         env:
-          PULL_REQUEST_NUMBER: ${{ steps.get_pr_number.outputs.result }}
+          PULL_REQUEST_NUMBER: ${{ steps.create_pr.outputs.prNumber }}
         with:
           script: |
             const timeout = 5 * 60 * 1000; // 5 minutes
