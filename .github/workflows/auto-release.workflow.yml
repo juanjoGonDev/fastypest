@@ -43,6 +43,7 @@ jobs:
           tag-prefix: "v"
           target-branch: "release/${{ github.run_number }}"
           commit-message: "CI: bumps version to {{version}} [skip ci]"
+          push: false
       - name: 🪄 Create pull request
         uses: peter-evans/create-pull-request@v4
         with:
@@ -51,7 +52,7 @@ jobs:
           body: "Bumps version to ${{ steps.bump_version.outputs.newTag }}"
           branch: "release/${{ github.run_number }}"
           base: "main"
-          git-token: ${{ secrets.PAT }}
+          token: ${{ secrets.PAT }}
           labels: "auto-release"
           draft: false
           signoff: true
