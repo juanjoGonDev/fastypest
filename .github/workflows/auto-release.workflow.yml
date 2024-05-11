@@ -140,6 +140,12 @@ jobs:
           release_name: Release ${{ steps.get_new_tag.outputs.newTag }}
           draft: false
           prerelease: false
+      - name: 🚧 Run build
+        run: yarn run build
+      - name: 🎉 Publish to npm
+        run: yarn publish
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_AUTH_TOKEN}}
       - name: 🧹 Cleanup on failure or cancellation
         if: ${{ failure() || cancelled() }}
         run: |
