@@ -19,6 +19,12 @@ jobs:
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v3
+      - name: 🎫 Configure Git
+        run: |
+          USER_NAME=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" https://api.github.com/user | jq -r '.name')
+          USER_EMAIL=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" https://api.github.com/user | jq -r '.email')
+          git config --global user.name "$USER_NAME"
+          git config --global user.email "$USER_EMAIL"
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -48,10 +54,6 @@ jobs:
           echo ::set-output name=newTag::$NEW_TAG
       - name: 🔄 Create commit with PAT
         run: |
-          USER_NAME=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" https://api.github.com/user | jq -r '.name')
-          USER_EMAIL=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" https://api.github.com/user | jq -r '.email')
-          git config --global user.name "$USER_NAME"
-          git config --global user.email "$USER_EMAIL"
           git commit -m "CI: bumps version to ${{ steps.get_new_tag.outputs.newTag }} [skip ci]"
           git push origin HEAD:release/${{ github.run_number }}
         env:
