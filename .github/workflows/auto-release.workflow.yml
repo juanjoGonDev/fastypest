@@ -25,6 +25,7 @@ jobs:
           USER_EMAIL=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" https://api.github.com/user | jq -r '.email')
           git config --global user.name "$USER_NAME"
           git config --global user.email "$USER_EMAIL"
+          git config --global http.extraheader "AUTHORIZATION: bearer ${{ secrets.PAT }}"
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -115,8 +116,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.bump_version.outputs.newTag }}
-          release_name: Release ${{ steps.bump_version.outputs.newTag }}
+          tag_name: ${{ steps.get_new_tag.outputs.newTag }}
+          release_name: Release ${{ steps.get_new_tag.outputs.newTag }}
           draft: false
           prerelease: false
       - name: 🧹 Cleanup on failure or cancellation
@@ -130,7 +131,7 @@ jobs:
               git push origin --delete release/${{ github.run_number }}
             fi
           fi
-          if git show-ref --verify --quiet refs/tags/${{ steps.bump_version.outputs.newTag }}; then
-            git tag -d ${{ steps.bump_version.outputs.newTag }}
-            git push origin :refs/tags/${{ steps.bump_version.outputs.newTag }}
+          if git show-ref --verify --quiet refs/tags/${{ steps.get_new_tag.outputs.newTag }}; then
+            git tag -d ${{ steps.get_new_tag.outputs.newTag }}
+            git push origin :refs/tags/${{ steps.get_new_tag.outputs.newTag }}
           fi
