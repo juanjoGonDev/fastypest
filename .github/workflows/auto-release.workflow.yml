@@ -148,16 +148,27 @@ jobs:
           NODE_AUTH_TOKEN: ${{secrets.NPM_AUTH_TOKEN}}
       - name: 🧹 Cleanup on failure or cancellation
         if: ${{ failure() || cancelled() }}
-        run: |
-          git checkout main
-          if git show-ref --verify --quiet refs/heads/release/${{ github.run_number }}; then
-            git branch -D release/${{ github.run_number }}
-            EXISTS=$(git ls-remote --heads origin release/${{ github.run_number }} | wc -l)
-            if [ $EXISTS -eq 1 ]; then
-              git push origin --delete release/${{ github.run_number }}
-            fi
-          fi
-          if git show-ref --verify --quiet refs/tags/${{ steps.get_new_tag.outputs.newTag }}; then
-            git tag -d ${{ steps.get_new_tag.outputs.newTag }}
-            git push origin :refs/tags/${{ steps.get_new_tag.outputs.newTag }}
-          fi
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const runNumber = ${{ github.run_number }};
+            const newTag = '${{ steps.get_new_tag.outputs.newTag }}';
+            const { owner, repo } = context.repo;
+            // Delete branch
+            if (await github.rest.git.getRef({ owner, repo, ref: `heads/release/${runNumber}` })) {
+              await github.rest.git.deleteRef({ owner, repo, ref: `heads/release/${runNumber}` });
+              console.log(`Deleted branch release/${runNumber}`);
+            }
+            // Delete tag
+            if (await github.rest.git.getRef({ owner, repo, ref: `tags/${newTag}` })) {
+              await github.rest.git.deleteRef({ owner, repo, ref: `tags/${newTag}` });
+              console.log(`Deleted tag ${newTag}`);
+            }
+            // Delete release
+            const { data: releases } = await github.rest.repos.listReleases({ owner, repo });
+            const release = releases.find(r => r.tag_name === newTag);
+            if (release) {
+              await github.rest.repos.deleteRelease({ owner, repo, release_id: release.id });
+              console.log(`Deleted release ${newTag}`);
+            }
+          github-token: ${{ secrets.GITHUB_TOKEN }}
