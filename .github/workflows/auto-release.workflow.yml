@@ -41,7 +41,7 @@ jobs:
             git pull origin release/${{ github.run_number }}
           fi
           yarn release
-          git push origin release/${{ github.run_number }}
+          git push --follow-tags origin release/${{ github.run_number }}
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
       - name: 🏷️ Get new tag
