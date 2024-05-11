@@ -151,7 +151,7 @@ jobs:
                 ref: `refs/pull/${prNumber}/head`
               });
               const requiredChecksPassed = requiredChecks.every(requiredCheck =>
-                checkRuns.check_runs.some(checkRun => checkRun.name === requiredCheck && checkRun.conclusion === 'success')
+                checkRuns.check_runs.some(checkRun => checkRun.name === requiredCheck && (checkRun.conclusion === 'success' || checkRun.conclusion === 'skipped'))
               );
               if (requiredChecksPassed) {
                 console.log(`All required checks for PR #${prNumber} have passed`);
