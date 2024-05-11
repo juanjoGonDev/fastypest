@@ -31,7 +31,7 @@ jobs:
           node-version: "${{ env.NODE_VERSION }}"
       - name: ⚙️ Install dependencies
         run: yarn install --frozen-lockfile
-      - name: 🌿 Create release branch
+      - name: 🆙 Bump version and create a git tag
         run: |
           git checkout main
           git pull origin main
@@ -40,9 +40,10 @@ jobs:
           if [ $EXISTS -eq 1 ]; then
             git pull origin release/${{ github.run_number }}
           fi
+          yarn release
           git push origin release/${{ github.run_number }}
-      - name: 🆙 Bump version and create a git tag
-        run: yarn release
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
       - name: 🏷️ Get new tag
         id: get_new_tag
         run: |
@@ -52,10 +53,6 @@ jobs:
             exit 1
           fi
           echo ::set-output name=newTag::$NEW_TAG
-      - name: ⬆️ Push changes
-        run: git push origin HEAD:release/${{ github.run_number }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
       - name: 📝 Create pull request
         uses: peter-evans/create-pull-request@v4
         with:
