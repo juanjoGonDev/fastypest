@@ -46,12 +46,13 @@ jobs:
       - name: 🪄 Create pull request
         uses: peter-evans/create-pull-request@v4
         with:
-          commit-message: "CI: bumps version to {{steps.bump_version.outputs.newTag}}"
-          title: "Bump version to {{steps.bump_version.outputs.newTag}}"
-          body: "Bumps version to {{steps.bump_version.outputs.newTag}}"
+          commit-message: "CI: bumps version to ${{ steps.bump_version.outputs.newTag }}"
+          title: "Bump version to ${{ steps.bump_version.outputs.newTag }}"
+          body: "Bumps version to ${{ steps.bump_version.outputs.newTag }}"
           branch: "release/${{ github.run_number }}"
           base: "main"
-          token: ${{ secrets.PAT }}
+          git-token: ${{ secrets.PAT }}
+          token
           labels: "auto-release"
           draft: false
           signoff: true
