@@ -52,7 +52,6 @@ jobs:
           branch: "release/${{ github.run_number }}"
           base: "main"
           git-token: ${{ secrets.PAT }}
-          token
           labels: "auto-release"
           draft: false
           signoff: true
