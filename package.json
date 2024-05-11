@@ -21,7 +21,8 @@
     "eslint": "eslint --fix .",
     "pretest": "tsc",
     "test": "jest --runInBand --config ./jest.config.json",
-    "docker": "ts-node -r tsconfig-paths/register scripts/prepare-docker.ts"
+    "docker": "ts-node -r tsconfig-paths/register scripts/prepare-docker.ts",
+    "release": "standard-version --release-as patch"
   },
   "repository": {
     "type": "git",
@@ -66,6 +67,7 @@
     "mysql": "^2.18.1",
     "pg": "^8.11.5",
     "rimraf": "^5.0.5",
+    "standard-version": "^9.5.0",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",

@@ -1,4 +1,4 @@
-name: 🤖 Auto release
+name: 🔄 Auto release
 
 permissions:
   contents: write
@@ -17,16 +17,18 @@ jobs:
     name: 🚀 Auto release
     runs-on: ubuntu-latest
     steps:
-      - name: 📚 checkout
+      - name: 📥 Checkout code
         uses: actions/checkout@v3
-      - name: 🟢 node
+      - name: 🟢 Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: "${{ env.NODE_VERSION }}"
       - name: ⚙️ Install dependencies
         run: yarn install --frozen-lockfile
-      - name: 🍃 Create release branch
+      - name: 🌿 Create release branch
         run: |
+          git checkout main
+          git pull origin main
           git checkout -b release/${{ github.run_number }}
           EXISTS=$(git ls-remote --heads origin release/${{ github.run_number }} | wc -l)
           if [ $EXISTS -eq 1 ]; then
@@ -34,39 +36,39 @@ jobs:
           fi
           git push origin release/${{ github.run_number }}
       - name: 🆙 Bump version and create a git tag
-        id: bump_version
-        uses: phips28/gh-action-bump-version@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}}
-        with:
-          version-type: "patch"
-          tag-prefix: "v"
-          target-branch: "release/${{ github.run_number }}"
-          commit-message: "CI: bumps version to {{version}} [skip ci]"
-          push: false
+        run: yarn release
+      - name: 🏷️ Get new tag
+        id: get_new_tag
+        run: |
+          NEW_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
+          if [ -z "$NEW_TAG" ]; then
+            echo "No new tag created, exiting"
+            exit 1
+          fi
+          echo ::set-output name=newTag::$NEW_TAG
       - name: 🔄 Create commit with PAT
         run: |
           USER_NAME=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" https://api.github.com/user | jq -r '.name')
           USER_EMAIL=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" https://api.github.com/user | jq -r '.email')
           git config --global user.name "$USER_NAME"
           git config --global user.email "$USER_EMAIL"
-          git commit -m "CI: bumps version to ${{ steps.bump_version.outputs.newTag }} [skip ci]"
+          git commit -m "CI: bumps version to ${{ steps.get_new_tag.outputs.newTag }} [skip ci]"
           git push origin HEAD:release/${{ github.run_number }}
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
-      - name: 🪄 Create pull request
+      - name: 📝 Create pull request
         uses: peter-evans/create-pull-request@v4
         with:
-          commit-message: "CI: bumps version to ${{ steps.bump_version.outputs.newTag }}"
-          title: "Bump version to ${{ steps.bump_version.outputs.newTag }}"
-          body: "Bumps version to ${{ steps.bump_version.outputs.newTag }}"
+          commit-message: "CI: bumps version to ${{ steps.get_new_tag.outputs.newTag }}"
+          title: "Bump version to ${{ steps.get_new_tag.outputs.newTag }}"
+          body: "Bumps version to ${{ steps.get_new_tag.outputs.newTag }}"
           branch: "release/${{ github.run_number }}"
           base: "main"
           token: ${{ secrets.PAT }}
           labels: "auto-release"
           draft: false
           signoff: true
-      - name: 🔢 Get PR number
+      - name: 🔍 Get PR number
         id: get_pr_number
         uses: actions/github-script@v5
         with:
@@ -85,7 +87,7 @@ jobs:
 
             return prs[0].number;
           github-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: ⏱️ Wait for PR merged
+      - name: ⏱️ Wait for PR to be merged
         uses: actions/github-script@v5
         timeout-minutes: 5
         env:
