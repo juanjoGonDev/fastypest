@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: 🕵️ Check if there are at least 3 new commits from last release
+      - name: 🕵️ Check if there are at least 3 new commits since the last version
         id: check_commits
         run: |
           COMMITS=$(git log --oneline $(git describe --tags --abbrev=0)..HEAD | wc -l)
