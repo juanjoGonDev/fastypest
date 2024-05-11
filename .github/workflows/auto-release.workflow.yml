@@ -134,12 +134,12 @@ jobs:
             const prNumber = process.env.PULL_REQUEST_NUMBER;
             console.log('PR number:', prNumber);
             while (Date.now() - startTime < timeout) {
-              const { data: status } = await github.rest.repos.getCombinedStatusForRef({
+              const { data: checkRuns } = await github.rest.checks.listForRef({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 ref: `refs/pull/${prNumber}/head`
               });
-              const allChecksPassed = status.statuses.every(status => status.state === 'success');
+              const allChecksPassed = checkRuns.check_runs.every(checkRun => checkRun.conclusion === 'success');
               if (allChecksPassed) {
                 console.log(`All checks for PR #${prNumber} have passed`);
                 await github.rest.pulls.merge({
