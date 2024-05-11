@@ -133,15 +133,28 @@ jobs:
             const startTime = Date.now();
             const prNumber = process.env.PULL_REQUEST_NUMBER;
             console.log('PR number:', prNumber);
+            const { data: pullRequest } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber
+            });
+            const { data: branchProtection } = await github.rest.repos.getBranchProtection({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              branch: pullRequest.base.ref
+            });
+            const requiredChecks = branchProtection.required_status_checks.contexts;
             while (Date.now() - startTime < timeout) {
               const { data: checkRuns } = await github.rest.checks.listForRef({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 ref: `refs/pull/${prNumber}/head`
               });
-              const allChecksPassed = checkRuns.check_runs.every(checkRun => checkRun.conclusion === 'success');
-              if (allChecksPassed) {
-                console.log(`All checks for PR #${prNumber} have passed`);
+              const requiredChecksPassed = requiredChecks.every(requiredCheck =>
+                checkRuns.check_runs.some(checkRun => checkRun.name === requiredCheck && checkRun.conclusion === 'success')
+              );
+              if (requiredChecksPassed) {
+                console.log(`All required checks for PR #${prNumber} have passed`);
                 await github.rest.pulls.merge({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
@@ -154,7 +167,7 @@ jobs:
               await new Promise(resolve => setTimeout(resolve, interval));
             }
             throw new Error('PR checks and merge timed out');
-          github-token: ${{ secrets.PAT }}
+        github-token: ${{ secrets.PAT }}
       - name: �🚧 Run build
         run: yarn run build
       - name: 🎉 Publish to npm
