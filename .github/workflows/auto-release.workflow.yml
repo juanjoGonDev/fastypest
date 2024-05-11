@@ -48,8 +48,11 @@ jobs:
           git checkout pre-release/${{ github.run_number }}
           git reset --soft HEAD~1
           git checkout main
-          git checkout -D pre-release/${{ github.run_number }}
-          git push origin --delete pre-release/${{ github.run_number }}
+          git branch -D pre-release/${{ github.run_number }}
+          EXISTS=$(git ls-remote --heads origin pre-release/${{ github.run_number }} | wc -l)
+          if [ $EXISTS -eq 1 ]; then
+            git push origin --delete pre-release/${{ github.run_number }}
+          fi
           git checkout -b release/${{ github.run_number }}
           git commit -m "CI: bumps version to ${{ steps.bump_version.outputs.newTag }} [skip ci]"
           git push --force origin release/${{ github.run_number }}
