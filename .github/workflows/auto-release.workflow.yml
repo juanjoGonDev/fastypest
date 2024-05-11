@@ -48,13 +48,13 @@ jobs:
         timeout-minutes: 5
         run: |
           while true; do
+            sleep 5s
             git fetch origin
             DIFF=$(git diff main..release/${{ github.run_number }})
             if [ "$DIFF" != "" ]; then
               break
             fi
             echo "Waiting for changes to be registered..."
-            sleep 5s
           done
       - name: 🏷️ Get new tag
         id: get_new_tag
