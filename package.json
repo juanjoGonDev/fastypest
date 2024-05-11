@@ -22,7 +22,8 @@
     "pretest": "tsc",
     "test": "jest --runInBand --config ./jest.config.json",
     "docker": "ts-node -r tsconfig-paths/register scripts/prepare-docker.ts",
-    "release": "standard-version --release-as patch"
+    "release": "standard-version --release-as patch",
+    "publish": "npm publish"
   },
   "repository": {
     "type": "git",

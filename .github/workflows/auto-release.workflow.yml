@@ -130,6 +130,12 @@ jobs:
           MERGE_RETRIES: "6"
           MERGE_RETRY_SLEEP: "10000"
           UPDATE_LABELS: ""
+      - name: 🚧 Run build
+        run: yarn run build
+      - name: 🎉 Publish to npm
+        run: yarn publish
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_AUTH_TOKEN}}
       - name: 📦 Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -140,12 +146,6 @@ jobs:
           release_name: Release ${{ steps.get_new_tag.outputs.newTag }}
           draft: false
           prerelease: false
-      - name: 🚧 Run build
-        run: yarn run build
-      - name: 🎉 Publish to npm
-        run: yarn publish
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_AUTH_TOKEN}}
       - name: 🧹 Cleanup on failure or cancellation
         if: ${{ failure() || cancelled() }}
         uses: actions/github-script@v5
