@@ -92,7 +92,7 @@ jobs:
           }'
 
           echo ::set-output name=prNumber::$PR_NUMBER
-      - name: ⏱️ Wait for PR to be merged
+      - name: ⏱️ Wait for PR to be approved and then squash and merge
         uses: actions/github-script@v5
         timeout-minutes: 5
         env:
@@ -105,18 +105,28 @@ jobs:
             const prNumber = process.env.PULL_REQUEST_NUMBER;
             console.log('PR number:', prNumber);
             while (Date.now() - startTime < timeout) {
-              const { data: pr } = await github.rest.pulls.get({
+              const { data: reviews } = await github.rest.pulls.listReviews({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 pull_number: prNumber
               });
-              if (pr.state === 'closed' && pr.merged) {
-                return;
+              const approved = reviews.some(review => review.state === 'APPROVED');
+              if (approved) {
+                const { data: merge } = await github.rest.pulls.merge({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: prNumber,
+                  merge_method: 'squash'
+                });
+                if (merge.merged) {
+                  console.log(`PR #${prNumber} has been squashed and merged`);
+                  return;
+                }
               }
               await new Promise(resolve => setTimeout(resolve, interval));
             }
             throw new Error('PR approval timed out');
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.PAT }}
       - name: 📦 Create Release
         id: create_release
         uses: actions/create-release@v1
