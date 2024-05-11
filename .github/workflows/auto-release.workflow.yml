@@ -37,7 +37,7 @@ jobs:
         id: bump_version
         uses: phips28/gh-action-bump-version@master
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}}
+          GITHUB_TOKEN: ${{ secrets.PAT }}}
         with:
           version-type: "patch"
           tag-prefix: "v"
@@ -53,7 +53,7 @@ jobs:
           git push --force origin release/${{ github.run_number }}
           gh pr create --title "Bump version to ${{ steps.bump_version.outputs.newTag }}" --body "The version of the code has been bumped to **${{ steps.bump_version.outputs.newTag }}**" --base main --head release/${{ github.run_number }} --label auto-release
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: 🗑️ Delete pre-release branch
         run: |
           git push origin --delete pre-release/${{ github.run_number }}
