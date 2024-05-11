@@ -167,7 +167,7 @@ jobs:
               await new Promise(resolve => setTimeout(resolve, interval));
             }
             throw new Error('PR checks and merge timed out');
-        github-token: ${{ secrets.PAT }}
+          github-token: ${{ secrets.PAT }}
       - name: �🚧 Run build
         run: yarn run build
       - name: 🎉 Publish to npm
