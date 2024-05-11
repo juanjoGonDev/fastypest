@@ -100,7 +100,7 @@ jobs:
         with:
           script: |
             const timeout = 5 * 60 * 1000; // 5 minutes
-            const interval = 30 * 1000; // 30 seconds
+            const interval = 5 * 1000; // 5 seconds
             const startTime = Date.now();
             const prNumber = process.env.PULL_REQUEST_NUMBER;
             console.log('PR number:', prNumber);
