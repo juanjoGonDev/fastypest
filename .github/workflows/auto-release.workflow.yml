@@ -27,7 +27,7 @@ jobs:
           LAST_TAG=$(git tag | sed 's/^v\.//;s/^v//' | sort -V | tail -n 1)
           LAST_TAG="v${LAST_TAG}"
           echo "Last tag: $LAST_TAG"
-          COMMITS=$(git log --oneline ${LAST_TAG}..HEAD | wc -l)
+          COMMITS=$(git log --oneline ^${LAST_TAG}..HEAD | wc -l)
           echo "Commits since last tag: $COMMITS"
           if [ $COMMITS -lt 3 ]; then
             echo "There are less than 3 new commits since last release, exiting"
