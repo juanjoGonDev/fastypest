@@ -48,15 +48,14 @@ jobs:
           git checkout pre-release/${{ github.run_number }}
           git reset --soft HEAD~1
           git checkout main
+          git checkout -D pre-release/${{ github.run_number }}
+          git push origin --delete pre-release/${{ github.run_number }}
           git checkout -b release/${{ github.run_number }}
           git commit -m "CI: bumps version to ${{ steps.bump_version.outputs.newTag }} [skip ci]"
           git push --force origin release/${{ github.run_number }}
           gh pr create --title "Bump version to ${{ steps.bump_version.outputs.newTag }}" --body "The version of the code has been bumped to **${{ steps.bump_version.outputs.newTag }}**" --base main --head release/${{ github.run_number }} --label auto-release
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
-      - name: 🗑️ Delete pre-release branch
-        run: |
-          git push origin --delete pre-release/${{ github.run_number }}
       - name: 🔢 Get PR number
         id: get_pr_number
         uses: actions/github-script@v5
