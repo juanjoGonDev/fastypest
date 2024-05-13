@@ -111,7 +111,7 @@ jobs:
 
           echo ::set-output name=prNumber::$PR_NUMBER
       - name: 🕵️ Check if PR is approved
-        uses: actions/github-script@v5
+        uses: actions/github-script@v7
         timeout-minutes: 5
         env:
           PULL_REQUEST_NUMBER: ${{ steps.create_pr.outputs.prNumber }}
@@ -138,7 +138,7 @@ jobs:
             throw new Error('PR approval timed out');
           github-token: ${{ secrets.PAT }}
       - name: 🕵️ Check if all checks have passed and merge PR
-        uses: actions/github-script@v5
+        uses: actions/github-script@v7
         timeout-minutes: 5
         env:
           PULL_REQUEST_NUMBER: ${{ steps.create_pr.outputs.prNumber }}
@@ -202,7 +202,7 @@ jobs:
           prerelease: false
       - name: 🧹 Cleanup on failure or cancellation
         if: ${{ failure() || cancelled() }}
-        uses: actions/github-script@v5
+        uses: actions/github-script@v7
         with:
           script: |
             const runNumber = ${{ github.run_number }};
