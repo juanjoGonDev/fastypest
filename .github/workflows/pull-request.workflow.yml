@@ -81,9 +81,11 @@ jobs:
                 cockroachdb/cockroach:v22.2.0 start-single-node --insecure
               sudo apt update && sudo apt install wait-for-it -y
               wait-for-it -h localhost -p 26257
-              docker exec roach bash -c "echo 'CREATE DATABASE IF NOT EXISTS test;' | cockroach sql --insecure"
-              docker exec roach bash -c "echo 'CREATE USER fastypest;' | cockroach sql --insecure"
-              docker exec roach bash -c "echo 'GRANT ALL ON DATABASE test TO fastypest;' | cockroach sql --insecure"
+              docker exec roach bash -c "cockroach sql --insecure <<EOF
+              CREATE DATABASE IF NOT EXISTS test;
+              CREATE USER fastypest;
+              GRANT ALL ON DATABASE test TO fastypest;
+              EOF"
 
           - name: cockroachdb - latest
             type: cockroachdb
@@ -100,9 +102,11 @@ jobs:
                 cockroachdb/cockroach:latest start-single-node --insecure
               sudo apt update && sudo apt install wait-for-it -y
               wait-for-it -h localhost -p 26257 -t 5
-              docker exec roach bash -c "echo 'CREATE DATABASE IF NOT EXISTS test;' | cockroach sql --insecure"
-              docker exec roach bash -c "echo 'CREATE USER fastypest;' | cockroach sql --insecure"
-              docker exec roach bash -c "echo 'GRANT ALL ON DATABASE test TO fastypest;' | cockroach sql --insecure"
+              docker exec roach bash -c "cockroach sql --insecure <<EOF
+              CREATE DATABASE IF NOT EXISTS test;
+              CREATE USER fastypest;
+              GRANT ALL ON DATABASE test TO fastypest;
+              EOF"
 
           - name: mysql - 5.7
             type: mysql
