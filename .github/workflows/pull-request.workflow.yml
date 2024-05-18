@@ -76,7 +76,7 @@ jobs:
               docker run -d --name roach --hostname roach \
                 -p 26257:26257 -p 8080:8080 \
                 -e "COCKROACH_INSECURE=true" \
-                -e "COCKROACH_USER=root" \
+                -e "COCKROACH_USER=fastypest" \
                 -e "COCKROACH_PASSWORD=password" \
                 cockroachdb/cockroach:v22.2.0 start-single-node --insecure
               sudo apt update && sudo apt install wait-for-it -y
@@ -93,7 +93,7 @@ jobs:
               docker run -d --name roach --hostname roach \
                 -p 26257:26257 -p 8080:8080 \
                 -e "COCKROACH_INSECURE=true" \
-                -e "COCKROACH_USER=root" \
+                -e "COCKROACH_USER=fastypest" \
                 -e "COCKROACH_PASSWORD=password" \
                 cockroachdb/cockroach:latest start-single-node --insecure
               sudo apt update && sudo apt install wait-for-it -y
@@ -107,6 +107,8 @@ jobs:
               image: "bitnami/mysql:5.7"
               env:
                 MYSQL_ROOT_PASSWORD: password
+                MYSQL_USER: fastypest
+                MYSQL_PASSWORD: password
                 MYSQL_ALLOW_EMPTY_PASSWORD: 1
                 MYSQL_DATABASE: test
                 MYSQL_ROOT_HOST: "%"
@@ -126,7 +128,7 @@ jobs:
               image: "bitnami/mysql:latest"
               env:
                 MYSQL_ROOT_PASSWORD: password
-                MYSQL_USER: root
+                MYSQL_USER: fastypest
                 MYSQL_PASSWORD: password
                 MYSQL_ALLOW_EMPTY_PASSWORD: 1
                 MYSQL_DATABASE: test
@@ -146,7 +148,7 @@ jobs:
               image: "bitnami/postgresql:9.4.6"
               env:
                 POSTGRES_PASSWORD: password
-                POSTGRES_USER: root
+                POSTGRES_USER: fastypest
                 POSTGRES_DB: test
               ports:
                 - 5432:5432
@@ -163,7 +165,7 @@ jobs:
               image: "postgres"
               env:
                 POSTGRES_PASSWORD: password
-                POSTGRES_USER: root
+                POSTGRES_USER: fastypest
                 POSTGRES_DB: test
               ports:
                 - 5432:5432
@@ -180,6 +182,8 @@ jobs:
               image: "mariadb:10.11"
               env:
                 MARIADB_ROOT_PASSWORD: password
+                MARIADB_USER: fastypest
+                MARIADB_PASSWORD: password
                 MARIADB_DATABASE: test
                 MARIADB_ROOT_HOST: "%"
               ports:
@@ -197,6 +201,8 @@ jobs:
               image: "mariadb:latest"
               env:
                 MARIADB_ROOT_PASSWORD: password
+                MARIADB_USER: fastypest
+                MARIADB_PASSWORD: password
                 MARIADB_DATABASE: test
                 MARIADB_ROOT_HOST: "%"
               ports:
