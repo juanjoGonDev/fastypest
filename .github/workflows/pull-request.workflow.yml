@@ -51,7 +51,6 @@ jobs:
     name: ✅ Check all test
     runs-on: ubuntu-latest
     needs: run-test
-    if: ${{ success() }}
     outputs:
       success: ${{ steps.all-ok.outputs.success }}
     steps:
