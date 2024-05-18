@@ -99,7 +99,7 @@ jobs:
                 -e "COCKROACH_PASSWORD=password" \
                 cockroachdb/cockroach:latest start-single-node --insecure
               sudo apt update && sudo apt install wait-for-it -y
-              wait-for-it -h localhost -p 26257
+              wait-for-it -h localhost -p 26257 -t 5
               docker exec roach bash -c "echo 'CREATE DATABASE IF NOT EXISTS test;' | cockroach sql --insecure"
               docker exec roach bash -c "echo 'CREATE USER fastypest;' | cockroach sql --insecure"
               docker exec roach bash -c "echo 'GRANT ALL ON DATABASE test TO fastypest;' | cockroach sql --insecure"
@@ -124,7 +124,7 @@ jobs:
                 --health-interval=10s
                 --health-timeout=5s
                 --health-retries=3
-          - name: mysql - latest
+          - name: mysql - 8.0.36
             type: mysql
             image: mysql:latest
             use-service: false
