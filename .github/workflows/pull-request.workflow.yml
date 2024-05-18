@@ -76,12 +76,13 @@ jobs:
               docker run -d --name roach --hostname roach \
                 -p 26257:26257 -p 8080:8080 \
                 -e "COCKROACH_INSECURE=true" \
-                -e "COCKROACH_USER=fastypest" \
+                -e "COCKROACH_USER=root" \
                 -e "COCKROACH_PASSWORD=password" \
                 cockroachdb/cockroach:v22.2.0 start-single-node --insecure
               sudo apt update && sudo apt install wait-for-it -y
               wait-for-it -h localhost -p 26257
-              docker exec roach bash -c "echo 'CREATE DATABASE test;' | cockroach sql --insecure"
+              docker exec roach bash -c "echo 'CREATE USER fastypest;' | cockroach sql --insecure"
+              docker exec roach bash -c "echo 'GRANT ALL ON DATABASE test TO fastypest;' | cockroach sql --insecure"
 
           - name: cockroachdb - latest
             type: cockroachdb
@@ -98,7 +99,8 @@ jobs:
                 cockroachdb/cockroach:latest start-single-node --insecure
               sudo apt update && sudo apt install wait-for-it -y
               wait-for-it -h localhost -p 26257
-              docker exec roach bash -c "echo 'CREATE DATABASE test;' | cockroach sql --insecure"
+              docker exec roach bash -c "echo 'CREATE USER fastypest;' | cockroach sql --insecure"
+              docker exec roach bash -c "echo 'GRANT ALL ON DATABASE test TO fastypest;' | cockroach sql --insecure"
 
           - name: mysql - 5.7
             type: mysql
@@ -125,7 +127,7 @@ jobs:
             type: mysql
             use-service: true
             service:
-              image: "bitnami/mysql:latest"
+              image: "mysql:latest"
               env:
                 MYSQL_ROOT_PASSWORD: password
                 MYSQL_USER: fastypest
@@ -133,6 +135,7 @@ jobs:
                 MYSQL_ALLOW_EMPTY_PASSWORD: 1
                 MYSQL_DATABASE: test
                 MYSQL_ROOT_HOST: "%"
+                MYSQL_AUTHENTICATION_PLUGIN: mysql_native_password
               ports:
                 - 3306:3306
               options: >-
