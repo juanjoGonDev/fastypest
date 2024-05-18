@@ -97,11 +97,11 @@ jobs:
               docker run -d --name roach --hostname roach \
                 -p 26257:26257 -p 8080:8080 \
                 -e "COCKROACH_INSECURE=true" \
-                -e "COCKROACH_USER=fastypest" \
+                -e "COCKROACH_USER=root" \
                 -e "COCKROACH_PASSWORD=password" \
                 cockroachdb/cockroach:latest start-single-node --insecure
               sudo apt update && sudo apt install wait-for-it -y
-              wait-for-it -h localhost -p 26257 -t 30
+              wait-for-it -h localhost -p 26257
               docker exec roach bash -c "cockroach sql --insecure <<EOF
               CREATE DATABASE IF NOT EXISTS test;
               CREATE USER fastypest;
