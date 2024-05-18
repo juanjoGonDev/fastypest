@@ -127,7 +127,7 @@ jobs:
               env:
                 MYSQL_ROOT_PASSWORD: password
                 MYSQL_USER: root
-                MYSQL_ROOT_PASSWORD: password
+                MYSQL_PASSWORD: password
                 MYSQL_ALLOW_EMPTY_PASSWORD: 1
                 MYSQL_DATABASE: test
                 MYSQL_ROOT_HOST: "%"
