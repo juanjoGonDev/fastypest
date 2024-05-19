@@ -51,7 +51,6 @@ jobs:
     name: ✅ Check all test
     runs-on: ubuntu-latest
     needs: run-test
-    if: ${{ success() }}
     outputs:
       success: ${{ steps.all-ok.outputs.success }}
     steps:
@@ -82,7 +81,11 @@ jobs:
                 cockroachdb/cockroach:v22.2.0 start-single-node --insecure
               sudo apt update && sudo apt install wait-for-it -y
               wait-for-it -h localhost -p 26257
-              docker exec roach bash -c "echo 'CREATE DATABASE test;' | cockroach sql --insecure"
+              docker exec roach bash -c "cockroach sql --insecure <<EOF
+              CREATE DATABASE IF NOT EXISTS test;
+              CREATE USER fastypest;
+              GRANT ALL ON DATABASE test TO fastypest;
+              EOF"
 
           - name: cockroachdb - latest
             type: cockroachdb
@@ -99,7 +102,11 @@ jobs:
                 cockroachdb/cockroach:latest start-single-node --insecure
               sudo apt update && sudo apt install wait-for-it -y
               wait-for-it -h localhost -p 26257
-              docker exec roach bash -c "echo 'CREATE DATABASE test;' | cockroach sql --insecure"
+              docker exec roach bash -c "cockroach sql --insecure <<EOF
+              CREATE DATABASE IF NOT EXISTS test;
+              CREATE USER fastypest;
+              GRANT ALL ON DATABASE test TO fastypest;
+              EOF"
 
           - name: mysql - 5.7
             type: mysql
@@ -108,6 +115,8 @@ jobs:
               image: "bitnami/mysql:5.7"
               env:
                 MYSQL_ROOT_PASSWORD: password
+                MYSQL_USER: fastypest
+                MYSQL_PASSWORD: password
                 MYSQL_ALLOW_EMPTY_PASSWORD: 1
                 MYSQL_DATABASE: test
                 MYSQL_ROOT_HOST: "%"
@@ -119,26 +128,18 @@ jobs:
                 --health-interval=10s
                 --health-timeout=5s
                 --health-retries=3
-
-          - name: mysql - latest
+          - name: mysql - 8.0.36
             type: mysql
-            use-service: true
-            service:
-              image: "bitnami/mysql:latest"
-              env:
-                MYSQL_ROOT_PASSWORD: password
-                MYSQL_ALLOW_EMPTY_PASSWORD: 1
-                MYSQL_DATABASE: test
-                MYSQL_ROOT_HOST: "%"
-                MYSQL_AUTHENTICATION_PLUGIN: mysql_native_password
-              ports:
-                - 3306:3306
-              options: >-
-                --health-cmd="mysqladmin ping"
-                --health-interval=10s
-                --health-timeout=5s
-                --health-retries=3
-
+            image: mysql:latest
+            use-service: false
+            port: 3306
+            run: |
+              sudo service mysql start
+              mysql --version
+              sudo mysql --user=root --password=root -e "CREATE USER 'fastypest'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';"
+              sudo mysql --user=root --password=root -e "GRANT ALL PRIVILEGES ON *.* TO 'fastypest'@'localhost' WITH GRANT OPTION;"
+              sudo mysql --user=root --password=root -e "CREATE DATABASE IF NOT EXISTS test;"
+              sudo mysql --user=root --password=root -e "GRANT ALL PRIVILEGES ON test.* TO 'fastypest'@'localhost';"
           - name: postgres - 9.4.6
             type: postgres
             use-service: true
@@ -146,7 +147,7 @@ jobs:
               image: "bitnami/postgresql:9.4.6"
               env:
                 POSTGRES_PASSWORD: password
-                POSTGRES_USER: root
+                POSTGRES_USER: fastypest
                 POSTGRES_DB: test
               ports:
                 - 5432:5432
@@ -163,7 +164,7 @@ jobs:
               image: "postgres"
               env:
                 POSTGRES_PASSWORD: password
-                POSTGRES_USER: root
+                POSTGRES_USER: fastypest
                 POSTGRES_DB: test
               ports:
                 - 5432:5432
@@ -180,6 +181,8 @@ jobs:
               image: "mariadb:10.11"
               env:
                 MARIADB_ROOT_PASSWORD: password
+                MARIADB_USER: fastypest
+                MARIADB_PASSWORD: password
                 MARIADB_DATABASE: test
                 MARIADB_ROOT_HOST: "%"
               ports:
@@ -197,6 +200,8 @@ jobs:
               image: "mariadb:latest"
               env:
                 MARIADB_ROOT_PASSWORD: password
+                MARIADB_USER: fastypest
+                MARIADB_PASSWORD: password
                 MARIADB_DATABASE: test
                 MARIADB_ROOT_HOST: "%"
               ports:

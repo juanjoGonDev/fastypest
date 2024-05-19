@@ -6,7 +6,7 @@ const env = process.env;
 const options: Record<string, any> = {
   type: (env.DB_TYPE as any) || "mysql",
   host: "127.0.0.1",
-  username: "root",
+  username: "fastypest",
   password: "password",
   entities: [Simple, User],
   database: "test",
