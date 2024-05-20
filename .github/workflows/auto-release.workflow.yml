@@ -30,26 +30,32 @@ jobs:
           COMMITS=$(git log --oneline ${LAST_TAG}..HEAD | wc -l)
           echo "Commits since last tag: $COMMITS"
           if [ $COMMITS -lt 4 ]; then
-            echo "There are less than 3 new commits since last release, exiting"
-            exit 78
+            echo "There are less than 3 new commits since last release, skipping the rest of the job"
+            echo "::set-output name=enough_commits::false"
+          else
+            echo "::set-output name=enough_commits::true"
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: 🎫 Configure Git
+        if: steps.check_commits.outputs.enough_commits == 'true'
         run: |
           USER_NAME=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" https://api.github.com/user | jq -r '.name')
           USER_EMAIL=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" https://api.github.com/user | jq -r '.email')
           git config --global user.name "$USER_NAME"
           git config --global user.email "$USER_EMAIL"
       - name: 🟢 Setup Node.js
+        if: steps.check_commits.outputs.enough_commits == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: "${{ env.NODE_VERSION }}"
           registry-url: "https://registry.npmjs.org/"
           cache: yarn
       - name: ⚙️ Install dependencies
+        if: steps.check_commits.outputs.enough_commits == 'true'
         run: yarn install --frozen-lockfile
       - name: 🆙 Bump version and create a git tag
+        if: steps.check_commits.outputs.enough_commits == 'true'
         run: |
           git checkout main
           git pull origin main
@@ -63,6 +69,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
       - name: ⏱️ Wait for changes to be registered
+        if: steps.check_commits.outputs.enough_commits == 'true'
         timeout-minutes: 5
         run: |
           while true; do
@@ -76,6 +83,7 @@ jobs:
             sleep 5s
           done
       - name: 🏷️ Get new tag
+        if: steps.check_commits.outputs.enough_commits == 'true'
         id: get_new_tag
         run: |
           NEW_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
@@ -85,6 +93,7 @@ jobs:
           fi
           echo ::set-output name=newTag::$NEW_TAG
       - name: 📝 Create pull request
+        if: steps.check_commits.outputs.enough_commits == 'true'
         id: create_pr
         run: |
           PR_DATA=$(curl \
@@ -111,6 +120,7 @@ jobs:
 
           echo ::set-output name=prNumber::$PR_NUMBER
       - name: 🕵️ Check if PR is approved
+        if: steps.check_commits.outputs.enough_commits == 'true'
         uses: actions/github-script@v7
         timeout-minutes: 5
         env:
@@ -138,6 +148,7 @@ jobs:
             throw new Error('PR approval timed out');
           github-token: ${{ secrets.PAT }}
       - name: 🕵️ Check if all checks have passed and merge PR
+        if: steps.check_commits.outputs.enough_commits == 'true'
         uses: actions/github-script@v7
         timeout-minutes: 5
         env:
@@ -185,12 +196,15 @@ jobs:
             throw new Error('PR checks and merge timed out');
           github-token: ${{ secrets.PAT }}
       - name: �🚧 Run build
+        if: steps.check_commits.outputs.enough_commits == 'true'
         run: yarn run build
       - name: 🎉 Publish to npm
+        if: steps.check_commits.outputs.enough_commits == 'true'
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_AUTH_TOKEN}}
       - name: 📦 Create Release
+        if: steps.check_commits.outputs.enough_commits == 'true'
         id: create_release
         uses: actions/create-release@v1
         env:
