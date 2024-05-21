@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.3.10](https://github.com/juanjoGonDev/fastypest/compare/v1.3.0...v1.3.10) (2024-05-21)
+
+
+### Bug Fixes
+
+* **action:** pr tests ([#367](https://github.com/juanjoGonDev/fastypest/issues/367)) ([a19b97e](https://github.com/juanjoGonDev/fastypest/commit/a19b97e55b7e24e6f94f8fed239711ad63b27ec9))
+* dependabot-auto-merge ([902d2c7](https://github.com/juanjoGonDev/fastypest/commit/902d2c7a6e6d3b73db06e7665bdc0fed0ceff0f9))
+* pull-request.workflow.yml ([#278](https://github.com/juanjoGonDev/fastypest/issues/278)) ([b275542](https://github.com/juanjoGonDev/fastypest/commit/b27554270e57d2877abc1bbfebceca8cef74afdc))
+
 ### [1.3.9](https://github.com/juanjoGonDev/fastypest/compare/v1.3.0...v1.3.9) (2024-05-20)
 
 
