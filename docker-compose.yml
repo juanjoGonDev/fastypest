@@ -1,4 +1,3 @@
-version: "3.8"
 services:
   mysql:
     container_name: fastypest-mysql
@@ -43,14 +42,16 @@ services:
       - "3307"
 
   cockroachdb:
-    image: cockroachdb/cockroach
-    command: start-single-node --insecure
-    restart: always
+    image: cockroachdb/cockroach:v21.2.8
+    container_name: cockroachdb
     ports:
       - "26257:26257"
       - "8080:8080"
-    environment:
-      COCKROACH_INSECURE: true
-      COCKROACH_USER: fastypest
-      COCKROACH_PASSWORD: password
-      COCKROACH_DATABASE: test
+    command: start-single-node --insecure
+    restart: always
+
+  cockroach-init:
+    image: cockroachdb/cockroach:v21.2.8
+    depends_on:
+      - cockroachdb
+    entrypoint: /bin/bash -c "until /cockroach/cockroach sql --insecure --host=cockroachdb --execute='SELECT 1'; do sleep 1; done && /cockroach/cockroach sql --insecure --host=cockroachdb --execute='CREATE USER IF NOT EXISTS fastypest; CREATE DATABASE IF NOT EXISTS test; GRANT ALL ON DATABASE test TO fastypest;'"

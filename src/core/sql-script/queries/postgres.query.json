@@ -1,12 +1,15 @@
 {
   "dependencyTree": "-- NOT USED",
   "foreignKey": {
-    "disable": "-- NOT USED",
-    "enable": "-- NOT USED"
+    "disable": "DO $$ DECLARE table_name text; BEGIN FOR table_name IN (SELECT tablename FROM pg_tables WHERE schemaname = current_schema()) LOOP EXECUTE 'ALTER TABLE \"' || table_name || '\" DISABLE TRIGGER ALL;'; END LOOP; END $$;",
+    "enable": "DO $$ DECLARE table_name text; BEGIN FOR table_name IN (SELECT tablename FROM pg_tables WHERE schemaname = current_schema()) LOOP EXECUTE 'ALTER TABLE \"' || table_name || '\" ENABLE TRIGGER ALL;'; END LOOP; END $$;"
   },
   "getTables": "SELECT table_name AS name FROM information_schema.tables  WHERE table_schema = CURRENT_SCHEMA() AND table_type = 'BASE TABLE'",
   "createTempTable": "CREATE TEMPORARY TABLE \"{{tableName}}_temp\" AS SELECT * FROM \"{{tableName}}\"",
   "dropTempTable": "DROP TABLE IF EXISTS \"{{tableName}}_temp\"",
-  "restoreData": "INSERT INTO \"{{tableName}}\" SELECT * FROM \"{{tableName}}_temp\"; SELECT SETVAL(pg_get_serial_sequence('{{tableName}}', 'id'), (SELECT COALESCE(MAX(id), 0) FROM \"{{tableName}}\"))",
-  "truncateTable": "TRUNCATE TABLE \"{{tableName}}\" RESTART IDENTITY CASCADE"
+  "restoreData": "INSERT INTO \"{{tableName}}\" SELECT * FROM \"{{tableName}}_temp\";",
+  "truncateTable": "TRUNCATE TABLE \"{{tableName}}\" RESTART IDENTITY CASCADE",
+  "getColumnsWithAutoIncrement": "SELECT column_name, column_default FROM information_schema.columns WHERE table_schema = 'public' AND column_default LIKE 'nextval%' AND table_name = '{{tableName}}'",
+  "resetAutoIncrementColumn": "ALTER SEQUENCE \"{{sequenceName}}\" RESTART WITH {{index}};",
+  "getMaxColumnIndex": "SELECT MAX({{column_name}}) AS maxindex FROM \"{{tableName}}\""
 }

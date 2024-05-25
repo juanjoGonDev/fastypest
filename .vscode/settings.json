@@ -4,17 +4,23 @@
     "source.fixAll": "always",
     "source.organizeImports": "always"
   },
-  "cSpell.words": [
-    "cockroachdb",
-    "Fastypest",
-    "typeorm"
-  ],
-  "files.trimFinalNewlines": true,
-  "typescript.tsdk": ".yarn/sdks/typescript/lib",
+  "cSpell.words": ["cockroachdb", "Fastypest", "typeorm"],
   "search.exclude": {
     "**/.yarn": true,
     "**/.pnp.*": true
   },
-  "eslint.nodePath": ".yarn/sdks",
-  "typescript.enablePromptUseWorkspaceTsdk": true
+  "typescript.implementationsCodeLens.enabled": true,
+  "typescript.suggest.autoImports": true,
+  "typescript.suggest.completeFunctionCalls": true,
+  "javascript.suggest.completeFunctionCalls": true,
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.referencesCodeLens.enabled": true,
+  "typescript.referencesCodeLens.showOnAllFunctions": true,
+  "references.preferredLocation": "view",
+  "typescript.preferences.quoteStyle": "single",
+  "typescript.tsdk": "node_modules\\typescript\\lib",
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "typescript.tsdk": ".yarn/sdks/typescript/lib",
+  "eslint.nodePath": ".yarn/sdks"
 }

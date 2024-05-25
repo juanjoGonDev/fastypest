@@ -7,6 +7,9 @@
   "getTables": "SELECT table_name AS name FROM information_schema.tables WHERE table_catalog = CURRENT_DATABASE() AND table_schema = 'public' AND table_type = 'BASE TABLE'",
   "createTempTable": "SET experimental_enable_temp_tables=on; CREATE TEMPORARY TABLE \"{{tableName}}_temp\" AS SELECT * FROM \"{{tableName}}\"",
   "dropTempTable": "DROP TABLE IF EXISTS \"{{tableName}}_temp\"",
-  "restoreData": "INSERT INTO \"{{tableName}}\" SELECT * FROM \"{{tableName}}_temp\"; SELECT setval(pg_get_serial_sequence('\"{{tableName}}\"', 'id'), (SELECT COALESCE(MAX(id), 0) FROM \"{{tableName}}\"))",
-  "truncateTable": "TRUNCATE TABLE \"{{tableName}}\" CASCADE; ALTER SEQUENCE {{tableName}}_id_seq RESTART WITH 1;"
+  "restoreData": "INSERT INTO \"{{tableName}}\" SELECT * FROM \"{{tableName}}_temp\";",
+  "truncateTable": "TRUNCATE TABLE \"{{tableName}}\" CASCADE;",
+  "getColumnsWithAutoIncrement": "SELECT column_name, column_default FROM information_schema.columns WHERE table_schema = 'public' AND column_default LIKE 'nextval%' AND table_name = '{{tableName}}'",
+  "resetAutoIncrementColumn": "SELECT setval('{{sequenceName}}',{{index}});",
+  "getMaxColumnIndex": "SELECT MAX({{column_name}}) AS maxindex FROM \"{{tableName}}\""
 }

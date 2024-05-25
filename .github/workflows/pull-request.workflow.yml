@@ -27,7 +27,7 @@ jobs:
       - name: ⚙️ yarn install
         run: yarn install --frozen-lockfile
       - name: ⌛ Run build
-        run: yarn run build
+        run: yarn build
 
   check-eslint:
     name: 📜 Check format
@@ -45,7 +45,7 @@ jobs:
       - name: ⚙️ yarn install
         run: yarn install --frozen-lockfile
       - name: ✔️ Run eslint
-        run: yarn run eslint
+        run: yarn eslint
 
   all-test-ok:
     name: ✅ Check all test
@@ -229,9 +229,9 @@ jobs:
       - name: ⚙️ yarn install
         run: yarn install --frozen-lockfile
       - name: ⌛ Run build
-        run: yarn run build
+        run: yarn build
       - name: 🧪 Testing
         env:
           DB_TYPE: ${{ matrix.database.type }}
           DB_PORT: ${{ matrix.database.port }}
-        run: yarn run test
+        run: yarn test:ci

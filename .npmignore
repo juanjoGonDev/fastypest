@@ -12,5 +12,4 @@ tsconfig.json
 docker-compose.yml
 *.tgz
 .yarn
-.pnp.cjs
 .pnp.*

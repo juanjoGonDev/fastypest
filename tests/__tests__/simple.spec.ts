@@ -1,12 +1,14 @@
 import { seedCount } from "../config";
 import { getConnection } from "../config/orm.config";
-import { Simple } from "../entities";
+import { Simple, User } from "../entities";
 import { simple } from "../seeds";
 import { ConnectionUtil } from "../utils";
 
+const SEED = Object.assign({}, simple);
+
 describe("Simple", () => {
   const connection = getConnection();
-  const randomSimpleIndex = Math.floor(Math.random() * seedCount);
+  const randomSimpleIndex = Math.floor(Math.random() * seedCount) + 1;
   const simpleRepository = connection.getRepository(Simple);
   const connectionUtil = new ConnectionUtil();
 
@@ -28,7 +30,7 @@ describe("Simple", () => {
 
       it(`Row with index ${randomSimpleIndex} must have initial name`, async () => {
         const row = await getRow(randomSimpleIndex);
-        expect(row?.name).toBe(simple[randomSimpleIndex - 1].name);
+        expect(row?.name).toBe(SEED[randomSimpleIndex - 1].name);
       });
     });
 
@@ -51,6 +53,27 @@ describe("Simple", () => {
         expect(newRow).toBeNull();
       });
     });
+
+    describe("Add new rows", () => {
+      const name = "new manual seed";
+
+      it("New row must increase previous index", async () => {
+        const lastRow = await getLastRow();
+        if (!lastRow) throw new Error("Last row is not defined");
+        const lastRowId = lastRow.id;
+
+        await simpleRepository
+          .createQueryBuilder("simple")
+          .insert()
+          .values({ name })
+          .execute();
+
+        const newRow = await getLastRow();
+        if (!newRow) throw new Error("New row is not defined");
+
+        expect(newRow.id).toBe(lastRowId + 1);
+      });
+    });
   });
 
   describe("Changes with queries", () => {
@@ -61,12 +84,8 @@ describe("Simple", () => {
 
       it('"Simple" table must be empty', async () => {
         await connectionUtil.transaction(async (em) => {
-          const simple = em.connection.getMetadata(Simple);
-          await em.query(
-            connectionUtil.getQuery("truncateTable", {
-              tableName: simple.tableName,
-            })
-          );
+          await em.delete(User, {}); // Delete for foreign key
+          await em.delete(Simple, {});
         });
 
         expect(await getSimpleCount()).toBe(0);
@@ -90,7 +109,7 @@ describe("Simple", () => {
 
       it(`Row with index ${randomSimpleIndex} must have initial name`, async () => {
         const row = await getRow(randomSimpleIndex);
-        expect(row?.name).toBe(simple[randomSimpleIndex - 1].name);
+        expect(row?.name).toBe(SEED[randomSimpleIndex - 1].name);
       });
     });
 
@@ -109,9 +128,32 @@ describe("Simple", () => {
         expect(newRow).toBeNull();
       });
     });
+
+    describe("Add new rows", () => {
+      const name = "new manual seed";
+
+      it("New row must increase previous index", async () => {
+        const lastRow = await getLastRow();
+        if (!lastRow) throw new Error("Last row is not defined");
+        const lastRowId = lastRow.id;
+
+        await connection.query(`INSERT INTO simple (name) VALUES ('${name}')`);
+
+        const newRow = await getLastRow();
+        if (!newRow) throw new Error("New row is not defined");
+
+        expect(newRow.id).toBe(lastRowId + 1);
+      });
+    });
   });
 
   const getSimpleCount = () => simpleRepository.count();
+
+  const getLastRow = () =>
+    simpleRepository
+      .createQueryBuilder("simple")
+      .orderBy("id", "DESC")
+      .getOne();
 
   const getRow = (id: number) => simpleRepository.findOneBy({ id });
 
