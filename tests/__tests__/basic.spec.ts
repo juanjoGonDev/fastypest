@@ -1,10 +1,10 @@
 import { getConnection } from "../config/orm.config";
 import { seedCount } from "../config/seed.config";
+import { DB_WITHOUT_QUOTES } from "../data/query";
 import { Basic } from "../entities";
 import { ConnectionUtil } from "../utils/connection.util";
 
 const randomIndex = Math.floor(Math.random() * seedCount) + 1;
-const DB_WITHOUT_QUOTES = ["mysql"];
 
 describe("Basic", () => {
   const connection = getConnection();
