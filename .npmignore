@@ -13,3 +13,4 @@ docker-compose.yml
 *.tgz
 .yarn
 .pnp.*
+.husky

@@ -22,7 +22,7 @@ jobs:
       - name: ⚙️ yarn install
         run: yarn install --frozen-lockfile
       - name: 🚧 Run build
-        run: yarn run build
+        run: yarn build
       - name: 🎉 Publish to npm
         run: npm publish
         env:
