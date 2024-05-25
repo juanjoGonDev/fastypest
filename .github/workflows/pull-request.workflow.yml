@@ -144,7 +144,7 @@ jobs:
             type: postgres
             use-service: true
             service:
-              image: "postgresql:10"
+              image: "postgres:10"
               env:
                 POSTGRES_PASSWORD: password
                 POSTGRES_USER: fastypest
