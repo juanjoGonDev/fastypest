@@ -206,14 +206,15 @@ jobs:
       - name: 📦 Create Release
         if: steps.check_commits.outputs.enough_commits == 'true'
         id: create_release
-        uses: actions/create-release@v1
+        uses: ncipollo/release-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.get_new_tag.outputs.newTag }}
-          release_name: Release ${{ steps.get_new_tag.outputs.newTag }}
+          tag: ${{ steps.get_new_tag.outputs.newTag }}
+          name: Release ${{ steps.get_new_tag.outputs.newTag }}
           draft: false
           prerelease: false
+          makeLatest: true
       - name: 🧹 Cleanup on failure or cancellation
         if: ${{ failure() || cancelled() }}
         uses: actions/github-script@v7
