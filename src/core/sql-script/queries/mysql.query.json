@@ -8,5 +8,8 @@
   "createTempTable": "CREATE TEMPORARY TABLE {{tableName}}_temp AS SELECT * FROM {{tableName}}",
   "dropTempTable": "DROP TEMPORARY TABLE {{tableName}}_temp",
   "restoreData": "INSERT INTO {{tableName}} SELECT * FROM {{tableName}}_temp",
-  "truncateTable": "TRUNCATE TABLE {{tableName}}"
+  "truncateTable": "TRUNCATE TABLE {{tableName}}",
+  "getColumnsWithAutoIncrement": "-- NOT USED",
+  "resetAutoIncrementColumn": "-- NOT USED",
+  "getMaxColumnIndex": "-- NOT USED"
 }

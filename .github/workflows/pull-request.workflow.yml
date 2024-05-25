@@ -27,7 +27,7 @@ jobs:
       - name: ⚙️ yarn install
         run: yarn install --frozen-lockfile
       - name: ⌛ Run build
-        run: yarn run build
+        run: yarn build
 
   check-eslint:
     name: 📜 Check format
@@ -45,7 +45,7 @@ jobs:
       - name: ⚙️ yarn install
         run: yarn install --frozen-lockfile
       - name: ✔️ Run eslint
-        run: yarn run eslint
+        run: yarn eslint
 
   all-test-ok:
     name: ✅ Check all test
@@ -140,11 +140,11 @@ jobs:
               sudo mysql --user=root --password=root -e "GRANT ALL PRIVILEGES ON *.* TO 'fastypest'@'localhost' WITH GRANT OPTION;"
               sudo mysql --user=root --password=root -e "CREATE DATABASE IF NOT EXISTS test;"
               sudo mysql --user=root --password=root -e "GRANT ALL PRIVILEGES ON test.* TO 'fastypest'@'localhost';"
-          - name: postgres - 9.4.6
+          - name: postgres - 10
             type: postgres
             use-service: true
             service:
-              image: "bitnami/postgresql:9.4.6"
+              image: "postgres:10"
               env:
                 POSTGRES_PASSWORD: password
                 POSTGRES_USER: fastypest
@@ -229,9 +229,9 @@ jobs:
       - name: ⚙️ yarn install
         run: yarn install --frozen-lockfile
       - name: ⌛ Run build
-        run: yarn run build
+        run: yarn build
       - name: 🧪 Testing
         env:
           DB_TYPE: ${{ matrix.database.type }}
           DB_PORT: ${{ matrix.database.port }}
-        run: yarn run test
+        run: yarn test:ci

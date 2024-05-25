@@ -1,7 +1,6 @@
 import { DataSource } from "typeorm";
-import { initialize } from ".";
 import { Fastypest } from "../../dist/core";
-import { seed } from "../seeds";
+import { initialize } from "./orm.config";
 
 jest.setTimeout(100_000);
 
@@ -10,7 +9,6 @@ let connection: DataSource;
 
 beforeAll(async () => {
   connection = await initialize();
-  await seed();
   fastypest = new Fastypest(connection);
   await fastypest.init();
 });

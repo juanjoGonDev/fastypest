@@ -7,6 +7,7 @@ const common = {
   ignores: ["**/dist/*", "**/node_modules/*"],
   rules: {
     "no-case-declarations": "off",
+    "@typescript-eslint/explicit-function-return-type": "error",
   },
 };
 

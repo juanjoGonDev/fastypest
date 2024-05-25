@@ -1,4 +1,4 @@
-import { seedCount } from "../config";
+import { seedCount } from "../config/seed.config";
 import { Simple } from "../entities";
 
 export const simple: Partial<Simple>[] = [];
