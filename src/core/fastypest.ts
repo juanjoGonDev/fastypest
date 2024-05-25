@@ -1,42 +1,20 @@
-import {
-  Connection,
-  DataSource,
-  DataSourceOptions,
-  EntityManager,
-} from "typeorm";
+import { Connection, DataSource, EntityManager, Table } from "typeorm";
+import { INDEX_OFFSET_CONFIG } from "./config";
 import { SQLScript } from "./sql-script";
-
-type Table = { name: string };
-type DependencyTree = {
-  table_name: string;
-  level: number;
-};
-
-type ColumnsWithAutoIncrement = {
-  column_name: string;
-  column_default: string;
-};
-
-type Manager = {
-  foreignKey: {
-    disable: () => Promise<void>;
-    enable: () => Promise<void>;
-  };
-  restoreOrder: () => Promise<void>;
-};
-type ColumnStat = { maxindex: string | null };
-type DBType = DataSourceOptions["type"];
-type IncrementDetail = { column: string; sequenceName: string; index: string };
-
-const INDEX_OFFSET_CONFIG: Partial<Record<DBType, number>> = {
-  postgres: 1,
-  cockroachdb: 0,
-};
+import {
+  ColumnStat,
+  ColumnsWithAutoIncrement,
+  DBType,
+  DependencyTreeQueryOut,
+  IncrementDetail,
+  Manager,
+} from "./types";
 
 export class Fastypest extends SQLScript {
   private manager: EntityManager;
   private tables: Set<string> = new Set();
   private tablesWithAutoIncrement: Map<string, IncrementDetail[]> = new Map();
+  private restoreInOder: boolean = false;
 
   constructor(connection: DataSource | Connection) {
     super(connection.options.type);
@@ -46,6 +24,7 @@ export class Fastypest extends SQLScript {
   public async init(): Promise<void> {
     await this.manager.transaction(async (em: EntityManager) => {
       await this.detectTables(em);
+      await this.calculateDependencyTables(em);
       const tables = [...this.tables];
       await Promise.all([
         this.createTempTable(em, tables),
@@ -176,26 +155,26 @@ export class Fastypest extends SQLScript {
         this.execQuery(em, "foreignKey.enable");
     }
 
-    const { tables, sorted } = await this.getSortedDependencyTables(em);
-    manager.restoreOrder = (): Promise<void> =>
-      this.restoreOrder(em, tables, sorted ? "sorted" : "random");
+    manager.restoreOrder = (): Promise<void> => this.restoreOrder(em);
 
     return manager;
   }
 
-  private async getSortedDependencyTables(
-    em: EntityManager
-  ): Promise<{ tables: string[]; sorted: boolean }> {
-    const dependencyTree = await this.execQuery<DependencyTree>(
+  private async calculateDependencyTables(em: EntityManager): Promise<void> {
+    const dependencyTree = await this.execQuery<DependencyTreeQueryOut>(
       em,
       "dependencyTree"
     );
 
-    if (!dependencyTree.length)
-      return { tables: [...this.tables], sorted: false };
+    if (!dependencyTree.length) {
+      this.restoreInOder = false;
+      return;
+    }
 
     const sortedTables = new Set(dependencyTree.map((row) => row.table_name));
-    return { tables: [...sortedTables], sorted: true };
+    this.tables.clear();
+    this.tables = sortedTables;
+    this.restoreInOder = true;
   }
 
   private async detectTables(em: EntityManager): Promise<void> {
@@ -206,19 +185,16 @@ export class Fastypest extends SQLScript {
     });
   }
 
-  private async restoreOrder(
-    em: EntityManager,
-    tables: string[],
-    type: "sorted" | "random" = "random"
-  ): Promise<void> {
-    if (type === "sorted") {
-      for (const tableName of tables) {
+  private async restoreOrder(em: EntityManager): Promise<void> {
+    if (this.restoreInOder) {
+      for (const tableName of this.tables) {
         await this.recreateData(em, tableName);
       }
 
       return;
     }
 
+    const tables = [...this.tables];
     await Promise.all(
       tables.map((tableName) => this.recreateData(em, tableName))
     );
