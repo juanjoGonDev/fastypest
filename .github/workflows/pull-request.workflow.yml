@@ -140,11 +140,11 @@ jobs:
               sudo mysql --user=root --password=root -e "GRANT ALL PRIVILEGES ON *.* TO 'fastypest'@'localhost' WITH GRANT OPTION;"
               sudo mysql --user=root --password=root -e "CREATE DATABASE IF NOT EXISTS test;"
               sudo mysql --user=root --password=root -e "GRANT ALL PRIVILEGES ON test.* TO 'fastypest'@'localhost';"
-          - name: postgres - 12
+          - name: postgres - 10
             type: postgres
             use-service: true
             service:
-              image: "bitnami/postgresql:12"
+              image: "postgresql:10"
               env:
                 POSTGRES_PASSWORD: password
                 POSTGRES_USER: fastypest
