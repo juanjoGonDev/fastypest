@@ -1,24 +1,15 @@
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from "typeorm";
 import { type Simple } from "./simple.entity";
 
 @Entity()
-export class User {
-  @PrimaryGeneratedColumn()
-  id!: number;
-
-  @Column()
+export class Basic {
+  @PrimaryColumn()
   name!: string;
 
   @Column()
   simpleId!: number;
 
-  @ManyToOne("Simple", (simple: Simple) => simple.users)
+  @ManyToOne("Simple", (simple: Simple) => simple.basics)
   @JoinColumn({ name: "simpleId" })
   simple!: Simple;
 

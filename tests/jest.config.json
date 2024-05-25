@@ -1,8 +1,11 @@
 {
   "testEnvironment": "node",
   "preset": "ts-jest",
-  "rootDir": "tests",
-  "setupFilesAfterEnv": ["./config/jest.setup.ts"],
+  "rootDir": ".",
+  "setupFilesAfterEnv": [
+    "./config/jest.setup.ts"
+  ],
+  "globalSetup": "./config/global.setup.ts",
   "testRegex": ".spec.ts",
   "transform": {
     "^.+\\.tsx?$": [

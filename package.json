@@ -18,7 +18,7 @@
     "build": "tsc",
     "eslint": "eslint --fix .",
     "pretest": "tsc",
-    "test:ci": "jest --runInBand --config ./jest.config.json",
+    "test:ci": "jest --runInBand --forceExit --verbose --showSeed --config ./tests/jest.config.json",
     "test": "yarn build && yarn test:ci",
     "docker": "ts-node -r tsconfig-paths/register scripts/prepare-docker.ts",
     "release": "standard-version --release-as patch"

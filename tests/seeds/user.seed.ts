@@ -1,4 +1,4 @@
-import { seedCount } from "../config";
+import { seedCount } from "../config/seed.config";
 import { User } from "../entities";
 
 export const user: Partial<User>[] = [];

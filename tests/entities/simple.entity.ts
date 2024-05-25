@@ -1,5 +1,6 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { User } from "./user.entity";
+import { type Basic } from "./basic.entity";
+import { type User } from "./user.entity";
 
 @Entity()
 export class Simple {
@@ -15,6 +16,9 @@ export class Simple {
   @Column({ default: () => "CURRENT_TIMESTAMP" })
   creationDate!: Date;
 
-  @OneToMany(() => User, (user) => user.simpleId)
+  @OneToMany("User", (user: User) => user.simpleId)
   users!: User[];
+
+  @OneToMany("Basic", (basic: Basic) => basic.simpleId)
+  basics!: Basic[];
 }

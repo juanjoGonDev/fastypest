@@ -1,32 +1,34 @@
 import { getConnection } from "../config/orm.config";
 import { seedCount } from "../config/seed.config";
-import { Basic, Simple, User } from "../entities";
+import { User } from "../entities";
 import { ConnectionUtil } from "../utils/connection.util";
 
 const randomIndex = Math.floor(Math.random() * seedCount) + 1;
+const DB_WITHOUT_QUOTES = ["mysql"];
 
-describe("Simple", () => {
+describe("User", () => {
   const connection = getConnection();
-  const simpleRepository = connection.getRepository(Simple);
-  let randomRow: Simple;
-  const connectionUtil = new ConnectionUtil();
+  const dbType = connection.options.type;
+  const userRepository = connection.getRepository(User);
+  const connectionUtil = new ConnectionUtil(connection);
+  let randomRow: User;
 
   beforeAll(async () => {
-    const row = await simpleRepository.findOneBy({ id: randomIndex });
+    const row = await userRepository.findOneBy({ id: randomIndex });
     if (!row) return;
     randomRow = row;
   });
 
   describe("Changes with typeorm methods", () => {
-    it('"simple" table must have the same number of data as at the beginning', async () => {
+    it('"user" table must have the same number of data as at the beginning', async () => {
       expect(await getSimpleCount()).toBe(seedCount);
     });
 
     describe("Modify value", () => {
       it("Row must be modified", async () => {
         const newName = "seed updated";
-        await simpleRepository
-          .createQueryBuilder("simple")
+        await userRepository
+          .createQueryBuilder("user")
           .update({ name: newName })
           .where({ id: randomRow.id })
           .execute();
@@ -47,10 +49,10 @@ describe("Simple", () => {
       const name = "new manual seed";
 
       it("New row must be defined", async () => {
-        await simpleRepository
-          .createQueryBuilder("simple")
+        await userRepository
+          .createQueryBuilder("user")
           .insert()
-          .values({ name })
+          .values({ name, simpleId: randomRow.id })
           .execute();
 
         const newRow = await getRowByName(name);
@@ -71,10 +73,10 @@ describe("Simple", () => {
         if (!lastRow) throw new Error("Last row is not defined");
         const lastRowId = lastRow.id;
 
-        await simpleRepository
-          .createQueryBuilder("simple")
+        await userRepository
+          .createQueryBuilder("user")
           .insert()
-          .values({ name })
+          .values({ name, simpleId: randomRow.id })
           .execute();
 
         const newRow = await getLastRow();
@@ -87,21 +89,19 @@ describe("Simple", () => {
 
   describe("Changes with queries", () => {
     describe("Restore all data", () => {
-      it('"simple" table must have the same number of data as at the beginning', async () => {
+      it('"user" table must have the same number of data as at the beginning', async () => {
         expect(await getSimpleCount()).toBe(seedCount);
       });
 
-      it('"Simple" table must be empty', async () => {
+      it('"User" table must be empty', async () => {
         await connectionUtil.transaction(async (em) => {
-          await em.delete(User, {}); // Delete for foreign key
-          await em.delete(Basic, {}); // Delete for foreign key
-          await em.delete(Simple, {});
+          await em.delete(User, {});
         });
 
         expect(await getSimpleCount()).toBe(0);
       });
 
-      it('After restore, "simple" table must have the same number of data as at the beginning', async () => {
+      it('After restore, "user" table must have the same number of data as at the beginning', async () => {
         expect(await getSimpleCount()).toBe(seedCount);
       });
     });
@@ -109,9 +109,7 @@ describe("Simple", () => {
     describe("Modify value", () => {
       it("Row must be modified", async () => {
         const newName = "seed updated";
-        await connection.query(
-          `UPDATE simple SET name = '${newName}' WHERE id = ${randomRow.id}`
-        );
+        await connection.query(updateQuery(newName, randomRow.id));
 
         const row = await getRow(randomRow.id);
         expect(row?.name).toBe(newName);
@@ -127,7 +125,7 @@ describe("Simple", () => {
       const name = "new manual seed";
 
       it("New row must be defined", async () => {
-        await connection.query(`INSERT INTO simple (name) VALUES ('${name}')`);
+        await connection.query(insertQuery(name, randomRow.id));
 
         const newRow = await getRowByName(name);
         expect(newRow).toBeDefined();
@@ -147,7 +145,7 @@ describe("Simple", () => {
         if (!lastRow) throw new Error("Last row is not defined");
         const lastRowId = lastRow.id;
 
-        await connection.query(`INSERT INTO simple (name) VALUES ('${name}')`);
+        await connection.query(insertQuery(name, randomRow.id));
 
         const newRow = await getLastRow();
         if (!newRow) throw new Error("New row is not defined");
@@ -157,15 +155,20 @@ describe("Simple", () => {
     });
   });
 
-  const getSimpleCount = () => simpleRepository.count();
+  const getSimpleCount = () => userRepository.count();
 
   const getLastRow = () =>
-    simpleRepository
-      .createQueryBuilder("simple")
-      .orderBy("id", "DESC")
-      .getOne();
+    userRepository.createQueryBuilder("user").orderBy("id", "DESC").getOne();
 
-  const getRow = (id: number) => simpleRepository.findOneBy({ id });
+  const getRow = (id: number) => userRepository.findOneBy({ id });
+  const insertQuery = (name: string, simpleId: number) => {
+    const quotes = DB_WITHOUT_QUOTES.includes(dbType) ? "" : '"';
+    return `INSERT INTO ${quotes}user${quotes} (name, ${quotes}simpleId${quotes}) VALUES ('${name}', ${simpleId})`;
+  };
+  const updateQuery = (name: string, id: number) => {
+    const quotes = DB_WITHOUT_QUOTES.includes(dbType) ? "" : '"';
+    return `UPDATE ${quotes}user${quotes} SET name = '${name}' WHERE id = ${id}`;
+  };
 
-  const getRowByName = (name: string) => simpleRepository.findOneBy({ name });
+  const getRowByName = (name: string) => userRepository.findOneBy({ name });
 });

@@ -1,12 +1,12 @@
 import { DataSource, EntityManager, EntityTarget } from "typeorm";
 import { Fastypest } from "../../dist/core";
-import { getConnection } from "../config";
+import { getConnection } from "../config/orm.config";
 
 export class ConnectionUtil extends Fastypest {
   private connection: DataSource;
-  constructor() {
-    super(getConnection());
-    this.connection = getConnection();
+  constructor(connection?: DataSource) {
+    super(connection || getConnection());
+    this.connection = connection || getConnection();
   }
 
   async transaction(

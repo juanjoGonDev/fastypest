@@ -1,5 +1,5 @@
 import { DataSource, DataSourceOptions } from "typeorm";
-import { Simple, User } from "../entities";
+import { Basic, Simple, User } from "../entities";
 
 const env = process.env;
 const TYPE: string = env.DB_TYPE || "mysql";
@@ -10,10 +10,10 @@ const options: Record<string, any> = {
   host: "127.0.0.1",
   username: "fastypest",
   password: "password",
-  entities: [Simple, User],
+  entities: [Simple, User, Basic],
   database: "test",
-  synchronize: true,
-  dropSchema: true,
+  synchronize: false,
+  dropSchema: false,
   logging: false,
   logger: "file",
 };
@@ -24,10 +24,14 @@ if (PORT !== undefined) {
 
 const dataBaseSource = new DataSource(options as DataSourceOptions);
 
-export const initialize = async (): Promise<DataSource> => {
-  const connection = await dataBaseSource.initialize();
+export const prepareDatabase = async (): Promise<DataSource> => {
+  const sourceOptions = { ...options, dropSchema: true, synchronize: true };
+  const source = new DataSource(sourceOptions as DataSourceOptions);
+  return source.initialize();
+};
 
-  return connection;
+export const initialize = async (): Promise<DataSource> => {
+  return dataBaseSource.initialize();
 };
 
 export const getConnection = (): DataSource => dataBaseSource;
