@@ -13,7 +13,7 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### Bug Fixes
 
-* fix: sequence (#377)[https://github.com/juanjoGonDev/fastypest/pull/377]
+* fix: sequence (https://github.com/juanjoGonDev/fastypest/pull/377)
 
 ### [1.3.10](https://github.com/juanjoGonDev/fastypest/compare/v1.3.0...v1.3.10) (2024-05-21)
 
