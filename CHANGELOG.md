@@ -9,6 +9,12 @@ All notable changes to this project will be documented in this file. See [standa
 
 * **npm:** husky not found ([cfa9a49](https://github.com/juanjoGonDev/fastypest/commit/cfa9a49344177959fa13e72e996501ff61efaed5))
 
+### [1.4.0](https://github.com/juanjoGonDev/fastypest/compare/v1.3.10...v1.4.0) (2024-05-26)
+
+### Bug Fixes
+
+* fix: sequence (#377)[https://github.com/juanjoGonDev/fastypest/pull/377]
+
 ### [1.3.10](https://github.com/juanjoGonDev/fastypest/compare/v1.3.0...v1.3.10) (2024-05-21)
 
 
