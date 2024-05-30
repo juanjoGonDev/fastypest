@@ -25,6 +25,11 @@ export class ConnectionUtil extends Fastypest {
     const tableName = repository.metadata.tableName;
 
     await this.execQuery(em, "truncateTable", { tableName });
-    await repository.insert(data);
+    await repository
+      .createQueryBuilder()
+      .insert()
+      .into(target)
+      .values(data)
+      .execute();
   }
 }
