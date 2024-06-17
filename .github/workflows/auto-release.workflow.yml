@@ -8,6 +8,18 @@ on:
   schedule:
     - cron: "0 6 * * *"
   workflow_dispatch:
+    inputs:
+      force:
+        description: "Force release"
+        required: true
+        default: "no"
+        type: choice
+        options:
+          - "yes"
+          - "no"
+      version:
+        description: "Version to release (required if force is yes)"
+        required: false
 
 env:
   NODE_VERSION: "18.20"
@@ -24,16 +36,21 @@ jobs:
       - name: 🕵️ Check if there are at least 3 new commits since the last version
         id: check_commits
         run: |
-          LAST_TAG=$(git tag | sed 's/^v\.//;s/^v//' | sort -V | tail -n 1)
-          LAST_TAG="v${LAST_TAG}"
-          echo "Last tag: $LAST_TAG"
-          COMMITS=$(git log --oneline ${LAST_TAG}..HEAD | wc -l)
-          echo "Commits since last tag: $COMMITS"
-          if [ $COMMITS -lt 4 ]; then
-            echo "There are less than 3 new commits since last release, skipping the rest of the job"
-            echo "::set-output name=enough_commits::false"
-          else
+          if [[ "${{ github.event.inputs.force }}" == "yes" ]]; then
             echo "::set-output name=enough_commits::true"
+            echo "Force release is enabled. Skipping commit check."
+          else
+            LAST_TAG=$(git tag | sed 's/^v\.//;s/^v//' | sort -V | tail -n 1)
+            LAST_TAG="v${LAST_TAG}"
+            echo "Last tag: $LAST_TAG"
+            COMMITS=$(git log --oneline ${LAST_TAG}..HEAD | wc -l)
+            echo "Commits since last tag: $COMMITS"
+            if [ $COMMITS -lt 4 ]; then
+              echo "There are less than 3 new commits since last release, skipping the rest of the job"
+              echo "::set-output name=enough_commits::false"
+            else
+              echo "::set-output name=enough_commits::true"
+            fi
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -56,7 +73,7 @@ jobs:
         run: yarn install --frozen-lockfile
       - name: 🆙 Bump version and create a git tag
         if: steps.check_commits.outputs.enough_commits == 'true'
-        run: |
+         run: |
           git checkout main
           git pull origin main
           git checkout -b release/${{ github.run_number }}
@@ -64,7 +81,13 @@ jobs:
           if [ $EXISTS -eq 1 ]; then
             git pull origin release/${{ github.run_number }}
           fi
-          yarn release
+          if [[ "${{ github.event.inputs.force }}" == "yes" ]]; then
+            VERSION=${{ github.event.inputs.version }}
+            yarn version --new-version $VERSION
+            git tag v$VERSION
+          else
+            yarn release
+          fi
           git push --follow-tags origin release/${{ github.run_number }}
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
