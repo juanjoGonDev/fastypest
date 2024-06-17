@@ -13,7 +13,7 @@
     "yarn": "4.2.2"
   },
   "scripts": {
-    "postinstall": "husky install",
+    "prepare": "husky install",
     "prebuild": "rimraf dist",
     "build": "tsc",
     "eslint": "eslint --fix .",
