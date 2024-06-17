@@ -73,7 +73,7 @@ jobs:
         run: yarn install --frozen-lockfile
       - name: 🆙 Bump version and create a git tag
         if: steps.check_commits.outputs.enough_commits == 'true'
-         run: |
+        run: |
           git checkout main
           git pull origin main
           git checkout -b release/${{ github.run_number }}
