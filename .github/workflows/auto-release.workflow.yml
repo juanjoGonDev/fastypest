@@ -17,9 +17,18 @@ on:
         options:
           - "yes"
           - "no"
-      version:
-        description: "Version to release (required if force is yes)"
-        required: false
+      strategy:
+        description: "Release strategy (only used if force is set to 'yes')"
+        required: true
+        type: choice
+        options:
+          - "major"
+          - "minor"
+          - "patch"
+          - "premajor"
+          - "preminor"
+          - "prepatch"
+          - "prerelease"
 
 env:
   NODE_VERSION: "18.20"
@@ -81,13 +90,11 @@ jobs:
           if [ $EXISTS -eq 1 ]; then
             git pull origin release/${{ github.run_number }}
           fi
-          if [[ "${{ github.event.inputs.force }}" == "yes" ]]; then
-            VERSION=${{ github.event.inputs.version }}
-            yarn version --new-version $VERSION
-            git tag v$VERSION
-          else
-            yarn release
+          STRATEGY="patch"
+          if [[ "${{ github.event.inputs.force }}" == "yes" && "${{ github.event.inputs.strategy }}" ]]; then
+            STRATEGY=${{ github.event.inputs.strategy }}
           fi
+          yarn release --release-as $STRATEGY
           git push --follow-tags origin release/${{ github.run_number }}
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
