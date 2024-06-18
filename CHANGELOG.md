@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.4.9](https://github.com/juanjoGonDev/fastypest/compare/v1.4.0...v1.4.9) (2024-06-18)
+
+
+### Bug Fixes
+
+* change husky prepare to setup ([6143d6d](https://github.com/juanjoGonDev/fastypest/commit/6143d6d5cf2a778b161a82ea003a2c991e0563a9))
+
 ### [1.4.8](https://github.com/juanjoGonDev/fastypest/compare/v1.4.0...v1.4.8) (2024-06-17)
 
 
