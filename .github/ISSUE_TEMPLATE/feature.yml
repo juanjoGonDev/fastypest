@@ -2,6 +2,8 @@ name: Feature Request
 description: Suggest an idea for Fastypest features
 title: "[Feature Request]: "
 labels: ["enhancement"]
+assignees:
+  - juanjoGonDev
 body:
   - type: markdown
     attributes:

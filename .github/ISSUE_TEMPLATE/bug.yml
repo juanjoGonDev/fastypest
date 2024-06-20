@@ -2,6 +2,8 @@ name: Bug
 description: Report a problem with Fastypest
 title: "[Bug]: "
 labels: ["bug"]
+assignees:
+  - juanjoGonDev
 body:
   - type: markdown
     attributes:
@@ -57,7 +59,7 @@ body:
         - PostgreSQL
         - CockroachDB
         - Other
-      default: 4
+      default: Other
   - type: input
     id: databaseVersion
     attributes:
