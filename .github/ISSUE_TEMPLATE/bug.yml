@@ -18,6 +18,7 @@ body:
     attributes:
       label: Bug Description
       description: A clear and concise description of what the issue is. Include any relevant details that may help us understand the context and nature of the problem.
+      placeholder: When I do X, Y happens...
     validations:
       required: true
   - type: dropdown
@@ -29,11 +30,13 @@ body:
         - Medium
         - High
         - Critical
+      default: 0
   - type: textarea
     id: steps
     attributes:
       label: Steps to Reproduce
       description: Steps to reproduce the behavior. Please be as detailed as possible.
+      placeholder: 1. Go to '...'
     validations:
       required: true
   - type: textarea
@@ -41,6 +44,7 @@ body:
     attributes:
       label: Expected Behavior
       description: A clear and concise description of what you expected to happen.
+      placeholder: I expected to see '...'
     validations:
       required: true
   - type: dropdown
@@ -53,11 +57,13 @@ body:
         - PostgreSQL
         - CockroachDB
         - Other
+      default: 4
   - type: input
     id: databaseVersion
     attributes:
       label: Database Version
       description: The version of the database you are using.
+      placeholder: 8.0.26
     validations:
       required: true
   - type: input
@@ -65,6 +71,7 @@ body:
     attributes:
       label: Fastypest Version
       description: The version of Fastypest you are using.
+      placeholder: 1.0.0
     validations:
       required: true
   - type: input
@@ -72,6 +79,7 @@ body:
     attributes:
       label: Node.js Version
       description: The version of Node.js you are using.
+      placeholder: 14.17.0
     validations:
       required: true
   - type: input
@@ -79,6 +87,7 @@ body:
     attributes:
       label: Yarn Version
       description: The version of Yarn you are using.
+      placeholder: 1.22.11
     validations:
       required: false
   - type: input
@@ -86,6 +95,7 @@ body:
     attributes:
       label: npm Version
       description: The version of npm you are using. (If you are not using Yarn)
+      placeholder: 7.24.0
     validations:
       required: false
   - type: input
@@ -93,15 +103,17 @@ body:
     attributes:
       label: TypeORM Version
       description: The version of TypeORM you are using.
+      placeholder: 0.2.0
     validations:
-      required: false
+      required: true
   - type: input
     id: tsVersion
     attributes:
       label: TypeScript Version
       description: The version of TypeScript you are using.
+      placeholder: 4.3.5
     validations:
-      required: false
+      required: true
   - type: input
     id: testingLibrary
     attributes:
@@ -109,11 +121,12 @@ body:
       description: The testing library you are using and its version.
       placeholder: Jest 27.0.6
     validations:
-      required: false
+      required: true
   - type: textarea
     id: additional
     attributes:
       label: Additional Information
       description: Add any other context about the problem here.
+      placeholder: My environment is '...', I have also tried '...'
     validations:
       required: false
