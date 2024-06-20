@@ -228,6 +228,14 @@ jobs:
       - name: �🚧 Run build
         if: steps.check_commits.outputs.enough_commits == 'true'
         run: yarn run build
+      - name: 🧪 Install package test
+        run: |
+          mkdir test-install
+          yarn pack --filename test-install/package.tar.gz
+          cd test-install
+          yarn init -y
+          touch yarn.lock
+          yarn add -D ./package.tar.gz
       - name: 🎉 Publish to npm
         if: steps.check_commits.outputs.enough_commits == 'true'
         run: npm publish

@@ -11,3 +11,6 @@
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# test relase
+test-install

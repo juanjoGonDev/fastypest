@@ -16,3 +16,5 @@ docker-compose.yml
 .husky
 .yarnrc.yml
 eslint.config.mjs
+CHANGELOG.md
+test-install
