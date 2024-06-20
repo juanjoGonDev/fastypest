@@ -11,21 +11,21 @@ body:
     attributes:
       label: Feature Description
       description: A clear and concise description of what the feature is. Include any relevant details that may help us understand the context and purpose of the feature.
-      validations:
+    validations:
         required: true
   - type: textarea
     id: useCase
     attributes:
       label: Use Case
       description: What problem or use case are you trying to solve with this feature?
-      validations:
+    validations:
         required: true
   - type: textarea
     id: technicalImplementation
     attributes:
       label: Technical Implementation
       description: Do you have thoughts on how this feature should be implemented?
-      validations:
+    validations:
         required: true
   - type: textarea
     id: alternatives

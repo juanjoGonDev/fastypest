@@ -18,8 +18,8 @@ body:
     attributes:
       label: Bug Description
       description: A clear and concise description of what the issue is. Include any relevant details that may help us understand the context and nature of the problem.
-      validations:
-        required: true
+    validations:
+      required: true
   - type: dropdown
     attributes:
       label: Bug Severity
@@ -34,15 +34,15 @@ body:
     attributes:
       label: Steps to Reproduce
       description: Steps to reproduce the behavior. Please be as detailed as possible.
-      validations:
-        required: true
+    validations:
+      required: true
   - type: textarea
     id: expected
     attributes:
       label: Expected Behavior
       description: A clear and concise description of what you expected to happen.
-      validations:
-        required: true
+    validations:
+      required: true
   - type: dropdown
     attributes:
       label: Database type
@@ -58,62 +58,62 @@ body:
     attributes:
       label: Database Version
       description: The version of the database you are using.
-      validations:
-        required: true
+    validations:
+      required: true
   - type: input
     id: version
     attributes:
       label: Fastypest Version
       description: The version of Fastypest you are using.
-      validations:
-        required: true
+    validations:
+      required: true
   - type: input
     id: nodeVersion
     attributes:
       label: Node.js Version
       description: The version of Node.js you are using.
-      validations:
-        required: true
+    validations:
+      required: true
   - type: input
     id: yarnVersion
     attributes:
       label: Yarn Version
       description: The version of Yarn you are using.
-      validations:
-        required: false
+    validations:
+      required: false
   - type: input
     id: npmVersion
     attributes:
       label: npm Version
       description: The version of npm you are using. (If you are not using Yarn)
-      validations:
-        required: false
+    validations:
+      required: false
   - type: input
     id: typeormVersion
     attributes:
       label: TypeORM Version
       description: The version of TypeORM you are using.
-      validations:
-        required: false
+    validations:
+      required: false
   - type: input
     id: tsVersion
     attributes:
       label: TypeScript Version
       description: The version of TypeScript you are using.
-      validations:
-        required: false
+    validations:
+      required: false
   - type: input
     id: testingLibrary
     attributes:
       label: Testing Library
       description: The testing library you are using and its version.
       placeholder: Jest 27.0.6
-      validations:
-        required: false
+    validations:
+      required: false
   - type: textarea
     id: additional
     attributes:
       label: Additional Information
       description: Add any other context about the problem here.
-      validations:
-        required: false
+    validations:
+      required: false
