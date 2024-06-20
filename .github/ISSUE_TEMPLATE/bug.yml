@@ -59,7 +59,7 @@ body:
         - PostgreSQL
         - CockroachDB
         - Other
-      default: Other
+      default: 4
   - type: input
     id: databaseVersion
     attributes:
