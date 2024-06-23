@@ -20,6 +20,8 @@ Currently compatible with:
 - <a href="https://www.npmjs.com/fastypest"><img alt="Postgres >= v9.0 supported" src="https://img.shields.io/badge/Postgres-%3E%3D9.0-green"></a>
 - <a href="https://www.npmjs.com/fastypest"><img alt="cockroachDB >= v22.2.0 supported" src="https://img.shields.io/badge/CockroachDB-%3E%3D22.2.0-blue"></a>
 
+If you need compatibility with another database, you can request it <b><a href="https://github.com/juanjoGonDev/fastypest/issues/new?assignees=juanjoGonDev&labels=enhancement&projects=&template=feature.yml&title=%5BFeature+Request%5D%3A+">here</a></b>.
+
 Install with npm
 
 ```
