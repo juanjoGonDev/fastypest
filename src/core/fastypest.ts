@@ -1,7 +1,7 @@
 import { Connection, DataSource, EntityManager, Table } from "typeorm";
 import { INDEX_OFFSET_CONFIG } from "./config";
 import { SQLScript } from "./sql-script";
-import {
+import type {
   ColumnStat,
   ColumnsWithAutoIncrement,
   DBType,
@@ -179,6 +179,7 @@ export class Fastypest extends SQLScript {
 
   private async detectTables(em: EntityManager): Promise<void> {
     const tables = await this.execQuery<Table>(em, "getTables");
+    if(!tables) return;
 
     tables.forEach((row) => {
       this.tables.add(row.name);
