@@ -18,9 +18,9 @@
   "typescript.referencesCodeLens.showOnAllFunctions": true,
   "references.preferredLocation": "view",
   "typescript.preferences.quoteStyle": "single",
-  "typescript.tsdk": "node_modules\\typescript\\lib",
   "files.insertFinalNewline": true,
   "files.trimFinalNewlines": true,
-  "typescript.tsdk": ".yarn/sdks/typescript/lib",
-  "eslint.nodePath": ".yarn/sdks"
+  "eslint.nodePath": ".yarn/sdks",
+  "prettier.prettierPath": ".yarn/sdks/prettier/index.cjs",
+  "typescript.tsdk": ".yarn/sdks/typescript/lib"
 }
