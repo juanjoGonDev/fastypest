@@ -2879,21 +2879,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-n@npm:^17.9.0":
-  version: 17.9.0
-  resolution: "eslint-plugin-n@npm:17.9.0"
+"eslint-plugin-n@npm:^17.10.0":
+  version: 17.10.0
+  resolution: "eslint-plugin-n@npm:17.10.0"
   dependencies:
     "@eslint-community/eslint-utils": "npm:^4.4.0"
     enhanced-resolve: "npm:^5.17.0"
     eslint-plugin-es-x: "npm:^7.5.0"
     get-tsconfig: "npm:^4.7.0"
-    globals: "npm:^15.0.0"
+    globals: "npm:^15.8.0"
     ignore: "npm:^5.2.4"
-    minimatch: "npm:^9.0.0"
+    minimatch: "npm:^9.0.5"
     semver: "npm:^7.5.3"
   peerDependencies:
     eslint: ">=8.23.0"
-  checksum: 10c0/8c9dc278eaf7ce7e0621127f82e56a7a117cecbd4dfa880145d930a62fc93ef47057f18805bf1bba944cbafa0ae9115c9bd52628193e1206810bb7bc3e1d2f25
+  checksum: 10c0/498bcf8ef600ecc2e7899166dd24bd11505f80b6f8a0cf7c0fc3e5af5428579b2294bb6cb1de741e346ebd77de8d3dfe63eee9f6b124adb898c0307031876f73
   languageName: node
   linkType: hard
 
@@ -3190,7 +3190,7 @@ __metadata:
     eslint: "npm:^9.7.0"
     eslint-config-standard-with-typescript: "npm:^43.0.1"
     eslint-plugin-import: "npm:^2.29.1"
-    eslint-plugin-n: "npm:^17.9.0"
+    eslint-plugin-n: "npm:^17.10.0"
     eslint-plugin-prettier: "npm:^5.2.1"
     eslint-plugin-promise: "npm:^7.0.0"
     globals: "npm:^15.8.0"
@@ -3612,13 +3612,6 @@ __metadata:
   version: 14.0.0
   resolution: "globals@npm:14.0.0"
   checksum: 10c0/b96ff42620c9231ad468d4c58ff42afee7777ee1c963013ff8aabe095a451d0ceeb8dcd8ef4cbd64d2538cef45f787a78ba3a9574f4a634438963e334471302d
-  languageName: node
-  linkType: hard
-
-"globals@npm:^15.0.0":
-  version: 15.1.0
-  resolution: "globals@npm:15.1.0"
-  checksum: 10c0/ae9cd15057dc6a21d6dbafe9f47b66bd063c6d3c9215fa1e8294bd130d89f188c48370a11a9525a5a33bd8689fc4fdfd3f474d930692d7abb7459cd982503336
   languageName: node
   linkType: hard
 
@@ -5272,12 +5265,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimatch@npm:^9.0.0, minimatch@npm:^9.0.1, minimatch@npm:^9.0.4":
+"minimatch@npm:^9.0.1, minimatch@npm:^9.0.4":
   version: 9.0.4
   resolution: "minimatch@npm:9.0.4"
   dependencies:
     brace-expansion: "npm:^2.0.1"
   checksum: 10c0/2c16f21f50e64922864e560ff97c587d15fd491f65d92a677a344e970fe62aafdbeafe648965fa96d33c061b4d0eabfe0213466203dd793367e7f28658cf6414
+  languageName: node
+  linkType: hard
+
+"minimatch@npm:^9.0.5":
+  version: 9.0.5
+  resolution: "minimatch@npm:9.0.5"
+  dependencies:
+    brace-expansion: "npm:^2.0.1"
+  checksum: 10c0/de96cf5e35bdf0eab3e2c853522f98ffbe9a36c37797778d2665231ec1f20a9447a7e567cb640901f89e4daaa95ae5d70c65a9e8aa2bb0019b6facbc3c0575ed
   languageName: node
   linkType: hard
 
