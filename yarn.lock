@@ -2400,6 +2400,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cross-spawn@npm:^7.0.5":
+  version: 7.0.5
+  resolution: "cross-spawn@npm:7.0.5"
+  dependencies:
+    path-key: "npm:^3.1.0"
+    shebang-command: "npm:^2.0.0"
+    which: "npm:^2.0.1"
+  checksum: 10c0/aa82ce7ac0814a27e6f2b738c5a7cf1fa21a3558a1e42df449fc96541ba3ba731e4d3ecffa4435348808a86212f287c6f20a1ee551ef1ff95d01cfec5f434944
+  languageName: node
+  linkType: hard
+
 "dargs@npm:^7.0.0":
   version: 7.0.0
   resolution: "dargs@npm:7.0.0"
@@ -3296,7 +3307,7 @@ __metadata:
     "@types/node": "npm:^22.9.0"
     "@typescript-eslint/eslint-plugin": "npm:^8.13.0"
     "@typescript-eslint/parser": "npm:^8.13.0"
-    cross-spawn: "npm:^7.0.3"
+    cross-spawn: "npm:^7.0.5"
     eslint: "npm:^9.14.0"
     eslint-config-standard-with-typescript: "npm:^43.0.1"
     eslint-plugin-import: "npm:^2.31.0"
