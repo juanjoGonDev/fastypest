@@ -30,8 +30,6 @@ body:
       label: Technical Implementation
       description: Do you have thoughts on how this feature should be implemented?
       placeholder: I think we should '...'
-    validations:
-      required: true
   - type: textarea
     id: alternatives
     attributes:
