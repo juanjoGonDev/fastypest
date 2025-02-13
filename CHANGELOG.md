@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.4.80](https://github.com/juanjoGonDev/fastypest/compare/v1.4.0...v1.4.80) (2025-02-13)
+
+
+### Bug Fixes
+
+* change husky prepare to setup ([6143d6d](https://github.com/juanjoGonDev/fastypest/commit/6143d6d5cf2a778b161a82ea003a2c991e0563a9))
+* **npm:** husky not found ([cfa9a49](https://github.com/juanjoGonDev/fastypest/commit/cfa9a49344177959fa13e72e996501ff61efaed5))
+* prepare husky ([#413](https://github.com/juanjoGonDev/fastypest/issues/413)) ([36fda43](https://github.com/juanjoGonDev/fastypest/commit/36fda43cca589f8d7953c0e236d36bc3509c2b98))
+
 ### [1.4.79](https://github.com/juanjoGonDev/fastypest/compare/v1.4.0...v1.4.79) (2025-02-11)
 
 
