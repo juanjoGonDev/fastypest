@@ -2,6 +2,69 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.4.93](https://github.com/juanjoGonDev/fastypest/compare/v1.4.0...v1.4.93) (2025-04-22)
+
+
+### Bug Fixes
+
+* change husky prepare to setup ([6143d6d](https://github.com/juanjoGonDev/fastypest/commit/6143d6d5cf2a778b161a82ea003a2c991e0563a9))
+* **npm:** husky not found ([cfa9a49](https://github.com/juanjoGonDev/fastypest/commit/cfa9a49344177959fa13e72e996501ff61efaed5))
+* prepare husky ([#413](https://github.com/juanjoGonDev/fastypest/issues/413)) ([36fda43](https://github.com/juanjoGonDev/fastypest/commit/36fda43cca589f8d7953c0e236d36bc3509c2b98))
+
+### [1.4.92](https://github.com/juanjoGonDev/fastypest/compare/v1.4.0...v1.4.92) (2025-04-15)
+
+
+### Bug Fixes
+
+* change husky prepare to setup ([6143d6d](https://github.com/juanjoGonDev/fastypest/commit/6143d6d5cf2a778b161a82ea003a2c991e0563a9))
+* **npm:** husky not found ([cfa9a49](https://github.com/juanjoGonDev/fastypest/commit/cfa9a49344177959fa13e72e996501ff61efaed5))
+* prepare husky ([#413](https://github.com/juanjoGonDev/fastypest/issues/413)) ([36fda43](https://github.com/juanjoGonDev/fastypest/commit/36fda43cca589f8d7953c0e236d36bc3509c2b98))
+
+### [1.4.91](https://github.com/juanjoGonDev/fastypest/compare/v1.4.0...v1.4.91) (2025-04-14)
+
+
+### Bug Fixes
+
+* change husky prepare to setup ([6143d6d](https://github.com/juanjoGonDev/fastypest/commit/6143d6d5cf2a778b161a82ea003a2c991e0563a9))
+* **npm:** husky not found ([cfa9a49](https://github.com/juanjoGonDev/fastypest/commit/cfa9a49344177959fa13e72e996501ff61efaed5))
+* prepare husky ([#413](https://github.com/juanjoGonDev/fastypest/issues/413)) ([36fda43](https://github.com/juanjoGonDev/fastypest/commit/36fda43cca589f8d7953c0e236d36bc3509c2b98))
+
+### [1.4.90](https://github.com/juanjoGonDev/fastypest/compare/v1.4.0...v1.4.90) (2025-04-10)
+
+
+### Bug Fixes
+
+* change husky prepare to setup ([6143d6d](https://github.com/juanjoGonDev/fastypest/commit/6143d6d5cf2a778b161a82ea003a2c991e0563a9))
+* **npm:** husky not found ([cfa9a49](https://github.com/juanjoGonDev/fastypest/commit/cfa9a49344177959fa13e72e996501ff61efaed5))
+* prepare husky ([#413](https://github.com/juanjoGonDev/fastypest/issues/413)) ([36fda43](https://github.com/juanjoGonDev/fastypest/commit/36fda43cca589f8d7953c0e236d36bc3509c2b98))
+
+### [1.4.89](https://github.com/juanjoGonDev/fastypest/compare/v1.4.0...v1.4.89) (2025-04-09)
+
+
+### Bug Fixes
+
+* change husky prepare to setup ([6143d6d](https://github.com/juanjoGonDev/fastypest/commit/6143d6d5cf2a778b161a82ea003a2c991e0563a9))
+* **npm:** husky not found ([cfa9a49](https://github.com/juanjoGonDev/fastypest/commit/cfa9a49344177959fa13e72e996501ff61efaed5))
+* prepare husky ([#413](https://github.com/juanjoGonDev/fastypest/issues/413)) ([36fda43](https://github.com/juanjoGonDev/fastypest/commit/36fda43cca589f8d7953c0e236d36bc3509c2b98))
+
+### [1.4.88](https://github.com/juanjoGonDev/fastypest/compare/v1.4.0...v1.4.88) (2025-04-08)
+
+
+### Bug Fixes
+
+* change husky prepare to setup ([6143d6d](https://github.com/juanjoGonDev/fastypest/commit/6143d6d5cf2a778b161a82ea003a2c991e0563a9))
+* **npm:** husky not found ([cfa9a49](https://github.com/juanjoGonDev/fastypest/commit/cfa9a49344177959fa13e72e996501ff61efaed5))
+* prepare husky ([#413](https://github.com/juanjoGonDev/fastypest/issues/413)) ([36fda43](https://github.com/juanjoGonDev/fastypest/commit/36fda43cca589f8d7953c0e236d36bc3509c2b98))
+
+### [1.4.87](https://github.com/juanjoGonDev/fastypest/compare/v1.4.0...v1.4.87) (2025-03-11)
+
+
+### Bug Fixes
+
+* change husky prepare to setup ([6143d6d](https://github.com/juanjoGonDev/fastypest/commit/6143d6d5cf2a778b161a82ea003a2c991e0563a9))
+* **npm:** husky not found ([cfa9a49](https://github.com/juanjoGonDev/fastypest/commit/cfa9a49344177959fa13e72e996501ff61efaed5))
+* prepare husky ([#413](https://github.com/juanjoGonDev/fastypest/issues/413)) ([36fda43](https://github.com/juanjoGonDev/fastypest/commit/36fda43cca589f8d7953c0e236d36bc3509c2b98))
+
 ### [1.4.86](https://github.com/juanjoGonDev/fastypest/compare/v1.4.0...v1.4.86) (2025-03-10)
 
 
