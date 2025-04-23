@@ -182,7 +182,7 @@ jobs:
 
             throw new Error('PR approval timed out');
           github-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: ✅ Approve and merge PR
+      - name: ⌛ Wait for all checks to pass
         if: steps.check_commits.outputs.enough_commits == 'true'
         uses: actions/github-script@v7
         timeout-minutes: 5
@@ -224,34 +224,19 @@ jobs:
               console.log(`⏳ Waiting for all checks to pass (${passedChecks}/${expectedChecks.length}). Retrying in ${interval / 1000}s...`);
               await new Promise(resolve => setTimeout(resolve, interval));
             }
-
-            const { data: reviews } = await github.rest.pulls.listReviews({
-              owner,
-              repo,
-              pull_number: prNumber
-            });
-
-            const alreadyApproved = reviews.some(r => r.state === 'APPROVED');
-            if (!alreadyApproved) {
-              await github.rest.pulls.createReview({
-                owner,
-                repo,
-                pull_number: prNumber,
-                event: 'APPROVE',
-              });
-              console.log('👍 PR approved by the bot.');
-            } else {
-              console.log('👌 PR was already approved.');
-            }
-
-            await github.request('PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge', {
-              owner,
-              repo,
-              pull_number: prNumber,
-              merge_method: 'squash',
-              headers: {
-                authorization: `token ${process.env.PAT_FINE}`
-              }
+      - name: ✅ Merge PR
+        if: steps.check_commits.outputs.enough_commits == 'true'
+        uses: actions/github-script@v7
+        env:
+          PULL_REQUEST_NUMBER: ${{ steps.create_pr.outputs.prNumber }}
+        with:
+          github-token: ${{ secrets.PAT_FINE }}
+          script: |
+            await github.rest.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: process.env.PULL_REQUEST_NUMBER,
+              merge_method: 'squash'
             });
             console.log(`✅ PR #${prNumber} successfully merged as squash.`);
       - name: �🚧 Run build
