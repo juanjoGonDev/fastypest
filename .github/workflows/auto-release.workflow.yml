@@ -201,17 +201,6 @@ jobs:
             const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNumber });
             const ref = pr.head.sha;
 
-            console.log(`⌛ Waiting for initial checks on PR #${prNumber}...`);
-            let initialChecksReady = false;
-            while (!initialChecksReady && Date.now() < deadline) {
-              const { data: checkStatus } = await github.rest.checks.listForRef({ owner, repo, ref });
-              if (checkStatus.check_runs.length >= 2) {
-                initialChecksReady = true;
-                break;
-              }
-              await new Promise(resolve => setTimeout(resolve, interval));
-            }
-
             console.log(`⌛ Waiting for all checks on PR #${prNumber}...`);
             while (Date.now() < deadline) {
               const { data: checks } = await github.rest.checks.listForRef({
@@ -220,22 +209,19 @@ jobs:
                 ref
               });
 
-              const relevantChecks = checks.check_runs.filter(run =>
-                run.status === 'completed' &&
-                run.conclusion !== 'skipped'
-              );
-              const passedChecks = relevantChecks.filter(run => run.conclusion === 'success').length;
-              const allPassed = passedChecks === relevantChecks.length;
+              const expectedChecks = checks.check_runs.filter(run => run.conclusion !== 'skipped');
+              const passedChecks = expectedChecks.filter(run => run.status === 'completed' && run.conclusion === 'success').length;
+              const allPassed = passedChecks === expectedChecks.length;
 
               if (allPassed) {
                 console.log(`✅ All checks passed! Proceeding to approve the PR #${prNumber}`);
                 break;
               }
 
-              const anyFailed = relevantChecks.some(run => run.conclusion === 'failure');
+              const anyFailed = expectedChecks.some(run => run.conclusion === 'failure');
               if (anyFailed) throw new Error(`❌ Some checks failed for PR #${prNumber}.`);
 
-              console.log(`⏳ Waiting for all checks to pass (${passedChecks}/${relevantChecks.length}). Retrying in ${interval / 1000}s...`);
+              console.log(`⏳ Waiting for all checks to pass (${passedChecks}/${expectedChecks.length}). Retrying in ${interval / 1000}s...`);
               await new Promise(resolve => setTimeout(resolve, interval));
             }
 
