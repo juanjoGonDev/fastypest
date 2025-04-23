@@ -201,6 +201,17 @@ jobs:
             const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNumber });
             const ref = pr.head.sha;
 
+            console.log(`⌛ Waiting for initial checks on PR #${prNumber}...`);
+            let initialChecksReady = false;
+            while (!initialChecksReady && Date.now() < deadline) {
+              const { data: checkStatus } = await github.rest.checks.listForRef({ owner, repo, ref });
+              if (checkStatus.check_runs.length >= 2) {
+                initialChecksReady = true;
+                break;
+              }
+              await new Promise(resolve => setTimeout(resolve, interval));
+            }
+
             console.log(`⌛ Waiting for all checks on PR #${prNumber}...`);
             while (Date.now() < deadline) {
               const { data: checks } = await github.rest.checks.listForRef({
