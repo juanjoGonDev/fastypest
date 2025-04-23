@@ -232,10 +232,11 @@ jobs:
         with:
           github-token: ${{ secrets.PAT_FINE }}
           script: |
+            const prNumber = process.env.PULL_REQUEST_NUMBER;
             await github.rest.pulls.merge({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              pull_number: process.env.PULL_REQUEST_NUMBER,
+              pull_number: prNumber,
               merge_method: 'squash'
             });
             console.log(`✅ PR #${prNumber} successfully merged as squash.`);
