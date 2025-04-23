@@ -209,19 +209,22 @@ jobs:
                 ref
               });
 
-              const totalChecks = checks.check_runs.length;
-              const passedChecks = checks.check_runs.filter(run => run.status === 'completed' && run.conclusion === 'success').length;
-              const allPassed = passedChecks === totalChecks;
+              const relevantChecks = checks.check_runs.filter(run =>
+                run.status === 'completed' &&
+                run.conclusion !== 'skipped'
+              );
+              const passedChecks = relevantChecks.filter(run => run.conclusion === 'success').length;
+              const allPassed = passedChecks === relevantChecks.length;
 
               if (allPassed) {
                 console.log(`✅ All checks passed! Proceeding to approve the PR #${prNumber}`);
                 break;
               }
 
-              const anyFailed = checks.check_runs.some(run => run.status === 'completed' && run.conclusion === 'failure');
+              const anyFailed = relevantChecks.some(run => run.conclusion === 'failure');
               if (anyFailed) throw new Error(`❌ Some checks failed for PR #${prNumber}.`);
 
-              console.log(`⏳ Waiting for all checks to pass (${passedChecks}/${totalChecks}). Retrying in ${interval / 1000}s...`);
+              console.log(`⏳ Waiting for all checks to pass (${passedChecks}/${relevantChecks.length}). Retrying in ${interval / 1000}s...`);
               await new Promise(resolve => setTimeout(resolve, interval));
             }
 
@@ -253,6 +256,7 @@ jobs:
                 authorization: `token ${process.env.PAT_FINE}`
               }
             });
+            console.log(`✅ PR #${prNumber} successfully merged as squash.`);
       - name: �🚧 Run build
         if: steps.check_commits.outputs.enough_commits == 'true'
         run: yarn run build
