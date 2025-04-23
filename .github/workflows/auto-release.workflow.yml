@@ -42,6 +42,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.PAT_FINE }}
       - name: 🕵️ Check if there are at least 3 new commits since the last version
         id: check_commits
         run: |
@@ -66,8 +67,8 @@ jobs:
       - name: 🎫 Configure Git
         if: steps.check_commits.outputs.enough_commits == 'true'
         run: |
-          USER_NAME=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" https://api.github.com/user | jq -r '.name')
-          USER_EMAIL=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" https://api.github.com/user | jq -r '.email')
+          USER_NAME=$(curl -s -H "Authorization: token ${{ secrets.PAT_FINE }}" https://api.github.com/user | jq -r '.name')
+          USER_EMAIL=$(curl -s -H "Authorization: token ${{ secrets.PAT_FINE }}" https://api.github.com/user | jq -r '.email')
           git config --global user.name "$USER_NAME"
           git config --global user.email "$USER_EMAIL"
       - name: 🟢 Setup Node.js
@@ -97,7 +98,7 @@ jobs:
           yarn release --release-as $STRATEGY
           git push --follow-tags origin release/${{ github.run_number }}
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
+          GITHUB_TOKEN: ${{ secrets.PAT_FINE }}
       - name: ⏱️ Wait for changes to be registered
         if: steps.check_commits.outputs.enough_commits == 'true'
         timeout-minutes: 5
@@ -128,7 +129,7 @@ jobs:
         run: |
           PR_DATA=$(curl \
             -X POST \
-            -H "Authorization: token ${{ secrets.PAT }}" \
+            -H "Authorization: token ${{ secrets.PAT_FINE }}" \
             -H "Accept: application/vnd.github.v3+json" \
             https://api.github.com/repos/${{ github.repository }}/pulls \
             -d '{
@@ -141,7 +142,7 @@ jobs:
 
           curl \
           -X POST \
-          -H "Authorization: token ${{ secrets.PAT }}" \
+          -H "Authorization: token ${{ secrets.PAT_FINE }}" \
           -H "Accept: application/vnd.github.v3+json" \
           https://api.github.com/repos/${{ github.repository }}/issues/$PR_NUMBER/labels \
           -d '{
@@ -176,7 +177,7 @@ jobs:
               await new Promise(resolve => setTimeout(resolve, interval));
             }
             throw new Error('PR approval timed out');
-          github-token: ${{ secrets.PAT }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: 🕵️ Check if all checks have passed and merge PR
         if: steps.check_commits.outputs.enough_commits == 'true'
         uses: actions/github-script@v7
@@ -224,7 +225,7 @@ jobs:
               await new Promise(resolve => setTimeout(resolve, interval));
             }
             throw new Error('PR checks and merge timed out');
-          github-token: ${{ secrets.PAT }}
+          github-token: ${{ secrets.PAT_FINE }}
       - name: �🚧 Run build
         if: steps.check_commits.outputs.enough_commits == 'true'
         run: yarn run build

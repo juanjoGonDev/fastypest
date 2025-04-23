@@ -1,4 +1,9 @@
 name: 🗑️ Delete old cache
+
+permissions:
+  actions: write
+  contents: read
+
 on:
   workflow_dispatch:
     inputs:
