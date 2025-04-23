@@ -203,18 +203,25 @@ jobs:
 
             console.log(`⌛ Waiting for all checks on PR #${prNumber}...`);
             while (Date.now() < deadline) {
-              const { data: status } = await github.rest.repos.getCombinedStatusForRef({ owner, repo, ref });
+              const { data: checks } = await github.rest.checks.listForRef({
+                owner,
+                repo,
+                ref
+              });
 
-              if (status.state === 'success') {
-                console.log('✅ All checks passed! Proceeding to approve the PR.');
+              const totalChecks = checks.check_runs.length;
+              const passedChecks = checks.check_runs.filter(run => run.status === 'completed' && run.conclusion === 'success').length;
+              const allPassed = passedChecks === totalChecks;
+
+              if (allPassed) {
+                console.log(`✅ All checks passed! Proceeding to approve the PR #${prNumber}`);
                 break;
               }
 
-              if (status.state === 'failure') {
-                throw new Error(`❌ Some checks failed for PR #${prNumber}.`);
-              }
+              const anyFailed = checks.check_runs.some(run => run.status === 'completed' && run.conclusion === 'failure');
+              if (anyFailed) throw new Error(`❌ Some checks failed for PR #${prNumber}.`);
 
-              console.log(`⏳ Current status: ${status.state}. Retrying in ${interval / 1000}s...`);
+              console.log(`⏳ Waiting for all checks to pass (${passedChecks}/${totalChecks}). Retrying in ${interval / 1000}s...`);
               await new Promise(resolve => setTimeout(resolve, interval));
             }
 
