@@ -163,69 +163,89 @@ jobs:
             const startTime = Date.now();
             const prNumber = process.env.PULL_REQUEST_NUMBER;
             console.log('PR number:', prNumber);
+
             while (Date.now() - startTime < timeout) {
               const { data: reviews } = await github.rest.pulls.listReviews({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 pull_number: prNumber
               });
+
               const approved = reviews.some(review => review.state === 'APPROVED');
               if (approved) {
                 console.log(`PR #${prNumber} has been approved`);
                 return;
               }
+
               await new Promise(resolve => setTimeout(resolve, interval));
             }
+
             throw new Error('PR approval timed out');
           github-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: 🕵️ Check if all checks have passed and merge PR
+      - name: ✅ Approve and merge PR
         if: steps.check_commits.outputs.enough_commits == 'true'
         uses: actions/github-script@v7
         timeout-minutes: 5
         env:
           PULL_REQUEST_NUMBER: ${{ steps.create_pr.outputs.prNumber }}
+          PAT_FINE: ${{ secrets.PAT_FINE }}
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const timeout = 5 * 60 * 1000; // 5 minutes
-            const interval = 5 * 1000; // 5 seconds
-            const startTime = Date.now();
             const prNumber = process.env.PULL_REQUEST_NUMBER;
-            console.log('PR number:', prNumber);
-            const { data: pullRequest } = await github.rest.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: prNumber
-            });
-            const { data: branchProtection } = await github.rest.repos.getBranchProtection({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              branch: pullRequest.base.ref
-            });
-            const requiredChecks = branchProtection.required_status_checks.contexts;
-            while (Date.now() - startTime < timeout) {
-              const { data: checkRuns } = await github.rest.checks.listForRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: `refs/pull/${prNumber}/head`
-              });
-              const requiredChecksPassed = requiredChecks.every(requiredCheck =>
-                checkRuns.check_runs.some(checkRun => checkRun.name === requiredCheck && (checkRun.conclusion === 'success' || checkRun.conclusion === 'skipped'))
-              );
-              if (requiredChecksPassed) {
-                console.log(`All required checks for PR #${prNumber} have passed`);
-                await github.rest.pulls.merge({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  pull_number: prNumber,
-                  merge_method: 'squash'
-                });
-                console.log(`PR #${prNumber} has been merged`);
-                return;
+            const { owner, repo } = context.repo;
+            const timeout = 5 * 60 * 1000; // 5 minutes
+            const interval = 5000; // 5 seconds
+            const deadline = Date.now() + timeout;
+
+            const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNumber });
+            const ref = pr.head.sha;
+
+            console.log(`⌛ Waiting for all checks on PR #${prNumber}...`);
+            while (Date.now() < deadline) {
+              const { data: status } = await github.rest.repos.getCombinedStatusForRef({ owner, repo, ref });
+
+              if (status.state === 'success') {
+                console.log('✅ All checks passed! Proceeding to approve the PR.');
+                break;
               }
+
+              if (status.state === 'failure') {
+                throw new Error(`❌ Some checks failed for PR #${prNumber}.`);
+              }
+
+              console.log(`⏳ Current status: ${status.state}. Retrying in ${interval / 1000}s...`);
               await new Promise(resolve => setTimeout(resolve, interval));
             }
-            throw new Error('PR checks and merge timed out');
-          github-token: ${{ secrets.PAT_FINE }}
+
+            const { data: reviews } = await github.rest.pulls.listReviews({
+              owner,
+              repo,
+              pull_number: prNumber
+            });
+
+            const alreadyApproved = reviews.some(r => r.state === 'APPROVED');
+            if (!alreadyApproved) {
+              await github.rest.pulls.createReview({
+                owner,
+                repo,
+                pull_number: prNumber,
+                event: 'APPROVE',
+              });
+              console.log('👍 PR approved by the bot.');
+            } else {
+              console.log('👌 PR was already approved.');
+            }
+
+            await github.request('PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge', {
+              owner,
+              repo,
+              pull_number: prNumber,
+              merge_method: 'squash',
+              headers: {
+                authorization: `token ${process.env.PAT_FINE}`
+              }
+            });
       - name: �🚧 Run build
         if: steps.check_commits.outputs.enough_commits == 'true'
         run: yarn run build
