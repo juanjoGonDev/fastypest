@@ -47,7 +47,7 @@ jobs:
         id: check_commits
         run: |
           if [[ "${{ github.event.inputs.force }}" == "yes" ]]; then
-            echo "::set-output name=enough_commits::true"
+            echo "enough_commits=true" >> $GITHUB_OUTPUT
             echo "Force release is enabled. Skipping commit check."
           else
             LAST_TAG=$(git tag | sed 's/^v\.//;s/^v//' | sort -V | tail -n 1)
@@ -57,9 +57,9 @@ jobs:
             echo "Commits since last tag: $COMMITS"
             if [ $COMMITS -lt 4 ]; then
               echo "There are less than 3 new commits since last release, skipping the rest of the job"
-              echo "::set-output name=enough_commits::false"
+              echo "enough_commits=false" >> $GITHUB_OUTPUT
             else
-              echo "::set-output name=enough_commits::true"
+              echo "enough_commits=true" >> $GITHUB_OUTPUT
             fi
           fi
         env:
@@ -101,7 +101,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PAT_FINE }}
       - name: ⏱️ Wait for changes to be registered
         if: steps.check_commits.outputs.enough_commits == 'true'
-        timeout-minutes: 5
+        timeout-minutes: 2
         run: |
           while true; do
             git fetch origin
@@ -113,17 +113,17 @@ jobs:
             echo "Waiting for changes to be registered..."
             sleep 5s
           done
-      - name: 🏷️ Get new tag
+      - name: 🏷️ Get last existing tag
         if: steps.check_commits.outputs.enough_commits == 'true'
         id: get_new_tag
         run: |
-          LAST_TAG=$(git tag | sort -V | tail -n 1)
+          LAST_TAG=$(git tag | grep '^v' | sort -V | tail -n 1)
           if [ -z "$LAST_TAG" ]; then
             echo "No tag found, exiting"
             exit 1
           fi
           echo "Last tag found: $LAST_TAG"
-          echo "newTag=$LAST_TAG" >> $GITHUB_OUTPUT
+          echo "lastTag=$LAST_TAG" >> $GITHUB_OUTPUT
       - name: 📝 Create pull request
         if: steps.check_commits.outputs.enough_commits == 'true'
         id: create_pr
@@ -134,8 +134,8 @@ jobs:
             -H "Accept: application/vnd.github.v3+json" \
             https://api.github.com/repos/${{ github.repository }}/pulls \
             -d '{
-              "title": "Bump version to ${{ steps.get_new_tag.outputs.newTag }}",
-              "body": "Bumps version to ${{ steps.get_new_tag.outputs.newTag }}",
+              "title": "Bump version to ${{ steps.get_new_tag.outputs.lastTag }}",
+              "body": "Bumps version to ${{ steps.get_new_tag.outputs.lastTag }}",
               "head": "release/${{ github.run_number }}",
               "base": "main"
             }')
@@ -149,8 +149,8 @@ jobs:
           -d '{
             "labels": ["auto-release"]
           }'
-
-          echo ::set-output name=prNumber::$PR_NUMBER
+          echo "Detected PR number: $PR_NUMBER"
+          echo "prNumber=$PR_NUMBER" >> $GITHUB_OUTPUT
       - name: 🕵️ Check if PR is approved
         if: steps.check_commits.outputs.enough_commits == 'true'
         uses: actions/github-script@v7
@@ -264,8 +264,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag: ${{ steps.get_new_tag.outputs.newTag }}
-          name: Release ${{ steps.get_new_tag.outputs.newTag }}
+          tag: ${{ steps.get_new_tag.outputs.lastTag }}
+          name: Release ${{ steps.get_new_tag.outputs.lastTag }}
           draft: false
           prerelease: false
           makeLatest: true
@@ -275,7 +275,7 @@ jobs:
         with:
           script: |
             const runNumber = ${{ github.run_number }};
-            const newTag = '${{ steps.get_new_tag.outputs.newTag }}';
+            const newTag = '${{ steps.get_new_tag.outputs.lastTag }}';
             const { owner, repo } = context.repo;
             // Delete branch
             try {
