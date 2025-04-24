@@ -117,7 +117,7 @@ jobs:
         if: steps.check_commits.outputs.enough_commits == 'true'
         id: get_new_tag
         run: |
-          LAST_TAG=$(git tag | grep '^v' | sort -V | tail -n 1)
+          LAST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
           if [ -z "$LAST_TAG" ]; then
             echo "No tag found, exiting"
             exit 1
