@@ -117,12 +117,13 @@ jobs:
         if: steps.check_commits.outputs.enough_commits == 'true'
         id: get_new_tag
         run: |
-          NEW_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
-          if [ -z "$NEW_TAG" ]; then
-            echo "No new tag created, exiting"
+          LAST_TAG=$(git tag | sort -V | tail -n 1)
+          if [ -z "$LAST_TAG" ]; then
+            echo "No tag found, exiting"
             exit 1
           fi
-          echo ::set-output name=newTag::$NEW_TAG
+          echo "Last tag found: $LAST_TAG"
+          echo "newTag=$LAST_TAG" >> $GITHUB_OUTPUT
       - name: 📝 Create pull request
         if: steps.check_commits.outputs.enough_commits == 'true'
         id: create_pr
