@@ -241,7 +241,7 @@ jobs:
               merge_method: 'squash'
             });
             console.log(`✅ PR #${prNumber} successfully merged as squash.`);
-      - name: �🚧 Run build
+      - name: 🚧 Run build
         if: steps.check_commits.outputs.enough_commits == 'true'
         run: yarn run build
       - name: 🧪 Install package test
