@@ -54,11 +54,10 @@ jobs:
     name: ✅ Check all test
     runs-on: ubuntu-latest
     needs: run-test
-    outputs:
-      success: ${{ steps.all-ok.outputs.success }}
+    if: ${{ always() && needs.run-test.result == 'success' }}  # Esto es clave
     steps:
-      - id: all-ok
-        run: echo "success=true" >> $GITHUB_OUTPUT
+      - name: ✅ All database tests passed
+        run: echo "All database test jobs succeeded."
 
   run-test:
     name: 🗂️ ${{ matrix.database.name }}
