@@ -51,13 +51,20 @@ jobs:
         run: yarn eslint
 
   all-test-ok:
-    name: ✅ Check all test
+    name: ✅ Check all tests
     runs-on: ubuntu-latest
     needs: run-test
-    if: ${{ always() && needs.run-test.result == 'success' }}  # Esto es clave
+    if: ${{ always() }}
     steps:
-      - name: ✅ All database tests passed
-        run: echo "All database test jobs succeeded."
+      - name: 🔍 Check test results
+        run: |
+          echo "Result: ${{ needs.run-test.result }}"
+          if [[ "${{ needs.run-test.result }}" != "success" ]]; then
+            echo "❌ Some tests failed."
+            exit 1
+          else
+            echo "✅ All tests passed successfully."
+          fi
 
   run-test:
     name: 🗂️ ${{ matrix.database.name }}
