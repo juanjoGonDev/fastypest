@@ -1,3 +1,4 @@
+import { IsNull, Not } from "typeorm";
 import { getConnection } from "../config/orm.config";
 import { seedCount } from "../config/seed.config";
 import { Basic, Simple, User } from "../entities";
@@ -93,9 +94,9 @@ describe("Simple", () => {
 
       it('"Simple" table must be empty', async () => {
         await connectionUtil.transaction(async (em) => {
-          await em.delete(User, {}); // Delete for foreign key
-          await em.delete(Basic, {}); // Delete for foreign key
-          await em.delete(Simple, {});
+          await em.delete(User, { id: Not(IsNull())}); // Delete for foreign key
+          await em.delete(Basic, { name: Not(IsNull())}); // Delete for foreign key
+          await em.delete(Simple, { id: Not(IsNull())});
         });
 
         expect(await getSimpleCount()).toBe(0);
