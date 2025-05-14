@@ -31,6 +31,14 @@ jobs:
         run: yarn install --frozen-lockfile
       - name: ⌛ Run build
         run: yarn build
+      - name: 🧪 Install package test
+        run: |
+          mkdir test-install
+          yarn pack --filename test-install/package.tar.gz
+          cd test-install
+          yarn init -y
+          touch yarn.lock
+          yarn add -D ./package.tar.gz
 
   check-eslint:
     name: 📜 Check format
