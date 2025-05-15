@@ -13,14 +13,14 @@
     "yarn": "4.8.1"
   },
   "scripts": {
+    "setup": "lefthook install",
     "prebuild": "rimraf dist",
     "build": "tsc",
     "eslint": "eslint --fix",
     "test:ci": "jest --runInBand --forceExit --verbose --showSeed --config ./tests/jest.config.json",
     "test": "yarn build && yarn test:ci",
     "docker": "ts-node -r tsconfig-paths/register scripts/prepare-docker.ts",
-    "release": "standard-version",
-    "prepare": "lefthook install"
+    "release": "standard-version"
   },
   "repository": {
     "type": "git",
