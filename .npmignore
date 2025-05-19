@@ -18,3 +18,4 @@ docker-compose.yml
 eslint.config.mjs
 CHANGELOG.md
 test-install
+lefthook.yml
