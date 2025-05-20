@@ -47,3 +47,7 @@ afterEach(async () => {
   await fastypest.restoreData();
 });
 ```
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=juanjoGonDev/fastypest&type=Date)](https://www.star-history.com/#juanjoGonDev/fastypest&Date)
