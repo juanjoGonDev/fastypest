@@ -1,0 +1,44 @@
+name: Feature Request
+description: Suggest an idea for Fastypest features
+title: "[Feature Request]: "
+labels: ["enhancement"]
+assignees:
+  - juanjoGonDev
+body:
+  - type: markdown
+    attributes:
+      value: Thank you for suggesting a feature! Please fill out the following information to help us understand your idea.
+  - type: textarea
+    id: description
+    attributes:
+      label: Feature Description
+      description: A clear and concise description of what the feature is. Include any relevant details that may help us understand the context and purpose of the feature.
+      placeholder: I would like to see '...'
+    validations:
+      required: true
+  - type: textarea
+    id: useCase
+    attributes:
+      label: Use Case
+      description: What problem or use case are you trying to solve with this feature?
+      placeholder: As a user, I want to '...' so that I can '...'
+    validations:
+      required: true
+  - type: textarea
+    id: technicalImplementation
+    attributes:
+      label: Technical Implementation
+      description: Do you have thoughts on how this feature should be implemented?
+      placeholder: I think we should '...'
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Describe any alternatives you've considered for this feature.
+      placeholder: I considered '...' but '...'
+  - type: textarea
+    id: additionalContext
+    attributes:
+      label: Additional Context
+      description: Add any other context or screenshots about the feature request here.
+      placeholder: I have attached a screenshot of '...'

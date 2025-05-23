@@ -1,5 +1,8 @@
 name: 🧪 Pull Request tests
 
+permissions:
+  contents: read
+
 on:
   pull_request:
     branches: ["main"]
@@ -28,6 +31,14 @@ jobs:
         run: yarn install --frozen-lockfile
       - name: ⌛ Run build
         run: yarn build
+      - name: 🧪 Install package test
+        run: |
+          mkdir test-install
+          yarn pack --filename test-install/package.tar.gz
+          cd test-install
+          yarn init -y
+          touch yarn.lock
+          yarn add -D ./package.tar.gz
 
   check-eslint:
     name: 📜 Check format
@@ -48,14 +59,20 @@ jobs:
         run: yarn eslint
 
   all-test-ok:
-    name: ✅ Check all test
+    name: ✅ Check all tests
     runs-on: ubuntu-latest
     needs: run-test
-    outputs:
-      success: ${{ steps.all-ok.outputs.success }}
+    if: ${{ always() }}
     steps:
-      - id: all-ok
-        run: echo "success=true" >> $GITHUB_OUTPUT
+      - name: 🔍 Check test results
+        run: |
+          echo "Result: ${{ needs.run-test.result }}"
+          if [[ "${{ needs.run-test.result }}" != "success" ]]; then
+            echo "❌ Some tests failed."
+            exit 1
+          else
+            echo "✅ All tests passed successfully."
+          fi
 
   run-test:
     name: 🗂️ ${{ matrix.database.name }}

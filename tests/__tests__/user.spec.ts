@@ -1,3 +1,4 @@
+import { IsNull, Not } from "typeorm";
 import { getConnection } from "../config/orm.config";
 import { seedCount } from "../config/seed.config";
 import { DB_WITHOUT_QUOTES } from "../data/query";
@@ -95,7 +96,7 @@ describe("User", () => {
 
       it('"User" table must be empty', async () => {
         await connectionUtil.transaction(async (em) => {
-          await em.delete(User, {});
+          await em.delete(User, { id: Not(IsNull()) });
         });
 
         expect(await getSimpleCount()).toBe(0);

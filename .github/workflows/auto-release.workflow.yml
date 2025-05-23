@@ -8,6 +8,27 @@ on:
   schedule:
     - cron: "0 6 * * *"
   workflow_dispatch:
+    inputs:
+      force:
+        description: "Force release"
+        required: true
+        default: "no"
+        type: choice
+        options:
+          - "yes"
+          - "no"
+      strategy:
+        description: "Release strategy (only used if force is set to 'yes')"
+        required: true
+        type: choice
+        options:
+          - "major"
+          - "minor"
+          - "patch"
+          - "premajor"
+          - "preminor"
+          - "prepatch"
+          - "prerelease"
 
 env:
   NODE_VERSION: "18.20"
@@ -21,28 +42,35 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.PAT_FINE }}
       - name: 🕵️ Check if there are at least 3 new commits since the last version
         id: check_commits
         run: |
-          LAST_TAG=$(git tag | sed 's/^v\.//;s/^v//' | sort -V | tail -n 1)
-          LAST_TAG="v${LAST_TAG}"
-          echo "Last tag: $LAST_TAG"
-          COMMITS=$(git log --oneline ${LAST_TAG}..HEAD | wc -l)
-          echo "Commits since last tag: $COMMITS"
-          if [ $COMMITS -lt 4 ]; then
-            echo "There are less than 3 new commits since last release, skipping the rest of the job"
-            echo "::set-output name=enough_commits::false"
+          if [[ "${{ github.event.inputs.force }}" == "yes" ]]; then
+            echo "enough_commits=true" >> $GITHUB_OUTPUT
+            echo "Force release is enabled. Skipping commit check."
           else
-            echo "::set-output name=enough_commits::true"
+            LAST_TAG=$(git tag | sed 's/^v\.//;s/^v//' | sort -V | tail -n 1)
+            LAST_TAG="v${LAST_TAG}"
+            echo "Last tag: $LAST_TAG"
+            COMMITS=$(git log --oneline ${LAST_TAG}..HEAD | wc -l)
+            echo "Commits since last tag: $COMMITS"
+            if [ $COMMITS -lt 4 ]; then
+              echo "There are less than 3 new commits since last release, skipping the rest of the job"
+              echo "enough_commits=false" >> $GITHUB_OUTPUT
+            else
+              echo "enough_commits=true" >> $GITHUB_OUTPUT
+            fi
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: 🎫 Configure Git
         if: steps.check_commits.outputs.enough_commits == 'true'
         run: |
-          USER_NAME=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" https://api.github.com/user | jq -r '.name')
-          USER_EMAIL=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" https://api.github.com/user | jq -r '.email')
-          git config --global user.name "$USER_NAME"
+          USER_LOGIN=$(curl -s -H "Authorization: token ${{ secrets.PAT_FINE }}" https://api.github.com/user | jq -r '.login')
+          USER_EMAIL=$(curl -s -H "Authorization: token ${{ secrets.PAT_FINE }}" https://api.github.com/user | jq -r '.email')
+          echo "ACTOR_USERNAME=${USER_LOGIN}" >> $GITHUB_ENV
+          git config --global user.name "$USER_LOGIN"
           git config --global user.email "$USER_EMAIL"
       - name: 🟢 Setup Node.js
         if: steps.check_commits.outputs.enough_commits == 'true'
@@ -64,13 +92,23 @@ jobs:
           if [ $EXISTS -eq 1 ]; then
             git pull origin release/${{ github.run_number }}
           fi
-          yarn release
+          STRATEGY="patch"
+          if [[ "${{ github.event.inputs.force }}" == "yes" && "${{ github.event.inputs.strategy }}" ]]; then
+            STRATEGY=${{ github.event.inputs.strategy }}
+          fi
+
+          # Determine current major.minor from package.json to construct tag-prefix
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          TAG_PREFIX_VALUE="v$(echo $CURRENT_VERSION | awk -F. '{print $1 FS $2}')." # Results in "v1.4." (using awk for robustness)
+          
+          echo "Using tag prefix: ${TAG_PREFIX_VALUE} for standard-version"
+          yarn release --release-as $STRATEGY --tag-prefix "${TAG_PREFIX_VALUE}"
           git push --follow-tags origin release/${{ github.run_number }}
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
+          GITHUB_TOKEN: ${{ secrets.PAT_FINE }}
       - name: ⏱️ Wait for changes to be registered
         if: steps.check_commits.outputs.enough_commits == 'true'
-        timeout-minutes: 5
+        timeout-minutes: 2
         run: |
           while true; do
             git fetch origin
@@ -82,28 +120,29 @@ jobs:
             echo "Waiting for changes to be registered..."
             sleep 5s
           done
-      - name: 🏷️ Get new tag
+      - name: 🏷️ Get last existing tag
         if: steps.check_commits.outputs.enough_commits == 'true'
         id: get_new_tag
         run: |
-          NEW_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
-          if [ -z "$NEW_TAG" ]; then
-            echo "No new tag created, exiting"
+          LAST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
+          if [ -z "$LAST_TAG" ]; then
+            echo "No tag found, exiting"
             exit 1
           fi
-          echo ::set-output name=newTag::$NEW_TAG
+          echo "Last tag found: $LAST_TAG"
+          echo "lastTag=$LAST_TAG" >> $GITHUB_OUTPUT
       - name: 📝 Create pull request
         if: steps.check_commits.outputs.enough_commits == 'true'
         id: create_pr
         run: |
           PR_DATA=$(curl \
             -X POST \
-            -H "Authorization: token ${{ secrets.PAT }}" \
+            -H "Authorization: token ${{ secrets.PAT_FINE }}" \
             -H "Accept: application/vnd.github.v3+json" \
             https://api.github.com/repos/${{ github.repository }}/pulls \
             -d '{
-              "title": "Bump version to ${{ steps.get_new_tag.outputs.newTag }}",
-              "body": "Bumps version to ${{ steps.get_new_tag.outputs.newTag }}",
+              "title": "Bump version to ${{ steps.get_new_tag.outputs.lastTag }}",
+              "body": "Bumps version to ${{ steps.get_new_tag.outputs.lastTag }}",
               "head": "release/${{ github.run_number }}",
               "base": "main"
             }')
@@ -111,14 +150,19 @@ jobs:
 
           curl \
           -X POST \
-          -H "Authorization: token ${{ secrets.PAT }}" \
+          -H "Authorization: token ${{ secrets.PAT_FINE }}" \
           -H "Accept: application/vnd.github.v3+json" \
           https://api.github.com/repos/${{ github.repository }}/issues/$PR_NUMBER/labels \
           -d '{
             "labels": ["auto-release"]
           }'
-
-          echo ::set-output name=prNumber::$PR_NUMBER
+          echo "Detected PR number: $PR_NUMBER"
+          echo "prNumber=$PR_NUMBER" >> $GITHUB_OUTPUT
+      - name: 👤 Assign PR to user
+        if: steps.check_commits.outputs.enough_commits == 'true'
+        run: gh pr edit ${{ steps.create_pr.outputs.prNumber }} --add-assignee "${{ env.ACTOR_USERNAME }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_FINE }}
       - name: 🕵️ Check if PR is approved
         if: steps.check_commits.outputs.enough_commits == 'true'
         uses: actions/github-script@v7
@@ -132,72 +176,94 @@ jobs:
             const startTime = Date.now();
             const prNumber = process.env.PULL_REQUEST_NUMBER;
             console.log('PR number:', prNumber);
+
             while (Date.now() - startTime < timeout) {
               const { data: reviews } = await github.rest.pulls.listReviews({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 pull_number: prNumber
               });
+
               const approved = reviews.some(review => review.state === 'APPROVED');
               if (approved) {
                 console.log(`PR #${prNumber} has been approved`);
                 return;
               }
+
               await new Promise(resolve => setTimeout(resolve, interval));
             }
+
             throw new Error('PR approval timed out');
-          github-token: ${{ secrets.PAT }}
-      - name: 🕵️ Check if all checks have passed and merge PR
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: ⌛ Wait for all checks to pass
         if: steps.check_commits.outputs.enough_commits == 'true'
         uses: actions/github-script@v7
         timeout-minutes: 5
         env:
           PULL_REQUEST_NUMBER: ${{ steps.create_pr.outputs.prNumber }}
+          PAT_FINE: ${{ secrets.PAT_FINE }}
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const timeout = 5 * 60 * 1000; // 5 minutes
-            const interval = 5 * 1000; // 5 seconds
-            const startTime = Date.now();
             const prNumber = process.env.PULL_REQUEST_NUMBER;
-            console.log('PR number:', prNumber);
-            const { data: pullRequest } = await github.rest.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: prNumber
-            });
-            const { data: branchProtection } = await github.rest.repos.getBranchProtection({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              branch: pullRequest.base.ref
-            });
-            const requiredChecks = branchProtection.required_status_checks.contexts;
-            while (Date.now() - startTime < timeout) {
-              const { data: checkRuns } = await github.rest.checks.listForRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: `refs/pull/${prNumber}/head`
+            const { owner, repo } = context.repo;
+            const timeout = 5 * 60 * 1000; // 5 minutes
+            const interval = 5000; // 5 seconds
+            const deadline = Date.now() + timeout;
+
+            const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNumber });
+            const ref = pr.head.sha;
+
+            console.log(`⌛ Waiting for all checks on PR #${prNumber}...`);
+            while (Date.now() < deadline) {
+              const { data: checks } = await github.rest.checks.listForRef({
+                owner,
+                repo,
+                ref
               });
-              const requiredChecksPassed = requiredChecks.every(requiredCheck =>
-                checkRuns.check_runs.some(checkRun => checkRun.name === requiredCheck && (checkRun.conclusion === 'success' || checkRun.conclusion === 'skipped'))
-              );
-              if (requiredChecksPassed) {
-                console.log(`All required checks for PR #${prNumber} have passed`);
-                await github.rest.pulls.merge({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  pull_number: prNumber,
-                  merge_method: 'squash'
-                });
-                console.log(`PR #${prNumber} has been merged`);
-                return;
+
+              const expectedChecks = checks.check_runs.filter(run => run.conclusion !== 'skipped');
+              const passedChecks = expectedChecks.filter(run => run.status === 'completed' && run.conclusion === 'success').length;
+              const allPassed = passedChecks === expectedChecks.length;
+
+              if (allPassed) {
+                console.log(`✅ All checks passed! Proceeding to approve the PR #${prNumber}`);
+                break;
               }
+
+              const anyFailed = expectedChecks.some(run => run.conclusion === 'failure');
+              if (anyFailed) throw new Error(`❌ Some checks failed for PR #${prNumber}.`);
+
+              console.log(`⏳ Waiting for all checks to pass (${passedChecks}/${expectedChecks.length}). Retrying in ${interval / 1000}s...`);
               await new Promise(resolve => setTimeout(resolve, interval));
             }
-            throw new Error('PR checks and merge timed out');
-          github-token: ${{ secrets.PAT }}
-      - name: �🚧 Run build
+      - name: ✅ Merge PR
+        if: steps.check_commits.outputs.enough_commits == 'true'
+        uses: actions/github-script@v7
+        env:
+          PULL_REQUEST_NUMBER: ${{ steps.create_pr.outputs.prNumber }}
+        with:
+          github-token: ${{ secrets.PAT_FINE }}
+          script: |
+            const prNumber = process.env.PULL_REQUEST_NUMBER;
+            await github.rest.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+              merge_method: 'squash'
+            });
+            console.log(`✅ PR #${prNumber} successfully merged as squash.`);
+      - name: 🚧 Run build
         if: steps.check_commits.outputs.enough_commits == 'true'
         run: yarn run build
+      - name: 🧪 Install package test
+        run: |
+          mkdir test-install
+          yarn pack --filename test-install/package.tar.gz
+          cd test-install
+          yarn init -y
+          touch yarn.lock
+          yarn add -D ./package.tar.gz
       - name: 🎉 Publish to npm
         if: steps.check_commits.outputs.enough_commits == 'true'
         run: npm publish
@@ -210,8 +276,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag: ${{ steps.get_new_tag.outputs.newTag }}
-          name: Release ${{ steps.get_new_tag.outputs.newTag }}
+          tag: ${{ steps.get_new_tag.outputs.lastTag }}
+          name: Release ${{ steps.get_new_tag.outputs.lastTag }}
           draft: false
           prerelease: false
           makeLatest: true
@@ -221,7 +287,7 @@ jobs:
         with:
           script: |
             const runNumber = ${{ github.run_number }};
-            const newTag = '${{ steps.get_new_tag.outputs.newTag }}';
+            const newTag = '${{ steps.get_new_tag.outputs.lastTag }}';
             const { owner, repo } = context.repo;
             // Delete branch
             try {
