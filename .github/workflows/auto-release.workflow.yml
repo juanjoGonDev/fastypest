@@ -96,7 +96,13 @@ jobs:
           if [[ "${{ github.event.inputs.force }}" == "yes" && "${{ github.event.inputs.strategy }}" ]]; then
             STRATEGY=${{ github.event.inputs.strategy }}
           fi
-          yarn release --release-as $STRATEGY
+
+          # Determine current major.minor from package.json to construct tag-prefix
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          TAG_PREFIX_VALUE="v$(echo $CURRENT_VERSION | awk -F. '{print $1 FS $2}')." # Results in "v1.4." (using awk for robustness)
+          
+          echo "Using tag prefix: ${TAG_PREFIX_VALUE} for standard-version"
+          yarn release --release-as $STRATEGY --tag-prefix "${TAG_PREFIX_VALUE}"
           git push --follow-tags origin release/${{ github.run_number }}
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_FINE }}
