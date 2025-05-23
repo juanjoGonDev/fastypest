@@ -99,7 +99,7 @@ jobs:
             yarn-dependencies-${{ runner.os }}-
             yarn-dependencies-
       - name: ⚙️ yarn install
-        run: yarn install --immutable --immutable-cache
+        run: yarn install --immutable --check-cache
       - name: ✔️ Run eslint
         run: yarn eslint
 
@@ -304,7 +304,7 @@ jobs:
             yarn-dependencies-${{ runner.os }}-
             yarn-dependencies-
       - name: ⚙️ yarn install
-        run: yarn install --immutable --immutable-cache
+        run: yarn install --immutable --check-cache
       - name: ⌛ Run build
         run: yarn build
       - name: 🧪 Testing
