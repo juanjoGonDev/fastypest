@@ -54,7 +54,7 @@
     "@swc-node/jest": "^1.8.13",
     "@swc/cli": "^0.7.7",
     "@swc/core": "^1.11.29",
-    "@swc/helpers": "^0.5.11",
+    "@swc/helpers": "^0.5.17",
     "@types/cross-spawn": "^6.0.6",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.15.21",
