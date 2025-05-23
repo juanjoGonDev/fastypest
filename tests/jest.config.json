@@ -1,36 +1,17 @@
 {
   "testEnvironment": "node",
-  "rootDir": "../",
+  "preset": "ts-jest",
+  "rootDir": ".",
   "setupFilesAfterEnv": [
-    "./tests/config/jest.setup.ts"
+    "./config/jest.setup.ts"
   ],
-  "globalSetup": "./tests/config/global.setup.ts",
+  "globalSetup": "./config/global.setup.ts",
   "testRegex": ".spec.ts",
-  "modulePaths": [
-    "<rootDir>"
-  ],
-  "roots": [
-    "<rootDir>/tests"
-  ],
   "transform": {
     "^.+\\.tsx?$": [
-      "@swc/jest",
+      "ts-jest",
       {
-        "jsc": {
-          "parser": {
-            "syntax": "typescript",
-            "tsx": false,
-            "decorators": true
-          },
-          "target": "es2017",
-          "transform": {
-            "decoratorMetadata": true,
-            "legacyDecorator": true
-          }
-        },
-        "module": {
-          "type": "commonjs"
-        }
+        "tsconfig": "tsconfig.json"
       }
     ]
   }

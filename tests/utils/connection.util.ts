@@ -13,7 +13,7 @@ export class ConnectionUtil extends Fastypest {
     handler: (entityManager: EntityManager) => Promise<unknown>
   ) {
     await this.connection.transaction(async (em: EntityManager) => {
-      const { foreignKey } = await this.restoreManager(em);
+      const { foreignKey } = await this.createRestoreManager(em); // Changed to createRestoreManager
       await foreignKey.disable();
       await handler(em);
       await foreignKey.enable();

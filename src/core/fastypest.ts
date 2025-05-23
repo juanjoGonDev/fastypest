@@ -7,6 +7,7 @@ import type {
   DBType,
   DependencyTreeQueryOut,
   Manager,
+  IncrementDetail, // Added IncrementDetail
 } from "./types";
 
 export class Fastypest extends SQLScript {
@@ -153,7 +154,7 @@ export class Fastypest extends SQLScript {
     return this.tables;
   }
 
-  public getTablesWithAutoIncrement() {
+  public getTablesWithAutoIncrement(): Map<string, IncrementDetail[]> {
     return this.autoIncrementManager.getTablesWithAutoIncrement();
   }
 
