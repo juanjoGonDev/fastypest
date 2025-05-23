@@ -8,7 +8,8 @@ permissions:
 jobs:
   approve-release:
     runs-on: ubuntu-latest
-    if: contains(github.event.pull_request.labels.*.name, 'auto-release')
+    if: contains(github.event.pull_request.labels.*.name, 'auto-release') && github.event.pull_request.head.repo.full_name == github.repository
+    environment: admin
     steps:
       - name: 🔎 Check is approved
         id: check-is-approved
@@ -32,7 +33,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   dependabot:
     runs-on: ubuntu-latest
-    if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' }}
+    if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' }} && github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - name: Fetch actor username
         id: get_actor_username

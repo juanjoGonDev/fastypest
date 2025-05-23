@@ -1,6 +1,6 @@
 {
   "testEnvironment": "node",
-  "preset": "ts-jest",
+  "preset": "@swc-node/jest",
   "rootDir": ".",
   "setupFilesAfterEnv": [
     "./config/jest.setup.ts"
@@ -9,7 +9,7 @@
   "testRegex": ".spec.ts",
   "transform": {
     "^.+\\.tsx?$": [
-      "ts-jest",
+      "@swc-node/jest",
       {
         "tsconfig": "tsconfig.json"
       }

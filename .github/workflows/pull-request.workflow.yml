@@ -17,6 +17,7 @@ concurrency:
 
 jobs:
   build:
+    if: github.event.pull_request.head.repo.full_name == github.repository
     name: 🚧 Build Node
     runs-on: ubuntu-latest
     timeout-minutes: 2
@@ -27,8 +28,37 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - name: ⚙️ yarn install
-        run: yarn install --frozen-lockfile
+      - name: 📦 Cache Yarn dependencies
+        id: yarn-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .yarn/cache
+            .yarn/unplugged
+            .yarn/global
+            .yarn/versions
+            .yarn/releases
+            .yarn/install-state.gz
+            .pnp.*
+          key: yarn-dependencies-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-dependencies-${{ runner.os }}-
+            yarn-dependencies-
+      - name: ⚙️ yarn install (cacheable)
+        run: yarn install --immutable --check-cache
+      - name: 💾 Save updated Yarn cache
+        if: steps.yarn-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            .yarn/cache
+            .yarn/unplugged
+            .yarn/global
+            .yarn/versions
+            .yarn/releases
+            .yarn/install-state.gz
+            .pnp.*
+          key: yarn-dependencies-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - name: ⌛ Run build
         run: yarn build
       - name: 🧪 Install package test
@@ -52,9 +82,24 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: yarn
+      - name: 📦 Cache Yarn dependencies
+        id: yarn-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .yarn/cache
+            .yarn/unplugged
+            .yarn/global
+            .yarn/versions
+            .yarn/releases
+            .yarn/install-state.gz
+            .pnp.*
+          key: yarn-dependencies-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-dependencies-${{ runner.os }}-
+            yarn-dependencies-
       - name: ⚙️ yarn install
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable --check-cache
       - name: ✔️ Run eslint
         run: yarn eslint
 
@@ -79,6 +124,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     needs: build
+    env:
+      IMG_CACHE_DIR: ${{ github.workspace }}/.docker-images
     strategy:
       fail-fast: false
       matrix:
@@ -89,7 +136,6 @@ jobs:
             image: cockroachdb/cockroach:v22.2.0
             port: 26257
             run: |
-              docker pull cockroachdb/cockroach:v22.2.0
               docker run -d --name roach --hostname roach \
                 -p 26257:26257 -p 8080:8080 \
                 -e "COCKROACH_INSECURE=true" \
@@ -110,7 +156,6 @@ jobs:
             image: cockroachdb/cockroach:latest
             port: 26257
             run: |
-              docker pull cockroachdb/cockroach:latest
               docker run -d --name roach --hostname roach \
                 -p 26257:26257 -p 8080:8080 \
                 -e "COCKROACH_INSECURE=true" \
@@ -233,7 +278,46 @@ jobs:
       data-base: ${{matrix.database.service}}
 
     steps:
-      - if: ${{matrix.database.use-service == false}}
+      - name: 🔍 Get registry digest
+        if: ${{ matrix.database.use-service == false }}
+        id: digest
+        run: |
+          DIGEST=$(docker buildx imagetools inspect \
+           --format '{{json .Manifest}}' "${{ matrix.database.image }}" \
+          | jq -r '.digest')
+          echo "digest=${DIGEST#sha256:}" >>"$GITHUB_OUTPUT"
+      - name: ♻️ Restore cached image
+        if: ${{ matrix.database.use-service == false }}
+        uses: actions/cache@v4
+        id: db-cache
+        with:
+          path: ${{ env.IMG_CACHE_DIR }}
+          key: db-img-${{ runner.os }}-${{ matrix.database.image }}-${{ steps.digest.outputs.digest }}
+          restore-keys: |
+            db-img-${{ runner.os }}-${{ matrix.database.image }}-
+      - name: 🐳 docker load (from cache)
+        if: ${{ matrix.database.use-service == false && steps.db-cache.outputs.cache-hit == 'true' }}
+        run: |
+          set -euo pipefail
+          IMAGE="${{ matrix.database.image }}"
+          FILE_NAME="$(echo "$IMAGE" | tr '/:' '_').tar"
+          docker load -i "$IMG_CACHE_DIR/$FILE_NAME"
+      - name: 🐳 docker pull (when cache miss)
+        if: ${{ matrix.database.use-service == false && steps.db-cache.outputs.cache-hit != 'true' }}
+        run: |
+          set -euo pipefail
+          IMAGE="${{ matrix.database.image }}"
+          FILE_NAME="$(echo "$IMAGE" | tr '/:' '_').tar"
+          mkdir -p "$IMG_CACHE_DIR"
+          docker pull "$IMAGE"
+          docker save "$IMAGE" -o "$IMG_CACHE_DIR/$FILE_NAME"
+      - name: 💾 Save image to cache
+        if: ${{ matrix.database.use-service == false && steps.db-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.IMG_CACHE_DIR }}
+          key: db-img-${{ runner.os }}-${{ matrix.database.image }}-${{ steps.digest.outputs.digest }}
+      - if: ${{ matrix.database.use-service == false }}
         name: 🐋 Start a single instance with docker
         run: ${{ matrix.database.run }}
       - name: 🔶 Check repository
@@ -242,9 +326,24 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: yarn
+      - name: 📦 Cache Yarn dependencies
+        id: yarn-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .yarn/cache
+            .yarn/unplugged
+            .yarn/global
+            .yarn/versions
+            .yarn/releases
+            .yarn/install-state.gz
+            .pnp.*
+          key: yarn-dependencies-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-dependencies-${{ runner.os }}-
+            yarn-dependencies-
       - name: ⚙️ yarn install
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable --check-cache
       - name: ⌛ Run build
         run: yarn build
       - name: 🧪 Testing
