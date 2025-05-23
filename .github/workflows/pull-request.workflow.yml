@@ -280,7 +280,7 @@ jobs:
         if: ${{ matrix.database.use-service == false }}
         id: digest
         run: |
-          DIGEST=$(docker buildx imagetools inspect --format '{{ .Digest }}' "$IMAGE")
+          DIGEST=$(docker buildx imagetools inspect --format '{{ .Digest }}' "${{ matrix.database.image }}")
           echo "digest=${DIGEST#sha256:}" >>"$GITHUB_OUTPUT"
       - name: ♻️ Restore cached image
         if: ${{ matrix.database.use-service == false }}
@@ -288,22 +288,22 @@ jobs:
         id: db-cache
         with:
           path: ${{ github.workspace }}/.docker-images
-          key: db-img-${{ runner.os }}-${{ env.IMAGE }}-${{ steps.digest.outputs.digest }}
+          key: db-img-${{ runner.os }}-${{ matrix.database.image }}-${{ steps.digest.outputs.digest }}
           restore-keys: |
-            db-img-${{ runner.os }}-${{ env.IMAGE }}-
+            db-img-${{ runner.os }}-${{ matrix.database.image }}-
       - name: 🐳 docker load (from cache)
         if: ${{ matrix.database.use-service == false && steps.db-cache.outputs.cache-hit == 'true' }}
         run: |
-          docker load -i ".docker-images/${IMAGE//[\/:]/_}.tar"
+          docker load -i ".docker-images/${{ matrix.database.image }}/[\/:]/_}.tar"
       - name: 🐳 docker pull (when cache miss)
         if: ${{ matrix.database.use-service == false && steps.db-cache.outputs.cache-hit != 'true' }}
-        run: docker pull "$IMAGE"
+        run: docker pull "${{ matrix.database.image }}"
       - name: 💾 Save image to cache
         if: ${{ matrix.database.use-service == false && steps.db-cache.outputs.cache-hit != 'true' }}
         uses: actions/cache/save@v4
         with:
           path: ${{ github.workspace }}/.docker-images
-          key: db-img-${{ runner.os }}-${{ env.IMAGE }}-${{ steps.digest.outputs.digest }}
+          key: db-img-${{ runner.os }}-${{ matrix.database.image }}-${{ steps.digest.outputs.digest }}
       - if: ${{ matrix.database.use-service == false }}
         name: 🐋 Start a single instance with docker
         run: ${{ matrix.database.run }}
