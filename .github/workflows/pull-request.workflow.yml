@@ -39,7 +39,7 @@ jobs:
             .yarn/global
           key: yarn-dependencies-${{ hashFiles('.yarn/cache/**/*.zip') }}-${{ runner.arch }}-${{ github.head_ref || github.ref }}
       - name: ⚙️ yarn install
-        run: yarn install --immutable --immutable-cache
+        run: yarn install --frozen-lockfile
       - name: ⌛ Run build
         run: yarn build
       - name: 🧪 Install package test
