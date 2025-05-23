@@ -27,6 +27,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+      - name: 📦 Cache Yarn dependencies
+        id: yarn-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .yarn/cache
+            .yarn/versions
+            .yarn/releases
+            .yarn/global
+          key: yarn-dependencies-${{ hashFiles('.yarn/cache/**/*.zip') }}-${{ runner.arch }}-${{ github.head_ref || github.ref }}
       - name: ⚙️ yarn install
         run: yarn install --frozen-lockfile
       - name: ⌛ Run build
@@ -52,7 +62,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: yarn
+      - name: 📦 Cache Yarn dependencies
+        id: yarn-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .yarn/cache
+            .yarn/versions
+            .yarn/releases
+            .yarn/global
+          key: yarn-dependencies-${{ hashFiles('.yarn/cache/**/*.zip') }}-${{ runner.arch }}-${{ github.head_ref || github.ref }}
       - name: ⚙️ yarn install
         run: yarn install --frozen-lockfile
       - name: ✔️ Run eslint
@@ -242,7 +261,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: yarn
+      - name: 📦 Cache Yarn dependencies
+        id: yarn-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .yarn/cache
+            .yarn/versions
+            .yarn/releases
+            .yarn/global
+          key: yarn-dependencies-${{ hashFiles('.yarn/cache/**/*.zip') }}-${{ runner.arch }}-${{ github.head_ref || github.ref }}
       - name: ⚙️ yarn install
         run: yarn install --frozen-lockfile
       - name: ⌛ Run build
