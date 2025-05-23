@@ -4,7 +4,11 @@
     "source.fixAll": "always",
     "source.organizeImports": "always"
   },
-  "cSpell.words": ["cockroachdb", "Fastypest", "typeorm"],
+  "cSpell.words": [
+    "cockroachdb",
+    "Fastypest",
+    "typeorm"
+  ],
   "search.exclude": {
     "**/.yarn": true,
     "**/.pnp.*": true
