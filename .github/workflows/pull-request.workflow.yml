@@ -279,24 +279,27 @@ jobs:
 
     steps:
       - name: ⬇️ Restore DB image cache
+        if: ${{matrix.database.use-service == false}}
         uses: actions/cache@v4
         id: db-cache
         with:
           path: ~/docker-images
           key: db-image-${{ runner.os }}-${{ matrix.database.image }}
       - name: 🐳 docker load (if cached)
+        if: ${{matrix.database.use-service == false}}
         run: |
           FILE=~/docker-images/$(echo "${{ matrix.database.image }}" | tr '/:' '_').tar
           if [ -f "$FILE" ]; then
             docker load -i "$FILE"
           fi
       - name: 🐳 docker pull (if needed)
+        if: ${{matrix.database.use-service == false}}
         run: |
           if ! docker image inspect "${{ matrix.database.image }}" > /dev/null 2>&1; then
             docker pull "${{ matrix.database.image }}"
           fi
       - name: 💾 Save DB image to cache
-        if: steps.db-cache.outputs.cache-hit != 'true'
+        if: ${{matrix.database.use-service == false}} && steps.db-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p ~/docker-images
           docker save "${{ matrix.database.image }}" \
