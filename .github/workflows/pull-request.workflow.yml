@@ -44,8 +44,8 @@ jobs:
           restore-keys: |
             yarn-dependencies-${{ runner.os }}-
             yarn-dependencies-
-      - name: ⚙️ yarn install
-        run: yarn install --frozen-lockfile
+      - name: ⚙️ yarn install (cacheable)
+        run: yarn install --immutable-cache
       - name: 💾 Save updated Yarn cache
         if: steps.yarn-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
