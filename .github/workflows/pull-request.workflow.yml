@@ -46,6 +46,19 @@ jobs:
             yarn-dependencies-
       - name: ⚙️ yarn install
         run: yarn install --frozen-lockfile
+      - name: 💾 Save updated Yarn cache
+        if: steps.yarn-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            .yarn/cache
+            .yarn/unplugged
+            .yarn/global
+            .yarn/versions
+            .yarn/releases
+            .yarn/install-state.gz
+            .pnp.*
+          key: yarn-dependencies-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - name: ⌛ Run build
         run: yarn build
       - name: 🧪 Install package test
