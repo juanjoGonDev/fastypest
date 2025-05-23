@@ -37,8 +37,12 @@ jobs:
             .yarn/versions
             .yarn/releases
             .yarn/global
+            .yarn/unplugged
             .yarn/install-state.gz
           key: yarn-dependencies-${{ hashFiles('.yarn/cache/**/*.zip') }}-${{ runner.arch }}-${{ github.head_ref || github.ref }}
+          restore-keys: |
+            yarn-dependencies-${{ runner.arch }}-
+            yarn-dependencies-
       - name: ⚙️ yarn install
         run: yarn install --frozen-lockfile
       - name: ⌛ Run build
@@ -73,8 +77,12 @@ jobs:
             .yarn/versions
             .yarn/releases
             .yarn/global
+            .yarn/unplugged
             .yarn/install-state.gz
           key: yarn-dependencies-${{ hashFiles('.yarn/cache/**/*.zip') }}-${{ runner.arch }}-${{ github.head_ref || github.ref }}
+          restore-keys: |
+            yarn-dependencies-${{ runner.arch }}-
+            yarn-dependencies-
       - name: ⚙️ yarn install
         run: yarn install --immutable --immutable-cache
       - name: ✔️ Run eslint
@@ -273,8 +281,12 @@ jobs:
             .yarn/versions
             .yarn/releases
             .yarn/global
+            .yarn/unplugged
             .yarn/install-state.gz
           key: yarn-dependencies-${{ hashFiles('.yarn/cache/**/*.zip') }}-${{ runner.arch }}-${{ github.head_ref || github.ref }}
+          restore-keys: |
+            yarn-dependencies-${{ runner.arch }}-
+            yarn-dependencies-
       - name: ⚙️ yarn install
         run: yarn install --immutable --immutable-cache
       - name: ⌛ Run build
