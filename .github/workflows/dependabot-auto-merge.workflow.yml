@@ -34,6 +34,11 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' }}
     steps:
+      - name: Fetch actor username
+        id: get_actor_username
+        run: echo "ACTOR_USERNAME=$(gh api user -q .login)" >> $GITHUB_ENV
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_FINE }}
       - name: 💿 Dependabot metadata
         id: metadata
         uses: dependabot/fetch-metadata@v2.4.0
@@ -43,19 +48,31 @@ jobs:
         run: gh pr merge --auto --squash "$PR_URL"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          GITHUB_TOKEN: ${{secrets.PAT_FINE}}
       - name: ✅ Approve patch and minor updates
         if: ${{steps.metadata.outputs.update-type == 'version-update:semver-patch' || steps.metadata.outputs.update-type == 'version-update:semver-minor'}}
         run: gh pr review $PR_URL --approve -b "I'm **approving** this pull request because **it includes a patch or minor update**"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          GITHUB_TOKEN: ${{secrets.PAT_FINE}}
+      - name: 👤 Assign PR to user (patch/minor)
+        if: ${{steps.metadata.outputs.update-type == 'version-update:semver-patch' || steps.metadata.outputs.update-type == 'version-update:semver-minor'}}
+        run: gh pr edit $PR_URL --add-assignee "${{ env.ACTOR_USERNAME }}"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.PAT_FINE}}
       - name: ✅ Approve major updates of development dependencies
         if: ${{steps.metadata.outputs.update-type == 'version-update:semver-major' && steps.metadata.outputs.dependency-type == 'direct:development'}}
         run: gh pr review $PR_URL --approve -b "I'm **approving** this pull request because **it includes a major update of a dependency used only in development**"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          GITHUB_TOKEN: ${{secrets.PAT_FINE}}
+      - name: 👤 Assign PR to user (major dev)
+        if: ${{steps.metadata.outputs.update-type == 'version-update:semver-major' && steps.metadata.outputs.dependency-type == 'direct:development'}}
+        run: gh pr edit $PR_URL --add-assignee "${{ env.ACTOR_USERNAME }}"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.PAT_FINE}}
       - name: 💬 Comment on major updates of non-development dependencies
         if: ${{steps.metadata.outputs.update-type == 'version-update:semver-major' && steps.metadata.outputs.dependency-type == 'direct:production'}}
         run: |
