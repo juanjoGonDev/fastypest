@@ -280,7 +280,9 @@ jobs:
         if: ${{ matrix.database.use-service == false }}
         id: digest
         run: |
-          DIGEST=$(docker buildx imagetools inspect --format '{{ .Descriptor.Digest }}' "${{ matrix.database.image }}")
+          DIGEST=$(docker buildx imagetools inspect \
+           --format '{{json .Manifest}}' "${{ matrix.database.image }}" \
+          | jq -r '.digest')
           echo "digest=${DIGEST#sha256:}" >>"$GITHUB_OUTPUT"
       - name: ♻️ Restore cached image
         if: ${{ matrix.database.use-service == false }}
