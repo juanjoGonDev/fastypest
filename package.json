@@ -17,7 +17,7 @@
     "prebuild": "rimraf dist",
     "build": "swc ./src -d ./dist --strip-leading-paths && tsc --emitDeclarationOnly --outDir dist && cpy \"src/**/*.json\" dist --parents && rimraf dist/src",
     "eslint": "eslint --fix",
-    "test:ci": "jest --runInBand --forceExit --verbose --showSeed --config ./tests/jest.config.json",
+    "test:ci": "jest --ci --runInBand --forceExit --verbose --showSeed --config ./tests/jest.config.json",
     "test": "yarn build && yarn test:ci",
     "docker": "ts-node -r tsconfig-paths/register scripts/prepare-docker.ts",
     "release": "standard-version"
