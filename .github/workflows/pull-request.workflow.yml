@@ -301,7 +301,14 @@ jobs:
           docker load -i "${{ env.IMG_CACHE_DIR }}/${{ matrix.database.image }}/[\/:]/_}.tar"
       - name: 🐳 docker pull (when cache miss)
         if: ${{ matrix.database.use-service == false && steps.db-cache.outputs.cache-hit != 'true' }}
-        run: docker pull "${{ matrix.database.image }}"
+        run: |
+          set -euo pipefail
+          IMAGE="${{ matrix.database.image }}"
+          FILE_NAME="$(echo "$IMAGE" | tr '/:' '_').tar"
+
+          mkdir -p "$IMG_CACHE_DIR"
+          docker pull "$IMAGE"
+          docker save "$IMAGE" -o "$IMG_CACHE_DIR/$FILE_NAME"
       - name: 💾 Save image to cache
         if: ${{ matrix.database.use-service == false && steps.db-cache.outputs.cache-hit != 'true' }}
         uses: actions/cache/save@v4
