@@ -34,14 +34,15 @@ jobs:
         with:
           path: |
             .yarn/cache
+            .yarn/unplugged
+            .yarn/global
             .yarn/versions
             .yarn/releases
-            .yarn/global
-            .yarn/unplugged
             .yarn/install-state.gz
-          key: yarn-dependencies-${{ hashFiles('.yarn/cache/**/*.zip') }}-${{ runner.arch }}-${{ github.head_ref || github.ref }}
+            .pnp.*
+          key: yarn-dependencies-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           restore-keys: |
-            yarn-dependencies-${{ runner.arch }}-
+            yarn-dependencies-${{ runner.os }}-
             yarn-dependencies-
       - name: ⚙️ yarn install
         run: yarn install --frozen-lockfile
@@ -74,14 +75,15 @@ jobs:
         with:
           path: |
             .yarn/cache
+            .yarn/unplugged
+            .yarn/global
             .yarn/versions
             .yarn/releases
-            .yarn/global
-            .yarn/unplugged
             .yarn/install-state.gz
-          key: yarn-dependencies-${{ hashFiles('.yarn/cache/**/*.zip') }}-${{ runner.arch }}-${{ github.head_ref || github.ref }}
+            .pnp.*
+          key: yarn-dependencies-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           restore-keys: |
-            yarn-dependencies-${{ runner.arch }}-
+            yarn-dependencies-${{ runner.os }}-
             yarn-dependencies-
       - name: ⚙️ yarn install
         run: yarn install --immutable --immutable-cache
@@ -278,14 +280,15 @@ jobs:
         with:
           path: |
             .yarn/cache
+            .yarn/unplugged
+            .yarn/global
             .yarn/versions
             .yarn/releases
-            .yarn/global
-            .yarn/unplugged
             .yarn/install-state.gz
-          key: yarn-dependencies-${{ hashFiles('.yarn/cache/**/*.zip') }}-${{ runner.arch }}-${{ github.head_ref || github.ref }}
+            .pnp.*
+          key: yarn-dependencies-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           restore-keys: |
-            yarn-dependencies-${{ runner.arch }}-
+            yarn-dependencies-${{ runner.os }}-
             yarn-dependencies-
       - name: ⚙️ yarn install
         run: yarn install --immutable --immutable-cache
