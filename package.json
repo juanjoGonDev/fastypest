@@ -15,7 +15,7 @@
   "scripts": {
     "setup": "lefthook install",
     "prebuild": "rimraf dist",
-    "build": "swc src -d dist",
+    "build": "swc ./src -d ./dist --strip-leading-paths && tsc --emitDeclarationOnly --outDir dist && cpy \"src/**/*.json\" dist --parents && rimraf dist/src",
     "eslint": "eslint --fix",
     "test:ci": "jest --runInBand --forceExit --verbose --showSeed --config ./tests/jest.config.json",
     "test": "yarn build && yarn test:ci",
@@ -60,6 +60,7 @@
     "@types/node": "^22.15.21",
     "@typescript-eslint/eslint-plugin": "^8.32.1",
     "@typescript-eslint/parser": "^8.32.1",
+    "cpy-cli": "^5.0.0",
     "cross-spawn": "^7.0.6",
     "eslint": "^9.27.0",
     "eslint-config-standard-with-typescript": "^43.0.1",
