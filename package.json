@@ -51,7 +51,7 @@
   "homepage": "https://github.com/juanjoGonDev/fastypest#readme",
   "devDependencies": {
     "@eslint/js": "^9.27.0",
-    "@swc-node/jest": "^1.8.1",
+    "@swc-node/jest": "^1.8.13",
     "@swc/cli": "^0.7.7",
     "@swc/core": "^1.11.29",
     "@swc/helpers": "^0.5.11",
