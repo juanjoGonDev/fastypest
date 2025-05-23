@@ -15,7 +15,7 @@
   "scripts": {
     "setup": "lefthook install",
     "prebuild": "rimraf dist",
-    "build": "tsc",
+    "build": "swc src -d dist",
     "eslint": "eslint --fix",
     "test:ci": "jest --runInBand --forceExit --verbose --showSeed --config ./tests/jest.config.json",
     "test": "yarn build && yarn test:ci",
@@ -52,7 +52,8 @@
   "devDependencies": {
     "@eslint/js": "^9.27.0",
     "@swc-node/jest": "^1.8.1",
-    "@swc/core": "1.5.7",
+    "@swc/cli": "^0.7.7",
+    "@swc/core": "^1.11.29",
     "@swc/helpers": "^0.5.11",
     "@types/cross-spawn": "^6.0.6",
     "@types/jest": "^29.5.14",
@@ -77,8 +78,6 @@
     "reflect-metadata": "^0.2.2",
     "rimraf": "^6.0.1",
     "standard-version": "^9.5.0",
-    "ts-jest": "^29.3.4",
-    "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typeorm": "^0.3.24",
     "typescript": "^5.8.3",
