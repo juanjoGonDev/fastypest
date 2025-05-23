@@ -8,7 +8,10 @@ permissions:
 jobs:
   approve-release:
     runs-on: ubuntu-latest
-    if: contains(github.event.pull_request.labels.*.name, 'auto-release') && github.event.pull_request.head.repo.full_name == github.repository
+    if: >
+      contains(github.event.pull_request.labels.*.name, 'auto-release') && 
+      github.event.pull_request.head.repo.full_name == github.repository && 
+      github.event.pull_request.user.login == github.repository_owner
     environment: admin
     steps:
       - name: 🔎 Check is approved
