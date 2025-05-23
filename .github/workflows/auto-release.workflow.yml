@@ -18,7 +18,16 @@ on:
           - "yes"
           - "no"
       strategy:
-        description: "Release strategy (only used if force is set to 'yes')"
+        description: >
+          Release strategy (only used if force = yes).
+          Ejemplos:
+          - major → 1.0.0 → 2.0.0
+          - minor → 1.0.0 → 1.1.0
+          - patch → 1.0.0 → 1.0.1
+          - premajor → 1.0.0 → 2.0.0-0
+          - preminor → 1.0.0 → 1.1.0-0
+          - prepatch → 1.0.0 → 1.0.1-0
+          - prerelease → 1.0.0 → 1.0.1-0
         required: true
         type: choice
         options:
@@ -37,6 +46,7 @@ jobs:
   release:
     name: 🚀 Auto release
     runs-on: ubuntu-latest
+    environment: admin
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
@@ -100,7 +110,7 @@ jobs:
           # Determine current major.minor from package.json to construct tag-prefix
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           TAG_PREFIX_VALUE="v$(echo $CURRENT_VERSION | awk -F. '{print $1 FS $2}')." # Results in "v1.4." (using awk for robustness)
-          
+
           echo "Using tag prefix: ${TAG_PREFIX_VALUE} for standard-version"
           yarn release --release-as $STRATEGY --tag-prefix "${TAG_PREFIX_VALUE}"
           git push --follow-tags origin release/${{ github.run_number }}
