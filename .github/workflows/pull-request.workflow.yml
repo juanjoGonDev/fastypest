@@ -37,6 +37,7 @@ jobs:
             .yarn/versions
             .yarn/releases
             .yarn/global
+            .yarn/install-state.gz
           key: yarn-dependencies-${{ hashFiles('.yarn/cache/**/*.zip') }}-${{ runner.arch }}-${{ github.head_ref || github.ref }}
       - name: ⚙️ yarn install
         run: yarn install --frozen-lockfile
@@ -72,6 +73,7 @@ jobs:
             .yarn/versions
             .yarn/releases
             .yarn/global
+            .yarn/install-state.gz
           key: yarn-dependencies-${{ hashFiles('.yarn/cache/**/*.zip') }}-${{ runner.arch }}-${{ github.head_ref || github.ref }}
       - name: ⚙️ yarn install
         run: yarn install --immutable --immutable-cache
@@ -271,6 +273,7 @@ jobs:
             .yarn/versions
             .yarn/releases
             .yarn/global
+            .yarn/install-state.gz
           key: yarn-dependencies-${{ hashFiles('.yarn/cache/**/*.zip') }}-${{ runner.arch }}-${{ github.head_ref || github.ref }}
       - name: ⚙️ yarn install
         run: yarn install --immutable --immutable-cache
