@@ -45,7 +45,7 @@ jobs:
             yarn-dependencies-${{ runner.os }}-
             yarn-dependencies-
       - name: ⚙️ yarn install (cacheable)
-        run: yarn install --immutable
+        run: yarn install --immutable --check-cache
       - name: 💾 Save updated Yarn cache
         if: steps.yarn-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4

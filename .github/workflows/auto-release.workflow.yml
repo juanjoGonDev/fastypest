@@ -91,7 +91,7 @@ jobs:
           cache: yarn
       - name: ⚙️ Install dependencies
         if: steps.check_commits.outputs.enough_commits == 'true'
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable --check-cache
       - name: 🆙 Bump version and create a git tag
         if: steps.check_commits.outputs.enough_commits == 'true'
         run: |
