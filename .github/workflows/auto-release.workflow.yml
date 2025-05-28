@@ -29,6 +29,14 @@ on:
           - "preminor"
           - "prepatch"
           - "prerelease"
+      dry_run:
+        description: "Do everything except push, PR and publish"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
 
 env:
   NODE_VERSION: "18.20"
@@ -83,8 +91,26 @@ jobs:
       - name: ⚙️ Install dependencies
         if: steps.check_commits.outputs.enough_commits == 'true'
         run: yarn install --immutable --check-cache
-      - name: 🆙 Bump version and create a git tag
+      - name: 🚧 Run build
         if: steps.check_commits.outputs.enough_commits == 'true'
+        run: yarn run build
+      - name: 🧪 Install package test
+        if: steps.check_commits.outputs.enough_commits == 'true'
+        run: |
+          mkdir test-install
+          yarn pack --filename test-install/package.tar.gz
+          cd test-install
+          yarn init -y
+          touch yarn.lock
+          yarn add -D ./package.tar.gz
+      - name: 🆙 Dry run release
+        if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run == 'true'
+        run: yarn release --release-as $STRATEGY --dry-run
+      - name: 🚫 Dry run active
+        if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run == 'true'
+        run: echo "🔍 Dry run is enabled. Skipping publishing, tagging and PR steps."
+      - name: 🆙 Bump version and create a git tag
+        if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run != 'true'
         run: |
           git checkout main
           git pull origin main
@@ -103,7 +129,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_FINE }}
       - name: ⏱️ Wait for changes to be registered
-        if: steps.check_commits.outputs.enough_commits == 'true'
+        if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run != 'true'
         timeout-minutes: 2
         run: |
           while true; do
@@ -117,7 +143,7 @@ jobs:
             sleep 5s
           done
       - name: 🏷️ Get last existing tag
-        if: steps.check_commits.outputs.enough_commits == 'true'
+        if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run != 'true'
         id: get_new_tag
         run: |
           LAST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
@@ -128,7 +154,7 @@ jobs:
           echo "Last tag found: $LAST_TAG"
           echo "lastTag=$LAST_TAG" >> $GITHUB_OUTPUT
       - name: 📝 Create pull request
-        if: steps.check_commits.outputs.enough_commits == 'true'
+        if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run != 'true'
         id: create_pr
         run: |
           PR_DATA=$(curl \
@@ -155,12 +181,12 @@ jobs:
           echo "Detected PR number: $PR_NUMBER"
           echo "prNumber=$PR_NUMBER" >> $GITHUB_OUTPUT
       - name: 👤 Assign PR to user
-        if: steps.check_commits.outputs.enough_commits == 'true'
+        if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run != 'true'
         run: gh pr edit ${{ steps.create_pr.outputs.prNumber }} --add-assignee "${{ env.ACTOR_USERNAME }}"
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_FINE }}
       - name: 🕵️ Check if PR is approved
-        if: steps.check_commits.outputs.enough_commits == 'true'
+        if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run != 'true'
         uses: actions/github-script@v7
         timeout-minutes: 5
         env:
@@ -192,7 +218,7 @@ jobs:
             throw new Error('PR approval timed out');
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: ⌛ Wait for all checks to pass
-        if: steps.check_commits.outputs.enough_commits == 'true'
+        if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run != 'true'
         uses: actions/github-script@v7
         timeout-minutes: 5
         env:
@@ -234,7 +260,7 @@ jobs:
               await new Promise(resolve => setTimeout(resolve, interval));
             }
       - name: ✅ Merge PR
-        if: steps.check_commits.outputs.enough_commits == 'true'
+        if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run != 'true'
         uses: actions/github-script@v7
         env:
           PULL_REQUEST_NUMBER: ${{ steps.create_pr.outputs.prNumber }}
@@ -263,24 +289,13 @@ jobs:
             await exec.exec('git', ['push', '-f', 'origin', `refs/tags/${tag}`]);
 
             console.log(`Tag ${tag} moved to ${mergeSha}`);
-      - name: 🚧 Run build
-        if: steps.check_commits.outputs.enough_commits == 'true'
-        run: yarn run build
-      - name: 🧪 Install package test
-        run: |
-          mkdir test-install
-          yarn pack --filename test-install/package.tar.gz
-          cd test-install
-          yarn init -y
-          touch yarn.lock
-          yarn add -D ./package.tar.gz
       - name: 🎉 Publish to npm
-        if: steps.check_commits.outputs.enough_commits == 'true'
+        if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run != 'true'
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_AUTH_TOKEN}}
       - name: 📦 Create Release
-        if: steps.check_commits.outputs.enough_commits == 'true'
+        if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run != 'true'
         id: create_release
         uses: ncipollo/release-action@v1
         env:
