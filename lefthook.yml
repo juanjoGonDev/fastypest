@@ -1,6 +1,7 @@
 pre-commit:
+  parallel: true
   commands:
     run-build-and-test:
-      run: node scripts/pre-commit.js
+      run: yarn node scripts/pre-commit.js
     lint-staged:
       run: npx lint-staged

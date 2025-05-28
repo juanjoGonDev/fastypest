@@ -1,44 +1,60 @@
-const spawn = require("cross-spawn");
 const fs = require("fs");
 const path = require("path");
 
-const run = (command, args = [], options = { stdio: "inherit" }) => {
-  return new Promise((resolve, reject) => {
-    const childProcess = spawn(command, args, options);
-    if (childProcess?.status !== 0) {
-      console.error(`Error executing: ${command} ${args.join(" ")}`);
-      process.exit(childProcess.status); 
-    }
-    if (childProcess.error) {
-      reject(childProcess.error);
-    } else {
-      resolve(childProcess);
-    }
-  });
+const run = async (command, args = [], options = { stdio: "inherit" }) => {
+  const { execa } = await import("execa");
+  try {
+    const { stdout } = await execa(command, args, options);
+    return stdout;
+  } catch (err) {
+    console.error(`✗ Error executing: ${command} ${args.join(" ")}`);
+    if (err.stderr) console.error(err.stderr);
+    throw err;
+  }
+};
+
+const testInstallDir = path.join(__dirname, "..", "test-install");
+const packagePath = path.join(testInstallDir, "package.tar.gz");
+
+const cleanUp = () => {
+  if (fs.existsSync(testInstallDir)) {
+    fs.rmSync(testInstallDir, { recursive: true, force: true });
+    console.log("🧹 Removed test-install directory.");
+  }
 };
 
 (async () => {
   try {
-    console.log("Running yarn build...");
-    await run("yarn", ["run", "build"]);
+    console.log("🛠 Building the package...");
+    await run("yarn", ["build"]);
 
-    const testInstallDir = path.join(__dirname, "test-install");
     if (!fs.existsSync(testInstallDir)) {
       fs.mkdirSync(testInstallDir);
     }
 
-    console.log("Packing the package...");
-    await run("yarn", ["pack", "--filename", "test-install/package.tar.gz"]);
+    console.log("📦 Packing the package...");
+    await run("yarn", ["pack", "--filename", packagePath]);
 
-    console.log("Initializing new Yarn project in test-install...");
+    console.log("📁 Initializing a fresh project in test-install...");
     await run("yarn", ["init", "-y"], { cwd: testInstallDir });
 
-    console.log("Adding the packaged tar.gz as a dev dependency...");
-    await run("yarn", ["add", "-D", "./package.tar.gz"], { cwd: testInstallDir });
+    const yarnLockPath = path.join(testInstallDir, "yarn.lock");
+    if (!fs.existsSync(yarnLockPath)) {
+      fs.writeFileSync(yarnLockPath, "");
+    }
 
-    console.log("Pre-commit check completed successfully!");
+    console.log("➕ Adding the tarball as a dev dependency...");
+    await run(
+      "yarn",
+      ["add", "-D", `fastypest@${packagePath}`],
+      { cwd: testInstallDir }
+    );
+
+    console.log("✅ Pre-commit install test succeeded!");
   } catch (error) {
-    console.error("An error occurred during the pre-commit check:", error);
-    process.exit(1); 
+    console.error("❌ Pre-commit check failed:", error.message || error);
+    process.exitCode = 1;
+  } finally {
+    cleanUp();
   }
 })();
