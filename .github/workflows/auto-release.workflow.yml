@@ -18,16 +18,7 @@ on:
           - "yes"
           - "no"
       strategy:
-        description: >
-          Release strategy (only used if force = yes).
-          Ejemplos:
-          - major → 1.0.0 → 2.0.0
-          - minor → 1.0.0 → 1.1.0
-          - patch → 1.0.0 → 1.0.1
-          - premajor → 1.0.0 → 2.0.0-0
-          - preminor → 1.0.0 → 1.1.0-0
-          - prepatch → 1.0.0 → 1.0.1-0
-          - prerelease → 1.0.0 → 1.0.1-0
+        description: "Release strategy (if force=yes):\nmajor→2.0.0 • minor→1.1.0 • patch→1.0.1\npremajor→2.0.0-0 • preminor→1.1.0-0 • prepatch→1.0.1-0\nprerelease→1.0.1-0"
         required: true
         type: choice
         options:
