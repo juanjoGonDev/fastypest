@@ -105,7 +105,15 @@ jobs:
           yarn add -D ./package.tar.gz
       - name: 🆙 Dry run release
         if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run == 'true'
-        run: yarn release --release-as $STRATEGY --dry-run
+        run: |
+          git checkout main
+          git pull origin main
+          STRATEGY="patch"
+          if [[ "${{ github.event.inputs.strategy }}" ]]; then
+            STRATEGY=${{ github.event.inputs.strategy }}
+          fi
+
+          yarn release --release-as "$STRATEGY" --dry-run
       - name: 🚫 Dry run active
         if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run == 'true'
         run: echo "🔍 Dry run is enabled. Skipping publishing, tagging and PR steps."
@@ -120,7 +128,7 @@ jobs:
             git pull origin release/${{ github.run_number }}
           fi
           STRATEGY="patch"
-          if [[ "${{ github.event.inputs.force }}" == "yes" && "${{ github.event.inputs.strategy }}" ]]; then
+          if [[ "${{ github.event.inputs.strategy }}" ]]; then
             STRATEGY=${{ github.event.inputs.strategy }}
           fi
 
