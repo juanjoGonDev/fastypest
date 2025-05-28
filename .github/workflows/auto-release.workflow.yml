@@ -41,9 +41,11 @@ on:
 env:
   NODE_VERSION: "18.20"
 
+run-name: 🔄 Auto release${{ github.event.inputs.dry_run == 'true' && ' (dry)' || '' }}
+
 jobs:
   release:
-    name: 🚀 Auto release
+    name: 🚀 Auto release${{ github.event.inputs.dry_run == 'true' && ' (dry)' || '' }}
     runs-on: ubuntu-latest
     environment: admin
     steps:
