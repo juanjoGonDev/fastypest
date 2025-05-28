@@ -268,8 +268,8 @@ jobs:
             } catch {}
 
             await exec.exec('git', ['fetch', '--tags']);
-            await exec.exec('git', ['tag', tag, mergeSha]);
-            await exec.exec('git', ['push', '--force', 'origin', `refs/tags/${tag}`]);
+            await exec.exec('git', ['tag', '-f', tag, mergeSha]);
+            await exec.exec('git', ['push', '-f', 'origin', `refs/tags/${tag}`]);
 
             console.log(`Tag ${tag} moved to ${mergeSha}`);
       - name: 🚧 Run build
