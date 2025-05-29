@@ -1,0 +1,41 @@
+name: ⚡ Quick bug report
+description: Short form – perfect if you just want to let us know something broke
+title: "[Bug]: "
+labels: ["bug"]
+assignees:
+  - juanjoGonDev
+body:
+  - type: markdown
+    attributes:
+      value: "🐞 Thanks for reporting a bug! Just a few quick questions:"
+  - type: textarea
+    id: description
+    attributes:
+      label: What's the issue?
+      placeholder: Describe what you expected and what happened
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - Low
+        - Medium
+        - High
+        - Critical
+        - Unknown
+      default: 0
+  - type: dropdown
+    id: db
+    attributes:
+      label: Database
+      options:
+        - MySQL
+        - MariaDB
+        - PostgreSQL
+        - CockroachDB
+        - Other
+  - type: markdown
+    attributes:
+      value: "🛠️ If you'd like to provide full technical details (versions, steps, etc.), feel free to edit the issue after submission!"

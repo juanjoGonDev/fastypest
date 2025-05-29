@@ -10,8 +10,10 @@
   <a href="https://www.npmjs.com/fastypest" target="_blank"><img src="https://img.shields.io/npm/dm/fastypest" alt="NPM Downloads" /></a>
 </p>
 <p align=center>
-<a href="https://buymeacoffee.com/juanjogondev" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
+<a href="https://buymeacoffee.com/juanjogondev" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee"></a>
 </p>
+
+[![es](https://img.shields.io/badge/lang-es-yellow.svg)](./README.es.md)
 
 With this library, you can run your test suites without having to stop and restore the database in between them.
 
@@ -47,6 +49,20 @@ afterEach(async () => {
   await fastypest.restoreData();
 });
 ```
+
+## ⚙️ Automated Workflow
+
+This project leverages a sophisticated CI/CD setup using GitHub Actions:
+
+- 🤖 Dependabot PRs are auto-approved **only for safe updates** (patch/minor or dev-only major updates)
+- 🔁 A new release is triggered automatically every 3 commits using a commit counter system
+- 📦 When it's time to release, a pull request is automatically created to bump the version
+- 👤 The release PR is assigned to the maintainer and auto-approved (if conditions are met)
+- ✅ All checks must pass before the PR is merged
+- 🚀 After merge, the new version is automatically published to NPM
+- 🧪 Before publishing, a full build and installation test is executed to ensure package integrity
+
+This automation ensures high-quality, low-friction delivery while keeping full control over critical updates.
 
 ## Star History
 

@@ -6,13 +6,25 @@ permissions:
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run without publishing to npm"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
+
+run-name: 🚀 Publish to npm${{ github.event.inputs.dry_run == 'true' && ' (dry)' || '' }}
 
 env:
   NODE_VERSION: "18.20"
 
 jobs:
   release:
-    name: 🆕 Release
+    name: 🆕 Release${{ github.event.inputs.dry_run == 'true' && ' (dry)' || '' }}
     runs-on: ubuntu-latest
     environment: admin
     steps:
@@ -28,7 +40,19 @@ jobs:
         run: yarn install --immutable --check-cache
       - name: 🚧 Run build
         run: yarn build
+      - name: 🧪 Install package test
+        run: |
+          mkdir test-install
+          yarn pack --filename test-install/package.tar.gz
+          cd test-install
+          yarn init -y
+          touch yarn.lock
+          yarn add -D ./package.tar.gz
       - name: 🎉 Publish to npm
+        if: github.event.inputs.dry_run != 'true'
         run: npm publish
         env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_AUTH_TOKEN}}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+      - name: 🚫 Skipped npm publish (dry run)
+        if: github.event.inputs.dry_run == 'true'
+        run: echo "🔍 Dry run is enabled, skipping npm publish."
