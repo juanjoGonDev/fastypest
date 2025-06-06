@@ -34,8 +34,13 @@ export class SQLScript {
 
     let query = queryObj;
 
-    for (const key in values) {
-      query = query.replace(new RegExp(`{{\\s*${key}\\s*}}`, "g"), values[key]);
+    if (values) {
+      for (const key in values) {
+        query = query.replace(
+          new RegExp(`{{\\s*${key}\\s*}}`, "g"),
+          values[key]
+        );
+      }
     }
 
     return em.query(query) as T extends void ? Promise<void> : Promise<T[]>;
