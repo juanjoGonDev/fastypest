@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.4.110](https://github.com/juanjoGonDev/fastypest/compare/v1.4.109...v1.4.110) (2025-06-10)
+
+
+### Bug Fixes
+
+* avoid undefined values in execQuery ([#956](https://github.com/juanjoGonDev/fastypest/issues/956)) ([128b9c8](https://github.com/juanjoGonDev/fastypest/commit/128b9c84d6f85ab6686db0b4d83c010f93540f7a))
+
 ### [1.4.109](https://github.com/juanjoGonDev/fastypest/compare/v1.4.108...v1.4.109) (2025-06-03)
 
 ### [1.4.108](https://github.com/juanjoGonDev/fastypest/compare/v1.4.107...v1.4.108) (2025-06-02)
