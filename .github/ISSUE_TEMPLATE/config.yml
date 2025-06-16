@@ -6,9 +6,9 @@ contact_links:
     about: Ask anything that doesn't fit in a bug report – ideas, suggestions, doubts, or feedback.
 
 issue_templates:
-  - name: "Quick-bug"
+  - name: "🐞 Quick Bug Report"
     description: Report a bug quickly without filling in every detail.
     file: quick-bug.yml
-  - name: "Bug"
+  - name: "🔍 Detailed Bug Report"
     description: Provide all technical information to help reproduce and fix the bug.
     file: bug.yml

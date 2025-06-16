@@ -1,7 +1,6 @@
 name: 🐞 Detailed bug report
 description: Full form – great for serious issues or reproducible bugs
 title: "[Bug]: "
-type: "Bug"
 labels: ["bug"]
 assignees:
   - juanjoGonDev
