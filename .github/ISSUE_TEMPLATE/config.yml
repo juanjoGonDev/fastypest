@@ -4,3 +4,11 @@ contact_links:
   - name: 💬 General Question or Feedback
     url: https://github.com/juanjoGonDev/fastypest/discussions
     about: Ask anything that doesn't fit in a bug report – ideas, suggestions, doubts, or feedback.
+
+issue_templates:
+  - name: "Quick-bug"
+    description: Report a bug quickly without filling in every detail.
+    file: quick-bug.yml
+  - name: "Bug"
+    description: Provide all technical information to help reproduce and fix the bug.
+    file: bug.yml
