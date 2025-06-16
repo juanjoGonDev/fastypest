@@ -1,7 +1,7 @@
 name: ⚡ Quick bug report
 description: Short form – perfect if you just want to let us know something broke
 title: "[Bug]: "
-labels: ["bug"]
+labels: ["quick-bug"]
 assignees:
   - juanjoGonDev
 body:
