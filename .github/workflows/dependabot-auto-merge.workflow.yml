@@ -69,7 +69,7 @@ jobs:
           PR_URL: ${{github.event.pull_request.html_url}}
           GITHUB_TOKEN: ${{secrets.PAT_FINE}}
       - name: ⬇️ Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: 👤 Assign PR to user
         if: ${{steps.metadata.outputs.dependency-type == 'direct:development'}}
         run: gh pr edit $PR_URL --add-assignee "${{ env.ACTOR_USERNAME }}"
