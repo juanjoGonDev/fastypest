@@ -1,6 +1,6 @@
 {
   "name": "fastypest",
-  "version": "1.4.111",
+  "version": "1.4.112",
   "description": "Restores the database automatically after each test. Allows serial execution of tests without having to delete and restore the database having to stop the application",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
