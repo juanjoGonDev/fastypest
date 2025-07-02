@@ -53,11 +53,13 @@ jobs:
       - name: 🤖 Process PRs
         if: steps.search_prs.outputs.result != '[]'
         uses: actions/github-script@v7
+        env:
+          dry_run: ${{ github.event.inputs.dry_run }}
         with:
           github-token: ${{ secrets.PAT_FINE }}
           script: |
             // Detect dry_run from workflow_dispatch or default to false
-            const dryRun = core.getInput('dry_run') === 'true';
+            const dryRun = process.env.dry_run === 'true';
             console.log(`Dry run mode: ${dryRun}`);
 
             let prNumbers = ${{ steps.search_prs.outputs.result }};
