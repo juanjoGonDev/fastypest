@@ -109,20 +109,41 @@ jobs:
                   results.push({prNumber, merged: false, reason: 'Could not update branch: ' + e.message});
                   continue;
                 }
-                for (let i = 0; i < 12; i++) {
+
+                // Improved up-to-date check: consider clean, unstable, has_hooks as up-to-date; abort on behind, dirty, blocked; handle closed PR
+                for (let i = 0; i < 12; i++) { // Wait up to 1 minute (12x5s)
                   await new Promise(res => setTimeout(res, 5000));
                   pr = await github.rest.pulls.get({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
                     pull_number: prNumber
                   });
-                  if (pr.data.mergeable_state === 'clean') {
+
+                  // If PR is closed, stop waiting
+                  if (pr.data.state === 'closed') {
+                    console.log(`PR #${prNumber}: PR is closed, ending update check.`);
                     updated = true;
                     break;
                   }
+
+                  // Consider up-to-date if mergeable_state is clean, unstable, or has_hooks
+                  if (["clean", "unstable", "has_hooks"].includes(pr.data.mergeable_state)) {
+                    updated = true;
+                    console.log(`PR #${prNumber}: mergeable_state=${pr.data.mergeable_state}, considered up-to-date.`);
+                    break;
+                  }
+
+                  // Abort if mergeable_state is behind, dirty, or blocked
+                  if (["behind", "dirty", "blocked"].includes(pr.data.mergeable_state)) {
+                    console.log(`PR #${prNumber}: mergeable_state=${pr.data.mergeable_state}, cannot update.`);
+                    break;
+                  }
+
+                  // Otherwise, keep waiting (unknown, etc)
+                  console.log(`PR #${prNumber}: mergeable_state=${pr.data.mergeable_state}, waiting...`);
                 }
               }
-                
+
               if (!updated) {
                 console.log(`PR #${prNumber}: did NOT become up-to-date.`);
                 results.push({prNumber, merged: false, reason: 'Branch did not become up-to-date after update'});
