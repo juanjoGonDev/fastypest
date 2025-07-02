@@ -58,7 +58,7 @@ jobs:
           script: |
             // Detect dry_run from workflow_dispatch or default to false
             let dryRun = false;
-            if (github.event.inputs && github.event.inputs.dry_run) {
+            if (github.event && github.event.inputs && typeof github.event.inputs.dry_run !== 'undefined') {
               dryRun = github.event.inputs.dry_run === 'true';
             }
             console.log(`Dry run mode: ${dryRun}`);
