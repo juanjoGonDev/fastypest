@@ -58,9 +58,16 @@ jobs:
             if (process.env.GITHUB_EVENT_NAME === 'workflow_dispatch') {
               dryRun = (process.env.INPUT_DRY_RUN || '').toLowerCase() === 'true';
             }
-            const prNumbers = ${{ steps.search_prs.outputs.result }};
+            let prNumbers = ${{ steps.search_prs.outputs.result }};
+            if (typeof prNumbers === 'string') {
+              try {
+                prNumbers = JSON.parse(prNumbers);
+              } catch {
+                prNumbers = [];
+              }
+            }
             const results = [];
-            for (const prNumber of JSON.parse(prNumbers)) {
+            for (const prNumber of prNumbers) {
               // 1. Check if approved
               const reviews = await github.rest.pulls.listReviews({
                 owner: context.repo.owner,
