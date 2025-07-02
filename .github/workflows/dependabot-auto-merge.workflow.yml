@@ -51,27 +51,30 @@ jobs:
         uses: dependabot/fetch-metadata@v2.4.0
         with:
           github-token: "${{secrets.GITHUB_TOKEN}}"
-      - name: 🔓 Enable auto-merge for Dependabot PRs
+      - name: ✅ Approve PR if eligible
+        id: approve
+        run: |
+          approved=false
+          if [[ "${{ steps.metadata.outputs.update-type }}" == "version-update:semver-patch" || "${{ steps.metadata.outputs.update-type }}" == "version-update:semver-minor" ]]; then
+            gh pr review "$PR_URL" --approve -b "I'm **approving** this pull request because **it includes a patch or minor update**"
+            approved=true
+          elif [[ "${{ steps.metadata.outputs.update-type }}" == "version-update:semver-major" && "${{ steps.metadata.outputs.dependency-type }}" == "direct:development" ]]; then
+            gh pr review "$PR_URL" --approve -b "I'm **approving** this pull request because **it includes a major update of a dependency used only in development**"
+            approved=true
+          fi
+          echo "approved=$approved" >> $GITHUB_OUTPUT
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.PAT_FINE}}
+      - name: 🔓 Enable auto-merge for eligible PRs
+        if: steps.approve.outputs.approved == 'true'
         run: gh pr merge --auto --squash "$PR_URL"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      - name: ✅ Approve patch and minor updates
-        if: ${{steps.metadata.outputs.update-type == 'version-update:semver-patch' || steps.metadata.outputs.update-type == 'version-update:semver-minor'}}
-        run: gh pr review $PR_URL --approve -b "I'm **approving** this pull request because **it includes a patch or minor update**"
-        env:
-          PR_URL: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{secrets.PAT_FINE}}
-      - name: ✅ Approve major updates of development dependencies
-        if: ${{steps.metadata.outputs.update-type == 'version-update:semver-major' && steps.metadata.outputs.dependency-type == 'direct:development'}}
-        run: gh pr review $PR_URL --approve -b "I'm **approving** this pull request because **it includes a major update of a dependency used only in development**"
-        env:
-          PR_URL: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{secrets.PAT_FINE}}
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v3
       - name: 👤 Assign PR to user
-        if: ${{steps.metadata.outputs.dependency-type == 'direct:development'}}
         run: gh pr edit $PR_URL --add-assignee "${{ env.ACTOR_USERNAME }}"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
