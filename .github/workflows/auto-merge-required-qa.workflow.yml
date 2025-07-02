@@ -14,12 +14,15 @@ on:
           - "true"
           - "false"
 
+run-name: 🔄 PRs Required QA Auto-Merge${{ github.event.inputs.dry_run == 'true' && ' (dry)' || '' }}
+
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
   auto-merge-required-qa:
+    name: Auto merge required QA${{ github.event.inputs.dry_run == 'true' && ' (dry)' || '' }}
     runs-on: ubuntu-latest
     environment: admin
     steps:
@@ -55,9 +58,11 @@ jobs:
           script: |
             // Detect dry_run from workflow_dispatch or default to false
             let dryRun = false;
-            if (process.env.GITHUB_EVENT_NAME === 'workflow_dispatch') {
-              dryRun = (process.env.INPUT_DRY_RUN || '').toLowerCase() === 'true';
+            if (github.event.inputs && github.event.inputs.dry_run) {
+              dryRun = github.event.inputs.dry_run === 'true';
             }
+            console.log(`Dry run mode: ${dryRun}`);
+
             let prNumbers = ${{ steps.search_prs.outputs.result }};
             if (typeof prNumbers === 'string') {
               try {
@@ -104,6 +109,7 @@ jobs:
                     pull_number: prNumber
                   });
                   console.log(`PR #${prNumber}: update triggered.`);
+                  await new Promise(resolve => setTimeout(resolve, 15000));
                 } catch (e) {
                   console.log(`PR #${prNumber}: update FAILED: ${e.message}`);
                   results.push({prNumber, merged: false, reason: 'Could not update branch: ' + e.message});
@@ -162,8 +168,11 @@ jobs:
                 mergeReason = 'Dry run: merge skipped';
               } else {
                 try {
-                  console.log(`PR #${prNumber}: Attempting merge...`);
-                  await github.rest.pulls.merge({
+                  console.log(`PR #${prNumber}: Attempting merge using GITHUB_TOKEN...`);
+                  // Re-authenticate Octokit with GITHUB_TOKEN just for the merge
+                  const { Octokit } = require('@octokit/rest');
+                  const mergeOctokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+                  await mergeOctokit.pulls.merge({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
                     pull_number: prNumber,
