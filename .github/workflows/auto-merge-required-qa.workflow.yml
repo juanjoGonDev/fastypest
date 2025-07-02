@@ -59,7 +59,8 @@ jobs:
             // Detect dry_run from workflow_dispatch or default to false
             let dryRun = false;
             if (github.event && github.event.inputs && typeof github.event.inputs.dry_run !== 'undefined') {
-              dryRun = github.event.inputs.dry_run === 'true';
+              dryRun = String(github.event.inputs.dry_run).toLowerCase() === 'true';
+              console.log(`Dry value: ${github.event.inputs.dry_run}`);
             }
             console.log(`Dry run mode: ${dryRun}`);
 
