@@ -93,24 +93,23 @@ jobs:
                 repo: context.repo.repo,
                 pull_number: prNumber
               });
-              if (pr.data.mergeable_state !== 'clean') {
-                console.log(`PR #${prNumber}: is NOT up-to-date with main. Attempting to update branch...`);
-                // Try to update the branch to main
+              let updated = pr.data.mergeable_state === 'clean';
+
+              if (!updated) {
+                console.log(`PR #${prNumber}: is NOT up-to-date. Attempting to update...`);
                 try {
                   await github.rest.pulls.updateBranch({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
                     pull_number: prNumber
                   });
-                  console.log(`PR #${prNumber}: branch update triggered.`);
+                  console.log(`PR #${prNumber}: update triggered.`);
                 } catch (e) {
-                  console.log(`PR #${prNumber}: branch update FAILED: ${e.message}`);
+                  console.log(`PR #${prNumber}: update FAILED: ${e.message}`);
                   results.push({prNumber, merged: false, reason: 'Could not update branch: ' + e.message});
                   continue;
                 }
-                // Wait for PR to become up-to-date (mergeable_state === 'clean')
-                let updated = false;
-                for (let i = 0; i < 12; i++) { // Wait up to 1 minute
+                for (let i = 0; i < 12; i++) {
                   await new Promise(res => setTimeout(res, 5000));
                   pr = await github.rest.pulls.get({
                     owner: context.repo.owner,
@@ -119,17 +118,17 @@ jobs:
                   });
                   if (pr.data.mergeable_state === 'clean') {
                     updated = true;
-                    console.log(`PR #${prNumber}: is now up-to-date.`);
                     break;
                   }
                 }
-                if (!updated) {
-                  console.log(`PR #${prNumber}: did NOT become up-to-date after update.`);
-                  results.push({prNumber, merged: false, reason: 'Branch did not become up-to-date after update'});
-                  continue;
-                }
-                console.log(`PR #${prNumber}: is now up-to-date.`);
               }
+                
+              if (!updated) {
+                console.log(`PR #${prNumber}: did NOT become up-to-date.`);
+                results.push({prNumber, merged: false, reason: 'Branch did not become up-to-date after update'});
+                continue;
+              }
+              console.log(`PR #${prNumber}: up-to-date.`);
 
               // 3. Check required checks
 
