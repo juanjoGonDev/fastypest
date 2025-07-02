@@ -68,7 +68,9 @@ jobs:
             }
             const results = [];
             for (const prNumber of prNumbers) {
+              console.log(`Processing PR #${prNumber}`);
               // 1. Check if approved
+              console.log(`Checking if PR #${prNumber} is approved...`);
               const reviews = await github.rest.pulls.listReviews({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -76,21 +78,28 @@ jobs:
               });
               const approved = reviews.data.some(r => r.state === 'APPROVED');
               if (!approved) {
+                console.log(`PR #${prNumber} is NOT approved.`);
                 results.push({prNumber, merged: false, reason: 'No approved'});
                 continue;
               }
+              console.log(`PR #${prNumber} is approved.`);
               // 2. Checks OK
+              console.log(`Checking required checks for PR #${prNumber}...`);
               const checks = await github.rest.checks.listForRef({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 ref: `refs/pull/${prNumber}/head`
               });
               const requiredChecks = checks.data.check_runs.filter(run => run.conclusion !== 'skipped');
-              const allChecksPassed = requiredChecks.every(run => run.status === 'completed' && run.conclusion === 'success');
+              const passedChecks = requiredChecks.filter(run => run.status === 'completed' && run.conclusion === 'success').length;
+              const allChecksPassed = passedChecks === requiredChecks.length;
+              console.log(`PR #${prNumber}: Passed checks: ${passedChecks}/${requiredChecks.length}`);
               if (!allChecksPassed) {
+                console.log(`PR #${prNumber} required checks are NOT all successful. Failed: ${requiredChecks.length - passedChecks}`);
                 results.push({prNumber, merged: false, reason: 'Checks no OK'});
                 continue;
               }
+              console.log(`PR #${prNumber} required checks PASSED.`);
               // 3. Updated with main
               let pr = await github.rest.pulls.get({
                 owner: context.repo.owner,
@@ -98,6 +107,7 @@ jobs:
                 pull_number: prNumber
               });
               if (pr.data.mergeable_state !== 'clean') {
+                console.log(`PR #${prNumber} is NOT up-to-date with main. Attempting to update branch...`);
                 // Try to update the branch to main
                 try {
                   await github.rest.pulls.updateBranch({
@@ -105,7 +115,9 @@ jobs:
                     repo: context.repo.repo,
                     pull_number: prNumber
                   });
+                  console.log(`PR #${prNumber} branch update triggered.`);
                 } catch (e) {
+                  console.log(`PR #${prNumber} branch update FAILED: ${e.message}`);
                   results.push({prNumber, merged: false, reason: 'Could not update branch: ' + e.message});
                   continue;
                 }
@@ -120,13 +132,16 @@ jobs:
                   });
                   if (pr.data.mergeable_state === 'clean') {
                     updated = true;
+                    console.log(`PR #${prNumber} is now up-to-date.`);
                     break;
                   }
                 }
                 if (!updated) {
+                  console.log(`PR #${prNumber} did NOT become up-to-date after update.`);
                   results.push({prNumber, merged: false, reason: 'Branch did not become up-to-date after update'});
                   continue;
                 }
+                console.log(`PR #${prNumber} is now up-to-date. Waiting for all required checks to pass...`);
                 // Wait for all required checks to pass (same logic as auto-release)
                 const ref = pr.data.head.sha;
                 const timeout = 10 * 60 * 1000; // 10 minutes
@@ -142,6 +157,7 @@ jobs:
                   const requiredChecks = checks.check_runs.filter(run => run.conclusion !== 'skipped');
                   const passedChecks = requiredChecks.filter(run => run.status === 'completed' && run.conclusion === 'success').length;
                   const allPassed = passedChecks === requiredChecks.length;
+                  console.log(`PR #${prNumber}: Waiting for checks after update... Passed: ${passedChecks}/${requiredChecks.length}`);
                   if (allPassed) {
                     checksPassed = true;
                     break;
@@ -153,14 +169,18 @@ jobs:
                   await new Promise(res => setTimeout(res, interval));
                 }
                 if (!checksPassed) {
+                  console.log(`PR #${prNumber} required checks did NOT pass after update.`);
                   results.push({prNumber, merged: false, reason: 'Checks did not pass after update'});
                   continue;
                 }
+                console.log(`PR #${prNumber} required checks PASSED after update.`);
               }
-              // 4. Merge (unless dry_run)
+              // 4. Merge
               if (dryRun) {
+                console.log(`PR #${prNumber} would be merged (dry run mode).`);
                 results.push({prNumber, merged: false, reason: 'Dry run: merge skipped'});
               } else {
+                console.log(`Merging PR #${prNumber}...`);
                 await github.rest.pulls.merge({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
