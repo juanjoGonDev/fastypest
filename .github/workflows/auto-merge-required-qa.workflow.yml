@@ -90,33 +90,7 @@ jobs:
               }
               console.log(`PR #${prNumber}: is approved.`);
 
-              // 2. Updated with main
-
-              let pr = await github.rest.pulls.get({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: prNumber
-              });
-              let updated = pr.data.mergeable_state === 'clean';
-
-              if (!updated) {
-                console.log(`PR #${prNumber}: is NOT up-to-date. Attempting to update...`);
-                try {
-                  await github.rest.pulls.updateBranch({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    pull_number: prNumber
-                  });
-                  console.log(`PR #${prNumber}: update triggered.`);
-                  await new Promise(resolve => setTimeout(resolve, 15000));
-                } catch (e) {
-                  console.log(`PR #${prNumber}: update FAILED: ${e.message}`);
-                  results.push({prNumber, merged: false, reason: 'Could not update branch: ' + e.message});
-                  continue;
-                }
-              }
-
-              // 3. Enable auto-merge
+              // 2. Enable auto-merge
               if (!dryRun) {
                 try {
                   const pr = await github.rest.pulls.get({
@@ -139,6 +113,31 @@ jobs:
               } else {
                 results.push({ prNumber, merged: false, reason: 'Dry run: auto-merge skipped' });
                 console.log(`PR #${prNumber}: Dry run, auto-merge skipped.`);
+              }
+
+              // 3. Updated with main
+
+              let pr = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber
+              });
+              let updated = pr.data.mergeable_state === 'clean';
+
+              if (!updated) {
+                console.log(`PR #${prNumber}: is NOT up-to-date. Attempting to update...`);
+                try {
+                  await github.rest.pulls.updateBranch({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    pull_number: prNumber
+                  });
+                  console.log(`PR #${prNumber}: update triggered.`);
+                } catch (e) {
+                  console.log(`PR #${prNumber}: update FAILED: ${e.message}`);
+                  results.push({prNumber, merged: false, reason: 'Could not update branch: ' + e.message});
+                  continue;
+                }
               }
             }
             console.table(results);
