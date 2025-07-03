@@ -140,8 +140,6 @@ jobs:
                 results.push({ prNumber, merged: false, reason: 'Dry run: auto-merge skipped' });
                 console.log(`PR #${prNumber}: Dry run, auto-merge skipped.`);
               }
-
-              results.push({prNumber, merged, reason: mergeReason});
             }
             console.table(results);
             return results;
