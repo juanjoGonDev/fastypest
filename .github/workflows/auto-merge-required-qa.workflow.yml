@@ -116,74 +116,29 @@ jobs:
                 }
               }
 
-              // 3. Check required checks
-
-              console.log(`PR #${prNumber}: Checking required checks...`);
-              const ref = `refs/pull/${prNumber}/head`;
-              const timeout = 5 * 60 * 1000; // 5 minutes
-              const interval = 5000; // 5 seconds
-              const deadline = Date.now() + timeout;
-
-              let checksPassed = false;
-              while (Date.now() < deadline) {
-                const { data: checksData } = await github.rest.checks.listForRef({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  ref
-               });
-
-                const relevantChecks = checksData.check_runs.filter(run => run.conclusion !== 'skipped');
-                const failed = relevantChecks.filter(run => run.conclusion === 'failure');
-                const running = relevantChecks.filter(run => run.status !== 'completed');
-
-                console.log(`PR #${prNumber}: ${relevantChecks.length - failed.length - running.length}/${relevantChecks.length} checks passed. ${running.length} still running.`);
-
-                if (failed.length > 0) {
-                  console.log(`PR #${prNumber}: Some checks failed.`);
-                  break;
-                }
-
-                if (running.length === 0) {
-                  console.log(`PR #${prNumber}: All required checks PASSED.`);
-                  checksPassed = true;
-                  break;
-                }
-
-                console.log(`PR #${prNumber}: Waiting for checks to complete. Running: ${running.length}/${relevantChecks.length}...`);
-               await new Promise(resolve => setTimeout(resolve, interval));
-              }
-
-              if (!checksPassed) {
-                results.push({ prNumber, merged: false, reason: 'Checks no OK (failure or still pending)' });
-                continue;
-              }
-
-              // 4. Merge
-
-              let merged = false;
-              let mergeReason = '';
-              if (dryRun) {
-                console.log(`PR #${prNumber}: would be merged (dry run mode).`);
-                mergeReason = 'Dry run: merge skipped';
-              } else {
+              // 3. Enable auto-merge
+              if (!dryRun) {
                 try {
-                  console.log(`PR #${prNumber}: Attempting merge using GITHUB_TOKEN...`);
-                  // Re-authenticate Octokit with GITHUB_TOKEN just for the merge
-                  const { Octokit } = require('@octokit/rest');
-                  const mergeOctokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
-                  await mergeOctokit.pulls.merge({
+                  const pr = await github.rest.pulls.get({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
-                    pull_number: prNumber,
-                    merge_method: 'squash'
+                    pull_number: prNumber
                   });
-                  merged = true;
-                  mergeReason = 'Merged!';
-                  console.log(`PR #${prNumber}: Merge successful.`);
+                  const prUrl = pr.data.html_url;
+                  const execSync = require('child_process').execSync;
+                  execSync(`gh pr merge --auto --squash "${prUrl}"`, {
+                    stdio: 'inherit',
+                    env: { ...process.env, GITHUB_TOKEN: process.env.GITHUB_TOKEN }
+                  });
+                  results.push({ prNumber, merged: true, reason: 'Auto-merge enabled' });
+                  console.log(`PR #${prNumber}: Auto-merge enabled.`);
                 } catch (e) {
-                  mergeReason = 'Merge failed: ' + e.message;
-                  console.log(`PR #${prNumber}: Merge failed: ${e.message}`);
+                  results.push({ prNumber, merged: false, reason: 'Auto-merge failed: ' + e.message });
+                  console.log(`PR #${prNumber}: Auto-merge failed: ${e.message}`);
                 }
+              } else {
+                results.push({ prNumber, merged: false, reason: 'Dry run: auto-merge skipped' });
+                console.log(`PR #${prNumber}: Dry run, auto-merge skipped.`);
               }
 
               results.push({prNumber, merged, reason: mergeReason});
