@@ -2109,13 +2109,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/geojson@npm:^7946.0.14":
-  version: 7946.0.14
-  resolution: "@types/geojson@npm:7946.0.14"
-  checksum: 10c0/54f3997708fa2970c03eeb31f7e4540a0eb6387b15e9f8a60513a1409c23cafec8d618525404573468b59c6fecbfd053724b3327f7fca416729c26271d799f55
-  languageName: node
-  linkType: hard
-
 "@types/http-cache-semantics@npm:^4.0.2":
   version: 4.0.4
   resolution: "@types/http-cache-semantics@npm:4.0.4"
@@ -2185,15 +2178,6 @@ __metadata:
   dependencies:
     undici-types: "npm:~5.26.4"
   checksum: 10c0/efaa7b08c50ba6e6982ac7d531ba08d5935539ba76e954807df1ff9382a319ead7e003ccaca5ad7cf33ecf53f212507f7c1f2794bd2ff52df6365fef21f6e1fb
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:^22.5.4":
-  version: 22.5.5
-  resolution: "@types/node@npm:22.5.5"
-  dependencies:
-    undici-types: "npm:~6.19.2"
-  checksum: 10c0/ead9495cfc6b1da5e7025856dcce2591e9bae635357410c0d2dd619fce797d2a1d402887580ca4b336cb78168b195224869967de370a23f61663cf1e4836121c
   languageName: node
   linkType: hard
 
@@ -5154,7 +5138,7 @@ __metadata:
     jest: "npm:^30.0.3"
     lefthook: "npm:^1.11.14"
     lint-staged: "npm:^16.1.2"
-    mariadb: "npm:^3.4.2"
+    mariadb: "npm:^3.4.3"
     mysql: "npm:^2.18.1"
     pg: "npm:^8.16.3"
     prettier: "npm:^3.6.2"
@@ -7713,16 +7697,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mariadb@npm:^3.4.2":
-  version: 3.4.2
-  resolution: "mariadb@npm:3.4.2"
+"mariadb@npm:^3.4.3":
+  version: 3.4.3
+  resolution: "mariadb@npm:3.4.3"
   dependencies:
-    "@types/geojson": "npm:^7946.0.14"
-    "@types/node": "npm:^22.5.4"
     denque: "npm:^2.1.0"
     iconv-lite: "npm:^0.6.3"
     lru-cache: "npm:^10.3.0"
-  checksum: 10c0/a4cc412490e8f719b72904764b7a9d1ad7b3908b1c6fb6baae620327fd4c3583b6240a7b195261a92a833896a3c5d8f4ba78f6d48d06c5d1c61971b5dd59e80b
+  checksum: 10c0/a736f65f328360d5b9331d6182477baca9afa4e7f88c6bf8bbf54aec5a1965290b1b9d69e6dbdf3d69b742bab6620acea54d38a0f4a109c491289b6f3e4690ce
   languageName: node
   linkType: hard
 
@@ -10603,13 +10585,6 @@ __metadata:
   version: 5.26.5
   resolution: "undici-types@npm:5.26.5"
   checksum: 10c0/bb673d7876c2d411b6eb6c560e0c571eef4a01c1c19925175d16e3a30c4c428181fb8d7ae802a261f283e4166a0ac435e2f505743aa9e45d893f9a3df017b501
-  languageName: node
-  linkType: hard
-
-"undici-types@npm:~6.19.2":
-  version: 6.19.6
-  resolution: "undici-types@npm:6.19.6"
-  checksum: 10c0/9b2264c5700e7169c6c62c643aac56cd8984c5fd7e18ed31ff11780260e137f6340dee8317a2e6e0ae3c49f5e5ef6fa577ea07193cbaa535265cba76a267cae9
   languageName: node
   linkType: hard
 
