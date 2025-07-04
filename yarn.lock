@@ -5039,7 +5039,7 @@ __metadata:
     jest: "npm:^30.0.4"
     lefthook: "npm:^1.11.14"
     lint-staged: "npm:^16.1.2"
-    mariadb: "npm:^3.4.3"
+    mariadb: "npm:^3.4.4"
     mysql: "npm:^2.18.1"
     pg: "npm:^8.16.3"
     prettier: "npm:^3.6.2"
@@ -7598,14 +7598,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mariadb@npm:^3.4.3":
-  version: 3.4.3
-  resolution: "mariadb@npm:3.4.3"
+"mariadb@npm:^3.4.4":
+  version: 3.4.4
+  resolution: "mariadb@npm:3.4.4"
   dependencies:
     denque: "npm:^2.1.0"
     iconv-lite: "npm:^0.6.3"
     lru-cache: "npm:^10.3.0"
-  checksum: 10c0/a736f65f328360d5b9331d6182477baca9afa4e7f88c6bf8bbf54aec5a1965290b1b9d69e6dbdf3d69b742bab6620acea54d38a0f4a109c491289b6f3e4690ce
+  checksum: 10c0/80cdf04a58e0ceeb7c2cf8630f740c551f23b0d061973422c6e329c09c8d57542f553b8b816211ea26e47b8749baffddff77a3691c1b722f6bf86b0b2bdedbd6
   languageName: node
   linkType: hard
 
