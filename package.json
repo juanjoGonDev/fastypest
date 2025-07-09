@@ -56,7 +56,7 @@
     "@swc/core": "^1.12.9",
     "@swc/helpers": "^0.5.17",
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.0.10",
+    "@types/node": "^24.0.12",
     "@typescript-eslint/eslint-plugin": "^8.35.1",
     "@typescript-eslint/parser": "^8.36.0",
     "cpy-cli": "^5.0.0",
