@@ -55,10 +55,10 @@ jobs:
         uses: actions/github-script@v7
         env:
           dry_run: ${{ github.event.inputs.dry_run }}
+          GH_TOKEN: ${{ secrets.PAT_FINE }}
         with:
           github-token: ${{ secrets.PAT_FINE }}
           script: |
-            // Detect dry_run from workflow_dispatch or default to false
             const dryRun = process.env.dry_run === 'true';
             console.log(`Dry run mode: ${dryRun}`);
 
@@ -71,6 +71,7 @@ jobs:
               }
             }
             const results = [];
+
             for (const prNumber of prNumbers) {
               console.log(`PR #${prNumber}: Processing...`);
 
@@ -82,6 +83,7 @@ jobs:
                 repo: context.repo.repo,
                 pull_number: prNumber
               });
+              
               const approved = reviews.data.some(r => r.state === 'APPROVED');
               if (!approved) {
                 console.log(`PR #${prNumber}: is NOT approved.`);
@@ -93,26 +95,23 @@ jobs:
               // 2. Enable auto-merge
               if (!dryRun) {
                 try {
-                  const pr = await github.rest.pulls.get({
+                  await github.rest.pulls.update({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
-                    pull_number: prNumber
-                  });
-                  const prUrl = pr.data.html_url;
-                  const execSync = require('child_process').execSync;
-                  execSync(`gh pr merge --auto --squash "${prUrl}"`, {
-                    stdio: 'inherit',
-                    env: { ...process.env, GITHUB_TOKEN: process.env.GITHUB_TOKEN }
-                  });
-                  results.push({ prNumber, merged: true, reason: 'Auto-merge enabled' });
+                    pull_number: prNumber,
+                    auto_merge: {
+                      merge_method: 'squash'
+                    }
+                  })
                   console.log(`PR #${prNumber}: Auto-merge enabled.`);
+                  results.push({ prNumber, merged: true, reason: 'Auto-merge enabled' });
                 } catch (e) {
-                  results.push({ prNumber, merged: false, reason: 'Auto-merge failed: ' + e.message });
                   console.log(`PR #${prNumber}: Auto-merge failed: ${e.message}`);
+                  results.push({ prNumber, merged: false, reason: 'Auto-merge failed: ' + e.message });
                 }
               } else {
-                results.push({ prNumber, merged: false, reason: 'Dry run: auto-merge skipped' });
                 console.log(`PR #${prNumber}: Dry run, auto-merge skipped.`);
+                results.push({ prNumber, merged: false, reason: 'Dry run: auto-merge skipped' });
               }
 
               // 3. Updated with main
