@@ -75,6 +75,12 @@ jobs:
             for (const prNumber of prNumbers) {
               console.log(`PR #${prNumber}: Processing...`);
 
+              let pr = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber
+              });
+
               // 1. Check if approved
 
               console.log(`PR #${prNumber}: Checking if  is approved...`);
@@ -83,7 +89,7 @@ jobs:
                 repo: context.repo.repo,
                 pull_number: prNumber
               });
-              
+
               const approved = reviews.data.some(r => r.state === 'APPROVED');
               if (!approved) {
                 console.log(`PR #${prNumber}: is NOT approved.`);
@@ -95,14 +101,30 @@ jobs:
               // 2. Enable auto-merge
               if (!dryRun) {
                 try {
-                  await github.rest.pulls.update({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    pull_number: prNumber,
-                    auto_merge: {
-                      merge_method: 'squash'
+                  const result = await github.graphql(`
+                    mutation EnableAutoMerge($pullRequestId: ID!) {
+                      enablePullRequestAutoMerge(input: {
+                        pullRequestId: $pullRequestId,
+                        mergeMethod: SQUASH
+                      }) {
+                        pullRequest {
+                          number
+                          autoMergeRequest {
+                            enabledAt
+                            enabledBy {
+                              login
+                            }
+                          }
+                        }
+                      }
                     }
-                  })
+                  `, {
+                    pullRequestId: pr.data.node_id,
+                    headers: {
+                      Authorization: `token ${process.env.GH_TOKEN}`
+                    }
+                  });
+
                   console.log(`PR #${prNumber}: Auto-merge enabled.`);
                   results.push({ prNumber, merged: true, reason: 'Auto-merge enabled' });
                 } catch (e) {
@@ -115,12 +137,6 @@ jobs:
               }
 
               // 3. Updated with main
-
-              let pr = await github.rest.pulls.get({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: prNumber
-              });
               let updated = pr.data.mergeable_state === 'clean';
 
               if (!updated) {
