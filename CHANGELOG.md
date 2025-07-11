@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.4.122](https://github.com/juanjoGonDev/fastypest/compare/v1.4.121...v1.4.122) (2025-07-11)
+
+
+### Bug Fixes
+
+* **workflow:** auto merge required qa ([6b5849c](https://github.com/juanjoGonDev/fastypest/commit/6b5849c2a745d0bd58a2be4ee6aae4fe101b2933))
+* **workflow:** auto merge required qa ([fd6b60b](https://github.com/juanjoGonDev/fastypest/commit/fd6b60bf8604f93064ad07775ef8c2b50f018c1a))
+
 ### [1.4.121](https://github.com/juanjoGonDev/fastypest/compare/v1.4.120...v1.4.121) (2025-07-09)
 
 ### [1.4.120](https://github.com/juanjoGonDev/fastypest/compare/v1.4.119...v1.4.120) (2025-07-04)
