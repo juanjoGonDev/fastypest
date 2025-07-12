@@ -1,6 +1,6 @@
 {
   "name": "fastypest",
-  "version": "1.4.121",
+  "version": "1.4.122",
   "description": "Restores the database automatically after each test. Allows serial execution of tests without having to delete and restore the database having to stop the application",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -56,7 +56,7 @@
     "@swc/core": "^1.12.11",
     "@swc/helpers": "^0.5.17",
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.0.12",
+    "@types/node": "^24.0.13",
     "@typescript-eslint/eslint-plugin": "^8.36.0",
     "@typescript-eslint/parser": "^8.36.0",
     "cpy-cli": "^5.0.0",
