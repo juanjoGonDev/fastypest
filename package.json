@@ -59,7 +59,7 @@
     "@types/node": "^24.2.0",
     "@typescript-eslint/eslint-plugin": "^8.39.0",
     "@typescript-eslint/parser": "^8.38.0",
-    "@typescript-eslint/types": "8.38.0",
+    "@typescript-eslint/types": "8.39.0",
     "cpy-cli": "^5.0.0",
     "eslint": "^9.32.0",
     "eslint-config-standard-with-typescript": "^43.0.1",
