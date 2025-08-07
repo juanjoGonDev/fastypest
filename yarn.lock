@@ -5129,7 +5129,7 @@ __metadata:
     "@types/node": "npm:^24.2.0"
     "@typescript-eslint/eslint-plugin": "npm:^8.39.0"
     "@typescript-eslint/parser": "npm:^8.38.0"
-    "@typescript-eslint/types": "npm:8.38.0"
+    "@typescript-eslint/types": "npm:8.39.0"
     cpy-cli: "npm:^5.0.0"
     eslint: "npm:^9.32.0"
     eslint-config-standard-with-typescript: "npm:^43.0.1"
