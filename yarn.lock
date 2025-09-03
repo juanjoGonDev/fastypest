@@ -2414,6 +2414,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@typescript-eslint/types@npm:8.42.0":
+  version: 8.42.0
+  resolution: "@typescript-eslint/types@npm:8.42.0"
+  checksum: 10c0/d585dff5005328282cc59f9402e886a3db64727906ad3e68b49d7ef73bc07bef3ed569287ba826ebaa07b69be42a72232a38529951d64c28cebd83db0892cd33
+  languageName: node
+  linkType: hard
+
 "@typescript-eslint/typescript-estree@npm:6.21.0":
   version: 6.21.0
   resolution: "@typescript-eslint/typescript-estree@npm:6.21.0"
@@ -5066,7 +5073,7 @@ __metadata:
     "@types/node": "npm:^24.3.0"
     "@typescript-eslint/eslint-plugin": "npm:^8.41.0"
     "@typescript-eslint/parser": "npm:^8.41.0"
-    "@typescript-eslint/types": "npm:8.41.0"
+    "@typescript-eslint/types": "npm:8.42.0"
     cpy-cli: "npm:^6.0.0"
     eslint: "npm:^9.34.0"
     eslint-config-standard-with-typescript: "npm:^43.0.1"
