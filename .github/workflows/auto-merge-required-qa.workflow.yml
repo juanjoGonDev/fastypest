@@ -31,7 +31,7 @@ jobs:
 
       - name: 🔍 Search PRs requires-manual-qa
         id: search_prs
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -52,7 +52,7 @@ jobs:
 
       - name: 🤖 Process PRs
         if: steps.search_prs.outputs.result != '[]'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         env:
           dry_run: ${{ github.event.inputs.dry_run }}
           GH_TOKEN: ${{ secrets.PAT_FINE }}
