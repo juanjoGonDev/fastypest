@@ -85,7 +85,7 @@ jobs:
           git config --global user.email "$USER_EMAIL"
       - name: 🟢 Setup Node.js
         if: steps.check_commits.outputs.enough_commits == 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "${{ env.NODE_VERSION }}"
           registry-url: "https://registry.npmjs.org/"
