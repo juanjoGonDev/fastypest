@@ -1,5 +1,21 @@
 const fs = require("fs");
 const path = require("path");
+const { createScriptLogger } = require("./logger");
+
+const LOG_SCOPE = "pre-commit";
+const LOG_MESSAGE_COMMAND_ERROR = "Error executing command";
+const LOG_MESSAGE_REMOVED_DIRECTORY = "Removed test-install directory";
+const LOG_MESSAGE_BUILDING_PACKAGE = "Building the package";
+const LOG_MESSAGE_PACKING_PACKAGE = "Packing the package";
+const LOG_MESSAGE_INITIALIZING_PROJECT = "Initializing test-install project";
+const LOG_MESSAGE_ADDING_TARBALL = "Adding tarball as dev dependency";
+const LOG_MESSAGE_SUCCESS = "Pre-commit install test succeeded";
+const LOG_MESSAGE_FAILURE = "Pre-commit check failed";
+const METADATA_KEY_COMMAND = "command";
+const METADATA_KEY_ARGUMENTS = "args";
+const METADATA_KEY_ERROR = "error";
+
+const logger = createScriptLogger(LOG_SCOPE);
 
 const run = async (command, args = [], options = { stdio: "inherit" }) => {
   const { execa } = await import("execa");
@@ -7,8 +23,11 @@ const run = async (command, args = [], options = { stdio: "inherit" }) => {
     const { stdout } = await execa(command, args, options);
     return stdout;
   } catch (err) {
-    console.error(`✗ Error executing: ${command} ${args.join(" ")}`);
-    if (err.stderr) console.error(err.stderr);
+    logger.error(LOG_MESSAGE_COMMAND_ERROR, {
+      [METADATA_KEY_COMMAND]: command,
+      [METADATA_KEY_ARGUMENTS]: args,
+      [METADATA_KEY_ERROR]: err.stderr || err.message || err,
+    });
     throw err;
   }
 };
@@ -19,23 +38,23 @@ const packagePath = path.join(testInstallDir, "package.tar.gz");
 const cleanUp = () => {
   if (fs.existsSync(testInstallDir)) {
     fs.rmSync(testInstallDir, { recursive: true, force: true });
-    console.log("🧹 Removed test-install directory.");
+    logger.info(LOG_MESSAGE_REMOVED_DIRECTORY);
   }
 };
 
 (async () => {
   try {
-    console.log("🛠 Building the package...");
+    logger.info(LOG_MESSAGE_BUILDING_PACKAGE);
     await run("yarn", ["build"]);
 
     if (!fs.existsSync(testInstallDir)) {
       fs.mkdirSync(testInstallDir);
     }
 
-    console.log("📦 Packing the package...");
+    logger.info(LOG_MESSAGE_PACKING_PACKAGE);
     await run("yarn", ["pack", "--filename", packagePath]);
 
-    console.log("📁 Initializing a fresh project in test-install...");
+    logger.info(LOG_MESSAGE_INITIALIZING_PROJECT);
     await run("yarn", ["init", "-y"], { cwd: testInstallDir });
 
     const yarnLockPath = path.join(testInstallDir, "yarn.lock");
@@ -43,16 +62,18 @@ const cleanUp = () => {
       fs.writeFileSync(yarnLockPath, "");
     }
 
-    console.log("➕ Adding the tarball as a dev dependency...");
+    logger.info(LOG_MESSAGE_ADDING_TARBALL);
     await run(
       "yarn",
       ["add", "-D", `fastypest@${packagePath}`],
       { cwd: testInstallDir }
     );
 
-    console.log("✅ Pre-commit install test succeeded!");
+    logger.info(LOG_MESSAGE_SUCCESS);
   } catch (error) {
-    console.error("❌ Pre-commit check failed:", error.message || error);
+    logger.error(LOG_MESSAGE_FAILURE, {
+      [METADATA_KEY_ERROR]: error.message || error,
+    });
     process.exitCode = 1;
   } finally {
     cleanUp();

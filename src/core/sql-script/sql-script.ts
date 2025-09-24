@@ -1,11 +1,18 @@
 import { DataSourceOptions, EntityManager } from "typeorm";
 import { AllowedDataBases, DB_QUERIES, Queries } from "./queries";
 import { QueryPath } from "./types";
+import { createScopedLogger } from "../../logging";
+
+const LOG_SCOPE_SQL_SCRIPT = "SQLScript";
+const LOG_MESSAGE_EXECUTING_QUERY = "Executing query";
+const METADATA_KEY_QUERY_PATH = "queryPath";
+const METADATA_KEY_VALUES = "values";
 
 type DBTypes = DataSourceOptions["type"];
 
 export class SQLScript {
   private queries: Queries;
+  private readonly scriptLogger = createScopedLogger(LOG_SCOPE_SQL_SCRIPT);
 
   protected constructor(private readonly type: DBTypes) {
     if (!(this.type in DB_QUERIES)) {
@@ -43,6 +50,10 @@ export class SQLScript {
       }
     }
 
+    this.scriptLogger.debug(LOG_MESSAGE_EXECUTING_QUERY, {
+      [METADATA_KEY_QUERY_PATH]: queryPath,
+      [METADATA_KEY_VALUES]: values,
+    });
     return em.query(query) as T extends void ? Promise<void> : Promise<T[]>;
   }
 }
