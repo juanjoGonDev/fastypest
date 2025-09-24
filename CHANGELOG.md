@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### [1.5.0](https://github.com/juanjoGonDev/fastypest/compare/v1.4.139...v1.5.0) (2025-09-23)
 
+### Features
+
+* detect data mutations through the TypeORM subscriber strategy so only touched tables are restored during tests
+* add manual table tracking to combine subscriber detection with raw queries without breaking existing setups
+
+### Bug Fixes
+
+* drop temporary tables before recreating them across supported databases to keep repeated initializations reliable
+
 ### [1.4.139](https://github.com/juanjoGonDev/fastypest/compare/v1.4.138...v1.4.139) (2025-09-23)
 
 ### [1.4.138](https://github.com/juanjoGonDev/fastypest/compare/v1.4.137...v1.4.138) (2025-09-16)
