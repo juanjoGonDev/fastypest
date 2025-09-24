@@ -12,15 +12,14 @@ const CHANGE_DETECTION_SPEC_BASENAME = "change-detection.spec.ts";
 
 const shouldSkipDefaultFastypestSetup = (): boolean => {
   const testPath = expect.getState().testPath;
-  if (!testPath) {
-    return false;
-  }
+  if (!testPath) return false;
   return path.basename(testPath) === CHANGE_DETECTION_SPEC_BASENAME;
 };
 
 beforeAll(async () => {
   connection = await initialize();
   if (shouldSkipDefaultFastypestSetup()) {
+    console.log("Skipping default fastypest setup");
     return;
   }
   fastypest = new Fastypest(connection);
@@ -29,6 +28,7 @@ beforeAll(async () => {
 
 afterEach(async () => {
   if (shouldSkipDefaultFastypestSetup()) {
+    console.log("Skipping default fastypest restore");
     return;
   }
   await fastypest.restoreData();
