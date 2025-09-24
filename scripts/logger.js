@@ -2,11 +2,25 @@ const { addColors, createLogger, format, transports } = require("winston");
 
 const LOG_LEVELS = { error: 0, warn: 1, info: 2, debug: 3 };
 const LOG_COLORS = {
-  error: "red",
-  warn: "yellow",
-  info: "cyan",
-  debug: "magenta",
+  error: "bold red",
+  warn: "bold yellow",
+  info: "bold green",
+  debug: "bold cyan",
 };
+const LOG_LEVEL_ICONS = {
+  error: "❌",
+  warn: "⚠️",
+  info: "ℹ️",
+  debug: "🔍",
+};
+const LOG_LEVEL_LABELS = {
+  error: "ERROR",
+  warn: "WARN",
+  info: "INFO",
+  debug: "DEBUG",
+};
+const LOG_METADATA_SEPARATOR = " | ";
+const LOG_METADATA_KEY_VALUE_SEPARATOR = ": ";
 const LOG_TIMESTAMP_FORMAT = "YYYY-MM-DD HH:mm:ss";
 const LOG_FIELD_LABEL = "label";
 const LOG_FIELD_METADATA = "metadata";
@@ -34,11 +48,47 @@ const baseLogger = createLogger({
   silent: false,
 });
 
+const formatValue = (value) => {
+  if (value === undefined) {
+    return "undefined";
+  }
+  if (value === null) {
+    return "null";
+  }
+  if (Array.isArray(value)) {
+    return value.map((entry) => formatValue(entry)).join(", ");
+  }
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+  if (typeof value === "object") {
+    return JSON.stringify(value);
+  }
+  return String(value);
+};
+
+const formatMetadata = (metadata) => {
+  if (!metadata) {
+    return "";
+  }
+  const entries = Object.entries(metadata);
+  if (entries.length === 0) {
+    return "";
+  }
+  return entries
+    .map(([key, value]) => `${key}${LOG_METADATA_KEY_VALUE_SEPARATOR}${formatValue(value)}`)
+    .join(LOG_METADATA_SEPARATOR);
+};
+
 const formatMessage = (info) => {
   const label = info[LOG_FIELD_LABEL] ?? DEFAULT_SCOPE;
   const metadata = info[LOG_FIELD_METADATA];
-  const metadataText = metadata && Object.keys(metadata).length > 0 ? ` ${JSON.stringify(metadata)}` : "";
-  return `${info.timestamp} [${label}] ${info.level}: ${info.message}${metadataText}`;
+  const level = info[LOG_FIELD_LEVEL];
+  const levelLabel = LOG_LEVEL_LABELS[level] ?? String(level ?? "");
+  const levelIcon = LOG_LEVEL_ICONS[level] ? `${LOG_LEVEL_ICONS[level]} ` : "";
+  const metadataText = formatMetadata(metadata);
+  const formattedMetadata = metadataText ? `${LOG_METADATA_SEPARATOR}${metadataText}` : "";
+  return `${info.timestamp} ${levelIcon}[${label}] ${levelLabel} ${info.message}${formattedMetadata}`;
 };
 
 const mergeOptions = (options = {}) => ({
@@ -53,12 +103,19 @@ const createScriptLogger = (scope = DEFAULT_SCOPE, options = {}) => {
       return;
     }
     baseLogger.level = configuration.level;
-    baseLogger.log({
+    const metadataEntries = metadata ? Object.entries(metadata) : [];
+    const payload = {
       level,
       message,
       [LOG_FIELD_LABEL]: scope,
-      [LOG_FIELD_METADATA]: metadata ?? {},
-    });
+    };
+    if (metadataEntries.length > 0) {
+      payload[LOG_FIELD_METADATA] = metadataEntries.reduce((accumulator, [key, value]) => {
+        accumulator[key] = value;
+        return accumulator;
+      }, {});
+    }
+    baseLogger.log(payload);
   };
   return {
     error: (message, metadata) => log("error", message, metadata),

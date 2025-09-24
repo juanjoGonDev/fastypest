@@ -15,11 +15,26 @@ export const LOGGING_LEVEL_WEIGHTS: Record<LogLevel, number> = {
   [LogLevel.Debug]: 3,
 };
 export const LOGGING_COLORS: Record<LogLevel, string> = {
-  [LogLevel.Error]: "red",
-  [LogLevel.Warn]: "yellow",
-  [LogLevel.Info]: "cyan",
-  [LogLevel.Debug]: "magenta",
+  [LogLevel.Error]: "bold red",
+  [LogLevel.Warn]: "bold yellow",
+  [LogLevel.Info]: "bold green",
+  [LogLevel.Debug]: "bold cyan",
 };
+export const LOGGING_LEVEL_ICONS: Record<LogLevel, string> = {
+  [LogLevel.Error]: "❌",
+  [LogLevel.Warn]: "⚠️",
+  [LogLevel.Info]: "ℹ️",
+  [LogLevel.Debug]: "🔍",
+};
+export const LOGGING_LEVEL_LABELS: Record<LogLevel, string> = {
+  [LogLevel.Error]: "ERROR",
+  [LogLevel.Warn]: "WARN",
+  [LogLevel.Info]: "INFO",
+  [LogLevel.Debug]: "DEBUG",
+};
+export const LOGGING_METADATA_SEPARATOR = " | ";
+export const LOGGING_METADATA_KEY_VALUE_SEPARATOR = ": ";
+export const LOGGING_DEFAULT_SCOPE = "Fastypest";
 
 export type LoggingOptions = {
   enabled?: boolean;

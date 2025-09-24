@@ -4,9 +4,13 @@ import { QueryPath } from "./types";
 import { createScopedLogger } from "../../logging";
 
 const LOG_SCOPE_SQL_SCRIPT = "SQLScript";
-const LOG_MESSAGE_EXECUTING_QUERY = "Executing query";
-const METADATA_KEY_QUERY_PATH = "queryPath";
-const METADATA_KEY_VALUES = "values";
+const LOG_TEXT = {
+  executingQuery: "🧾 Executing query",
+} as const;
+const METADATA_KEYS = {
+  queryPath: "queryPath",
+  values: "values",
+} as const;
 
 type DBTypes = DataSourceOptions["type"];
 
@@ -50,9 +54,9 @@ export class SQLScript {
       }
     }
 
-    this.scriptLogger.debug(LOG_MESSAGE_EXECUTING_QUERY, {
-      [METADATA_KEY_QUERY_PATH]: queryPath,
-      [METADATA_KEY_VALUES]: values,
+    this.scriptLogger.debug(LOG_TEXT.executingQuery, {
+      [METADATA_KEYS.queryPath]: queryPath,
+      [METADATA_KEYS.values]: values,
     });
     return em.query(query) as T extends void ? Promise<void> : Promise<T[]>;
   }

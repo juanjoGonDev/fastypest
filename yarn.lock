@@ -2314,6 +2314,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/winston@npm:^2.4.4":
+  version: 2.4.4
+  resolution: "@types/winston@npm:2.4.4"
+  dependencies:
+    winston: "npm:*"
+  checksum: 10c0/8b967c089ba71773cca671b76aba931b2849afb3a6c03cbc5ef04d19e44092e0957573c730cdfbdda71eeb44984d3554e7edb88391c2a3c1aa36cafadc8f2b87
+  languageName: node
+  linkType: hard
+
 "@types/yargs-parser@npm:*":
   version: 21.0.3
   resolution: "@types/yargs-parser@npm:21.0.3"
@@ -5236,6 +5245,7 @@ __metadata:
     "@swc/helpers": "npm:^0.5.17"
     "@types/jest": "npm:^30.0.0"
     "@types/node": "npm:^24.5.1"
+    "@types/winston": "npm:^2.4.4"
     "@typescript-eslint/eslint-plugin": "npm:^8.44.0"
     "@typescript-eslint/parser": "npm:^8.44.1"
     "@typescript-eslint/types": "npm:8.44.1"
@@ -11147,7 +11157,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"winston@npm:^3.14.2":
+"winston@npm:*, winston@npm:^3.14.2":
   version: 3.17.0
   resolution: "winston@npm:3.17.0"
   dependencies:
