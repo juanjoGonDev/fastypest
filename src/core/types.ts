@@ -6,6 +6,15 @@ export type DependencyTreeQueryOut = {
   level: number;
 };
 
+export enum ChangeDetectionStrategy {
+  None = "none",
+  Subscriber = "subscriber",
+}
+
+export type FastypestOptions = {
+  changeDetectionStrategy?: ChangeDetectionStrategy;
+};
+
 export type ColumnsWithAutoIncrement = {
   column_name: string;
   column_default: string;

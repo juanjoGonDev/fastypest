@@ -1,3 +1,4 @@
+import path from "node:path";
 import { DataSource } from "typeorm";
 import { Fastypest } from "../../dist/core";
 import { initialize } from "./orm.config";
@@ -7,13 +8,29 @@ jest.setTimeout(100_000);
 let fastypest: Fastypest;
 let connection: DataSource;
 
+const CHANGE_DETECTION_SPEC_BASENAME = "change-detection.spec.ts";
+
+const shouldSkipDefaultFastypestSetup = (): boolean => {
+  const testPath = expect.getState().testPath;
+  if (!testPath) {
+    return false;
+  }
+  return path.basename(testPath) === CHANGE_DETECTION_SPEC_BASENAME;
+};
+
 beforeAll(async () => {
   connection = await initialize();
+  if (shouldSkipDefaultFastypestSetup()) {
+    return;
+  }
   fastypest = new Fastypest(connection);
   await fastypest.init();
 });
 
 afterEach(async () => {
+  if (shouldSkipDefaultFastypestSetup()) {
+    return;
+  }
   await fastypest.restoreData();
 });
 

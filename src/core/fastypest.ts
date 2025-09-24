@@ -1,13 +1,22 @@
-import { Connection, DataSource, EntityManager, Table } from "typeorm";
+import {
+  Connection,
+  DataSource,
+  EntityManager,
+  EntitySubscriberInterface,
+  Table,
+} from "typeorm";
 import { INDEX_OFFSET_CONFIG } from "./config";
 import { SQLScript } from "./sql-script";
-import type {
-  ColumnStat,
-  ColumnsWithAutoIncrement,
-  DBType,
-  DependencyTreeQueryOut,
-  IncrementDetail,
-  Manager,
+import { ChangeTrackerSubscriber } from "./subscribers/change-tracker.subscriber";
+import {
+  ChangeDetectionStrategy,
+  type ColumnStat,
+  type ColumnsWithAutoIncrement,
+  type DBType,
+  type DependencyTreeQueryOut,
+  type FastypestOptions,
+  type IncrementDetail,
+  type Manager,
 } from "./types";
 
 export class Fastypest extends SQLScript {
@@ -15,10 +24,25 @@ export class Fastypest extends SQLScript {
   private tables: Set<string> = new Set();
   private tablesWithAutoIncrement: Map<string, IncrementDetail[]> = new Map();
   private restoreInOder: boolean = false;
+  private readonly options: Required<FastypestOptions>;
+  private readonly changedTables: Set<string> = new Set();
 
-  constructor(connection: DataSource | Connection) {
+  constructor(
+    connection: DataSource | Connection,
+    options?: FastypestOptions
+  ) {
     super(connection.options.type);
     this.manager = connection.manager;
+    this.options = {
+      changeDetectionStrategy:
+        options?.changeDetectionStrategy ?? ChangeDetectionStrategy.None,
+    };
+    if (
+      this.options.changeDetectionStrategy ===
+      ChangeDetectionStrategy.Subscriber
+    ) {
+      this.registerSubscriber(connection);
+    }
   }
 
   public async init(): Promise<void> {
@@ -39,6 +63,7 @@ export class Fastypest extends SQLScript {
   ): Promise<void> {
     await Promise.all(
       tables.map(async (tableName) => {
+        await this.execQuery(em, "dropTempTable", { tableName });
         await this.execQuery(em, "createTempTable", { tableName });
       })
     );
@@ -179,7 +204,7 @@ export class Fastypest extends SQLScript {
 
   private async detectTables(em: EntityManager): Promise<void> {
     const tables = await this.execQuery<Table>(em, "getTables");
-    if(!tables) return;
+    if (!tables) return;
 
     tables.forEach((row) => {
       this.tables.add(row.name);
@@ -187,18 +212,19 @@ export class Fastypest extends SQLScript {
   }
 
   private async restoreOrder(em: EntityManager): Promise<void> {
+    const tables = this.getTablesForRestore();
     if (this.restoreInOder) {
-      for (const tableName of this.tables) {
+      for (const tableName of tables) {
         await this.recreateData(em, tableName);
       }
-
-      return;
+    } else {
+      await Promise.all(
+        tables.map((tableName) => this.recreateData(em, tableName))
+      );
     }
-
-    const tables = [...this.tables];
-    await Promise.all(
-      tables.map((tableName) => this.recreateData(em, tableName))
-    );
+    if (this.shouldTrackChanges()) {
+      this.changedTables.clear();
+    }
   }
 
   private async recreateData(
@@ -226,4 +252,73 @@ export class Fastypest extends SQLScript {
       });
     }
   }
+
+  private registerSubscriber(connection: DataSource | Connection): void {
+    const subscriber = new ChangeTrackerSubscriber((tableName) => {
+      this.markTableAsChanged(tableName);
+    });
+    this.getSubscriberCollection(connection).push(subscriber);
+    this.bindSubscriber(subscriber, connection);
+  }
+
+  private isDataSource(
+    connection: DataSource | Connection
+  ): connection is DataSource {
+    return connection instanceof DataSource;
+  }
+
+  private getSubscriberCollection(
+    connection: DataSource | Connection
+  ): Array<EntitySubscriberInterface<unknown>> {
+    return (connection as unknown as {
+      subscribers: Array<EntitySubscriberInterface<unknown>>;
+    }).subscribers;
+  }
+
+  private bindSubscriber(
+    subscriber: ChangeTrackerSubscriber,
+    connection: DataSource | Connection
+  ): void {
+    const lifecycle = subscriber as ChangeTrackerSubscriber & SubscriberLifecycle;
+    if (this.isDataSource(connection)) {
+      lifecycle.setDataSource?.(connection);
+      return;
+    }
+    lifecycle.setConnection?.(connection);
+  }
+
+  private shouldTrackChanges(): boolean {
+    return (
+      this.options.changeDetectionStrategy ===
+      ChangeDetectionStrategy.Subscriber
+    );
+  }
+
+  private getTablesForRestore(): string[] {
+    const tables = [...this.tables];
+    if (!this.shouldTrackChanges()) {
+      return tables;
+    }
+    if (this.changedTables.size === 0) {
+      return tables;
+    }
+    const changed = new Set(this.changedTables);
+    const filtered = tables.filter((table) => changed.has(table));
+    if (filtered.length === 0) {
+      return tables;
+    }
+    return filtered;
+  }
+
+  public markTableAsChanged(tableName: string): void {
+    if (!this.shouldTrackChanges()) {
+      return;
+    }
+    this.changedTables.add(tableName);
+  }
 }
+
+type SubscriberLifecycle = {
+  setDataSource?: (dataSource: DataSource) => unknown;
+  setConnection?: (connection: Connection) => unknown;
+};
