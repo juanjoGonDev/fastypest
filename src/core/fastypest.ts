@@ -63,6 +63,7 @@ export class Fastypest extends SQLScript {
   ): Promise<void> {
     await Promise.all(
       tables.map(async (tableName) => {
+        await this.execQuery(em, "dropTempTable", { tableName });
         await this.execQuery(em, "createTempTable", { tableName });
       })
     );

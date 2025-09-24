@@ -4,4 +4,4 @@ pre-commit:
     run-build-and-test:
       run: yarn node scripts/pre-commit.js
     lint-staged:
-      run: npx lint-staged
+      run: yarn lint-staged
