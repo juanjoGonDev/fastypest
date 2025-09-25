@@ -1,5 +1,8 @@
 const fs = require("fs");
 const path = require("path");
+const { createScriptLogger } = require("./logger");
+
+const logger = createScriptLogger("pre-commit");
 
 const run = async (command, args = [], options = { stdio: "inherit" }) => {
   const { execa } = await import("execa");
@@ -7,8 +10,13 @@ const run = async (command, args = [], options = { stdio: "inherit" }) => {
     const { stdout } = await execa(command, args, options);
     return stdout;
   } catch (err) {
-    console.error(`✗ Error executing: ${command} ${args.join(" ")}`);
-    if (err.stderr) console.error(err.stderr);
+    const errorMessage = err.stderr || err.message || String(err);
+    logger.error(
+      "Command execution failed",
+      `Command ${command}`,
+      args.length > 0 ? `Arguments ${args.join(" ")}` : undefined,
+      errorMessage
+    );
     throw err;
   }
 };
@@ -19,40 +27,45 @@ const packagePath = path.join(testInstallDir, "package.tar.gz");
 const cleanUp = () => {
   if (fs.existsSync(testInstallDir)) {
     fs.rmSync(testInstallDir, { recursive: true, force: true });
-    console.log("🧹 Removed test-install directory.");
+    logger.log("Removed temporary test-install directory");
   }
 };
 
 (async () => {
+  logger.verbose("Starting pre-commit installation smoke test");
   try {
-    console.log("🛠 Building the package...");
+    logger.debug("Running yarn build for test verification");
     await run("yarn", ["build"]);
+    logger.info("Package build completed for smoke test");
 
     if (!fs.existsSync(testInstallDir)) {
       fs.mkdirSync(testInstallDir);
+      logger.log("Created test-install working directory", testInstallDir);
     }
 
-    console.log("📦 Packing the package...");
+    logger.debug("Packing the current workspace into a tarball");
     await run("yarn", ["pack", "--filename", packagePath]);
+    logger.info("Package tarball generated", packagePath);
 
-    console.log("📁 Initializing a fresh project in test-install...");
+    logger.debug("Initializing isolated project for installation test");
     await run("yarn", ["init", "-y"], { cwd: testInstallDir });
+    logger.info("Initialization completed inside test-install project");
 
     const yarnLockPath = path.join(testInstallDir, "yarn.lock");
     if (!fs.existsSync(yarnLockPath)) {
       fs.writeFileSync(yarnLockPath, "");
+      logger.log("Created placeholder yarn.lock inside test-install project");
     }
 
-    console.log("➕ Adding the tarball as a dev dependency...");
-    await run(
-      "yarn",
-      ["add", "-D", `fastypest@${packagePath}`],
-      { cwd: testInstallDir }
-    );
+    logger.debug("Adding packed tarball as a dev dependency");
+    await run("yarn", ["add", "-D", `fastypest@${packagePath}`], {
+      cwd: testInstallDir,
+    });
+    logger.log("Tarball installation succeeded inside the test project");
 
-    console.log("✅ Pre-commit install test succeeded!");
+    logger.info("Pre-commit smoke test finished successfully");
   } catch (error) {
-    console.error("❌ Pre-commit check failed:", error.message || error);
+    logger.error("Pre-commit smoke test failed", error.message || String(error));
     process.exitCode = 1;
   } finally {
     cleanUp();

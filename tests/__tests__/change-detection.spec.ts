@@ -2,6 +2,7 @@ import { DataSource } from "typeorm";
 import {
   ChangeDetectionStrategy,
   Fastypest,
+  LoggingDetailLevel,
 } from "../../dist/core";
 import { getConnection } from "../config/orm.config";
 import { seedCount } from "../config/seed.config";
@@ -19,6 +20,7 @@ describe("Change detection strategy", () => {
   const connection: DataSource = getConnection();
   const fastypest = new Fastypest(connection, {
     changeDetectionStrategy: ChangeDetectionStrategy.Subscriber,
+    logging: { enabled: true, detail: LoggingDetailLevel.Detailed },
   });
   const basicRepository = connection.getRepository(Basic);
   const simpleRepository = connection.getRepository(Simple);
