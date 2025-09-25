@@ -2,6 +2,7 @@ import { DataSource } from "typeorm";
 import {
   ChangeDetectionStrategy,
   Fastypest,
+  LogLevel,
 } from "../../dist/core";
 import { getConnection } from "../config/orm.config";
 import { seedCount } from "../config/seed.config";
@@ -17,8 +18,10 @@ const DEFAULT_SIMPLE_ID = 1;
 
 describe("Change detection strategy", () => {
   const connection: DataSource = getConnection();
+  const testLogLevels = Object.values(LogLevel) as LogLevel[];
   const fastypest = new Fastypest(connection, {
     changeDetectionStrategy: ChangeDetectionStrategy.Subscriber,
+    logging: { enabled: true, levels: testLogLevels },
   });
   const basicRepository = connection.getRepository(Basic);
   const simpleRepository = connection.getRepository(Simple);
