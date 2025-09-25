@@ -69,6 +69,28 @@ const fastypest = new Fastypest(connection, {
 - When no subscriber event is captured Fastypest falls back to restoring the whole database, ensuring that changes executed exclusively through `connection.query()` are still reverted.
 - TypeORM subscribers are not triggered by raw queries, so enabling the subscriber strategy requires using repositories or query builders for automatic tracking.
 
+## 🔍 Logging
+
+Fastypest ships with a Winston-based logger that helps you trace the initialization and restore workflow.
+
+- Logging is disabled by default. Enable it with `logging: true` or provide a detailed configuration.
+- Use `LoggingDetailLevel` to toggle between the simple preset (errors, warnings, notices, info) and the detailed preset (all levels).
+- Combine `LoggingDetailLevel` with an explicit `levels` array when you need to focus on specific `LogLevel` entries.
+
+```typescript
+import { Fastypest, LogLevel, LoggingDetailLevel } from "fastypest";
+
+const fastypest = new Fastypest(connection, {
+  logging: {
+    enabled: true,
+    detail: LoggingDetailLevel.Detailed,
+    levels: [LogLevel.Info, LogLevel.Debug],
+  },
+});
+```
+
+When both `detail` and `levels` are provided, Fastypest only prints the intersection of the two filters, keeping the output focused on the events you care about.
+
 ## ⚙️ Automated Workflow
 
 This project leverages a sophisticated CI/CD setup using GitHub Actions:
