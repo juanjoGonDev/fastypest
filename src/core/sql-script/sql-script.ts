@@ -3,20 +3,11 @@ import { AllowedDataBases, DB_QUERIES, Queries } from "./queries";
 import { QueryPath } from "./types";
 import { createScopedLogger } from "../../logging";
 
-const LOG_SCOPE_SQL_SCRIPT = "SQLScript";
-const LOG_TEXT = {
-  executingQuery: "🧾 Executing query",
-} as const;
-const METADATA_KEYS = {
-  queryPath: "queryPath",
-  values: "values",
-} as const;
-
 type DBTypes = DataSourceOptions["type"];
 
 export class SQLScript {
   private queries: Queries;
-  private readonly scriptLogger = createScopedLogger(LOG_SCOPE_SQL_SCRIPT);
+  private readonly scriptLogger = createScopedLogger("SQLScript");
 
   protected constructor(private readonly type: DBTypes) {
     if (!(this.type in DB_QUERIES)) {
@@ -54,10 +45,14 @@ export class SQLScript {
       }
     }
 
-    this.scriptLogger.debug(LOG_TEXT.executingQuery, {
-      [METADATA_KEYS.queryPath]: queryPath,
-      [METADATA_KEYS.values]: values,
-    });
+    const parameterEntries = values
+      ? Object.entries(values).map(([key, value]) => `${key}=${value}`)
+      : [];
+    this.scriptLogger.debug(
+      "Executing SQL query",
+      `Path ${queryPath}`,
+      parameterEntries.length > 0 ? `Parameters ${parameterEntries.join(", ")}` : undefined
+    );
     return em.query(query) as T extends void ? Promise<void> : Promise<T[]>;
   }
 }

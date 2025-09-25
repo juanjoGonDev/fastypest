@@ -1,4 +1,3 @@
-import { performance } from "node:perf_hooks";
 import {
   Connection,
   DataSource,
@@ -19,60 +18,14 @@ import {
   type IncrementDetail,
   type Manager,
 } from "./types";
-import { configureLogging, createScopedLogger } from "../logging";
+import {
+  configureLogging,
+  createScopedLogger,
+  LogLevel,
+  LOGGING_LEVEL_LABELS,
+} from "../logging";
 import type { LoggingOptions, ScopedLogger } from "../logging";
 
-const LOG_SCOPE_FASTYPEST = "Fastypest";
-const LOG_TEXT = {
-  loggingEnabled: "🟢 Logging enabled",
-  loggingDisabled: "⚪️ Logging disabled",
-  changeTrackingEnabled: "🛰️ Change detection strategy enabled",
-  subscriberRegistered: "📡 Change tracking subscriber registered",
-  initializationStarted: "🚀 Initialization started",
-  initializationCompleted: "✅ Initialization completed",
-  tablesDiscovered: "🗂️ Tables discovered",
-  dependenciesReady: "🧭 Dependency order calculated",
-  tempTablesPrepared: "🧪 Temporary tables prepared",
-  autoIncrementAnalyzed: "📊 Auto increment analysis completed",
-  autoIncrementColumn: "🔁 Auto increment column processed",
-  restoreStarted: "🛠️ Restore process started",
-  restoreMode: "🧱 Restore mode selected",
-  restoringTable: "📥 Restoring table",
-  tableRestored: "✅ Table restored",
-  tableTruncated: "🧹 Table truncated",
-  dataRestored: "📦 Table data restored",
-  foreignKeyDisabled: "🚧 Foreign keys disabled",
-  foreignKeyEnabled: "🆗 Foreign keys enabled",
-  restoreCompleted: "🎉 Restore process completed",
-  autoIncrementReset: "♻️ Auto increment column reset",
-  changeDetected: "🔎 Table change detected",
-  noChanges: "🕊️ No tracked changes detected",
-  filteredTables: "🗜️ Filtered tables by detected changes",
-} as const;
-
-const METADATA_KEYS = {
-  databaseType: "databaseType",
-  loggingEnabled: "loggingEnabled",
-  loggingLevel: "loggingLevel",
-  changeDetectionStrategy: "changeDetectionStrategy",
-  durationSeconds: "durationInSeconds",
-  totalTables: "totalTables",
-  table: "table",
-  progressCurrent: "current",
-  progressTotal: "total",
-  mode: "mode",
-  sequences: "sequences",
-  columns: "columns",
-  tablesWithAutoIncrement: "tablesWithAutoIncrement",
-  changedTables: "changedTables",
-  tablesRestored: "tablesRestored",
-} as const;
-
-const RESTORE_MODE_ORDERED = "ordered";
-const RESTORE_MODE_PARALLEL = "parallel";
-
-const MILLISECONDS_IN_SECOND = 1000;
-const DURATION_PRECISION = 2;
 const PROGRESS_OFFSET = 1;
 
 export class Fastypest extends SQLScript {
@@ -91,35 +44,35 @@ export class Fastypest extends SQLScript {
     super(connection.options.type);
     const loggingConfiguration = this.resolveLoggingConfiguration(options?.logging);
     const resolvedLogging = configureLogging(loggingConfiguration);
-    this.logger = createScopedLogger(LOG_SCOPE_FASTYPEST);
+    this.logger = createScopedLogger("Fastypest");
     this.manager = connection.manager;
     this.options = {
       changeDetectionStrategy:
         options?.changeDetectionStrategy ?? ChangeDetectionStrategy.None,
     };
-    this.logger.info(
-      resolvedLogging.enabled ? LOG_TEXT.loggingEnabled : LOG_TEXT.loggingDisabled,
-      {
-        [METADATA_KEYS.loggingEnabled]: resolvedLogging.enabled,
-        [METADATA_KEYS.loggingLevel]: resolvedLogging.level,
-        [METADATA_KEYS.databaseType]: this.getType(),
-        [METADATA_KEYS.changeDetectionStrategy]: this.options.changeDetectionStrategy,
-      }
-    );
+    const levelLabel = LOGGING_LEVEL_LABELS[resolvedLogging.level];
+    const loggingDetails = [
+      `Level ${levelLabel}`,
+      `Database ${this.getType()}`,
+      `Change detection ${this.options.changeDetectionStrategy}`,
+    ];
+    if (resolvedLogging.enabled) {
+      this.logger.log("🟢 Logging enabled", ...loggingDetails);
+    } else {
+      this.logger.warn("⚪️ Logging disabled", ...loggingDetails);
+    }
     if (
       this.options.changeDetectionStrategy ===
       ChangeDetectionStrategy.Subscriber
     ) {
-      this.logger.info(LOG_TEXT.changeTrackingEnabled);
+      this.logger.info("🛰️ Change detection strategy enabled");
       this.registerSubscriber(connection);
     }
   }
 
   public async init(): Promise<void> {
-    const startTime = performance.now();
-    this.logger.info(LOG_TEXT.initializationStarted, {
-      [METADATA_KEYS.databaseType]: this.getType(),
-    });
+    const timer = this.logger.timer("Initialization");
+    this.logger.verbose("🚀 Initialization started", `Database ${this.getType()}`);
     await this.manager.transaction(async (em: EntityManager) => {
       await this.detectTables(em);
       await this.calculateDependencyTables(em);
@@ -129,14 +82,12 @@ export class Fastypest extends SQLScript {
         this.detectTablesWithAutoIncrement(em, tables),
       ]);
     });
-    this.logger.info(LOG_TEXT.initializationCompleted, {
-      [METADATA_KEYS.durationSeconds]: this.formatDuration(
-        performance.now() - startTime
-      ),
-      [METADATA_KEYS.totalTables]: this.tables.size,
-      [METADATA_KEYS.tablesWithAutoIncrement]:
-        this.tablesWithAutoIncrement.size,
-    });
+    timer.end(
+      "✅ Initialization completed",
+      LogLevel.Info,
+      `Tables ${this.tables.size}`,
+      `Tables with auto increment ${this.tablesWithAutoIncrement.size}`
+    );
   }
 
   private async createTempTable(
@@ -148,11 +99,11 @@ export class Fastypest extends SQLScript {
       tables.map(async (tableName, index) => {
         await this.execQuery(em, "dropTempTable", { tableName });
         await this.execQuery(em, "createTempTable", { tableName });
-        this.logger.debug(LOG_TEXT.tempTablesPrepared, {
-          [METADATA_KEYS.table]: tableName,
-          [METADATA_KEYS.progressCurrent]: index + PROGRESS_OFFSET,
-          [METADATA_KEYS.progressTotal]: totalTables,
-        });
+        this.logger.debug(
+          "🧪 Temporary table prepared",
+          `Table ${tableName}`,
+          `Progress ${index + PROGRESS_OFFSET}/${totalTables}`
+        );
       })
     );
   }
@@ -165,9 +116,10 @@ export class Fastypest extends SQLScript {
     for (const [index, tableName] of tables.entries()) {
       await this.processTable(em, tableName, index + PROGRESS_OFFSET, totalTables);
     }
-    this.logger.debug(LOG_TEXT.autoIncrementAnalyzed, {
-      [METADATA_KEYS.tablesWithAutoIncrement]: this.tablesWithAutoIncrement.size,
-    });
+    this.logger.debug(
+      "📊 Auto increment analysis completed",
+      `Tables with auto increment ${this.tablesWithAutoIncrement.size}`
+    );
   }
 
   private async processTable(
@@ -217,13 +169,13 @@ export class Fastypest extends SQLScript {
       sequenceName,
       index: String(index + (INDEX_OFFSET_CONFIG[this.getType()] ?? 0)),
     });
-    this.logger.debug(LOG_TEXT.autoIncrementColumn, {
-      [METADATA_KEYS.table]: tableName,
-      [METADATA_KEYS.columns]: column.column_name,
-      [METADATA_KEYS.sequences]: sequenceName,
-      [METADATA_KEYS.progressCurrent]: position,
-      [METADATA_KEYS.progressTotal]: total,
-    });
+    this.logger.debug(
+      "🔁 Auto increment column processed",
+      `Table ${tableName}`,
+      `Column ${column.column_name}`,
+      `Sequence ${sequenceName}`,
+      `Progress ${position}/${total}`
+    );
   }
 
   private async getMaxColumnIndex(
@@ -254,31 +206,33 @@ export class Fastypest extends SQLScript {
   }
 
   public async restoreData(): Promise<void> {
-    const startTime = performance.now();
     const tablesToRestore = this.getTablesForRestore();
     if (this.shouldTrackChanges() && this.changedTables.size === 0) {
-      this.logger.debug(LOG_TEXT.noChanges, {
-        [METADATA_KEYS.totalTables]: tablesToRestore.length,
-      });
+      this.logger.debug(
+        "🕊️ No tracked table changes detected",
+        `Tables ${tablesToRestore.length}`
+      );
     }
-    this.logger.info(LOG_TEXT.restoreStarted, {
-      [METADATA_KEYS.totalTables]: tablesToRestore.length,
-      [METADATA_KEYS.changedTables]: this.shouldTrackChanges()
-        ? this.changedTables.size
-        : undefined,
-    });
+    const timer = this.logger.timer("Restore process");
+    const changeSummary = this.shouldTrackChanges()
+      ? `Tracked changes ${this.changedTables.size}`
+      : undefined;
+    this.logger.verbose(
+      "🛠️ Restore process started",
+      `Tables selected ${tablesToRestore.length}`,
+      changeSummary
+    );
     await this.manager.transaction(async (em: EntityManager) => {
       const { foreignKey, restoreOrder } = await this.restoreManager(em);
       await foreignKey.disable();
       await restoreOrder();
       await foreignKey.enable();
     });
-    this.logger.info(LOG_TEXT.restoreCompleted, {
-      [METADATA_KEYS.durationSeconds]: this.formatDuration(
-        performance.now() - startTime
-      ),
-      [METADATA_KEYS.tablesRestored]: tablesToRestore.length,
-    });
+    timer.end(
+      "🎉 Restore process completed",
+      LogLevel.Info,
+      `Tables restored ${tablesToRestore.length}`
+    );
   }
 
   protected async restoreManager(em: EntityManager): Promise<Manager> {
@@ -297,16 +251,18 @@ export class Fastypest extends SQLScript {
     const typesWithForeignKey: DBType[] = ["postgres", "mariadb", "mysql"];
     if (typesWithForeignKey.includes(this.getType())) {
       manager.foreignKey.disable = async (): Promise<void> => {
-        this.logger.debug(LOG_TEXT.foreignKeyDisabled, {
-          [METADATA_KEYS.databaseType]: this.getType(),
-        });
+        this.logger.debug(
+          "🚧 Foreign keys disabled",
+          `Database ${this.getType()}`
+        );
         await this.execQuery(em, "foreignKey.disable");
       };
       manager.foreignKey.enable = async (): Promise<void> => {
         await this.execQuery(em, "foreignKey.enable");
-        this.logger.debug(LOG_TEXT.foreignKeyEnabled, {
-          [METADATA_KEYS.databaseType]: this.getType(),
-        });
+        this.logger.debug(
+          "🆗 Foreign keys enabled",
+          `Database ${this.getType()}`
+        );
       };
     }
 
@@ -316,7 +272,8 @@ export class Fastypest extends SQLScript {
   }
 
   private async calculateDependencyTables(em: EntityManager): Promise<void> {
-    const startTime = performance.now();
+    const timer = this.logger.timer("Dependency planning");
+    this.logger.debug("🧭 Calculating dependency order for restore");
     const dependencyTree = await this.execQuery<DependencyTreeQueryOut>(
       em,
       "dependencyTree"
@@ -324,13 +281,12 @@ export class Fastypest extends SQLScript {
 
     if (!dependencyTree.length) {
       this.restoreInOder = false;
-      this.logger.debug(LOG_TEXT.dependenciesReady, {
-        [METADATA_KEYS.mode]: RESTORE_MODE_PARALLEL,
-        [METADATA_KEYS.durationSeconds]: this.formatDuration(
-          performance.now() - startTime
-        ),
-        [METADATA_KEYS.totalTables]: this.tables.size,
-      });
+      timer.end(
+        "🧭 Dependency order calculated",
+        LogLevel.Debug,
+        "Mode parallel",
+        `Tables ${this.tables.size}`
+      );
       return;
     }
 
@@ -338,47 +294,42 @@ export class Fastypest extends SQLScript {
     this.tables.clear();
     this.tables = sortedTables;
     this.restoreInOder = true;
-    this.logger.debug(LOG_TEXT.dependenciesReady, {
-      [METADATA_KEYS.mode]: RESTORE_MODE_ORDERED,
-      [METADATA_KEYS.durationSeconds]: this.formatDuration(
-        performance.now() - startTime
-      ),
-      [METADATA_KEYS.totalTables]: this.tables.size,
-    });
+    timer.end(
+      "🧭 Dependency order calculated",
+      LogLevel.Debug,
+      "Mode ordered",
+      `Tables ${this.tables.size}`
+    );
   }
 
   private async detectTables(em: EntityManager): Promise<void> {
-    const startTime = performance.now();
+    const timer = this.logger.timer("Table discovery");
+    this.logger.debug("🗂️ Discovering tables from database");
     const tables = await this.execQuery<Table>(em, "getTables");
     if (!tables) {
-      this.logger.debug(LOG_TEXT.tablesDiscovered, {
-        [METADATA_KEYS.totalTables]: this.tables.size,
-        [METADATA_KEYS.durationSeconds]: this.formatDuration(
-          performance.now() - startTime
-        ),
-      });
+      timer.end(
+        "🗂️ Table discovery completed",
+        LogLevel.Debug,
+        `Tables ${this.tables.size}`
+      );
       return;
     }
 
     tables.forEach((row) => {
       this.tables.add(row.name);
     });
-    this.logger.debug(LOG_TEXT.tablesDiscovered, {
-      [METADATA_KEYS.totalTables]: this.tables.size,
-      [METADATA_KEYS.durationSeconds]: this.formatDuration(
-        performance.now() - startTime
-      ),
-    });
+    timer.end(
+      "🗂️ Table discovery completed",
+      LogLevel.Debug,
+      `Tables ${this.tables.size}`
+    );
   }
 
   private async restoreOrder(em: EntityManager): Promise<void> {
     const tables = this.getTablesForRestore();
     const totalTables = tables.length;
     if (this.restoreInOder) {
-      this.logger.debug(LOG_TEXT.restoreMode, {
-        [METADATA_KEYS.mode]: RESTORE_MODE_ORDERED,
-        [METADATA_KEYS.totalTables]: totalTables,
-      });
+      this.logger.verbose("🧱 Restore mode ordered", `Tables ${totalTables}`);
       for (const [index, tableName] of tables.entries()) {
         await this.recreateData(
           em,
@@ -388,10 +339,7 @@ export class Fastypest extends SQLScript {
         );
       }
     } else {
-      this.logger.debug(LOG_TEXT.restoreMode, {
-        [METADATA_KEYS.mode]: RESTORE_MODE_PARALLEL,
-        [METADATA_KEYS.totalTables]: totalTables,
-      });
+      this.logger.verbose("🧱 Restore mode parallel", `Tables ${totalTables}`);
       await Promise.all(
         tables.map((tableName, index) =>
           this.recreateData(
@@ -414,33 +362,33 @@ export class Fastypest extends SQLScript {
     position: number,
     total: number
   ): Promise<void> {
-    const startTime = performance.now();
-    this.logger.info(LOG_TEXT.restoringTable, {
-      [METADATA_KEYS.table]: tableName,
-      [METADATA_KEYS.progressCurrent]: position,
-      [METADATA_KEYS.progressTotal]: total,
-    });
+    const timer = this.logger.timer(`Restore ${tableName}`);
+    this.logger.debug(
+      "📥 Restoring table",
+      `Table ${tableName}`,
+      `Progress ${position}/${total}`
+    );
     await this.execQuery(em, "truncateTable", { tableName });
-    this.logger.debug(LOG_TEXT.tableTruncated, {
-      [METADATA_KEYS.table]: tableName,
-      [METADATA_KEYS.progressCurrent]: position,
-      [METADATA_KEYS.progressTotal]: total,
-    });
+    timer.mark(
+      "🧹 Table truncated",
+      LogLevel.Debug,
+      `Table ${tableName}`,
+      `Progress ${position}/${total}`
+    );
     await this.execQuery(em, "restoreData", { tableName });
-    this.logger.debug(LOG_TEXT.dataRestored, {
-      [METADATA_KEYS.table]: tableName,
-      [METADATA_KEYS.progressCurrent]: position,
-      [METADATA_KEYS.progressTotal]: total,
-    });
+    timer.mark(
+      "📦 Table data restored",
+      LogLevel.Debug,
+      `Table ${tableName}`,
+      `Progress ${position}/${total}`
+    );
     await this.resetAutoIncrementColumns(em, tableName);
-    this.logger.info(LOG_TEXT.tableRestored, {
-      [METADATA_KEYS.table]: tableName,
-      [METADATA_KEYS.durationSeconds]: this.formatDuration(
-        performance.now() - startTime
-      ),
-      [METADATA_KEYS.progressCurrent]: position,
-      [METADATA_KEYS.progressTotal]: total,
-    });
+    timer.end(
+      "✅ Table restored",
+      LogLevel.Info,
+      `Table ${tableName}`,
+      `Progress ${position}/${total}`
+    );
   }
 
   private async resetAutoIncrementColumns(
@@ -457,12 +405,13 @@ export class Fastypest extends SQLScript {
         sequenceName,
         index,
       });
-      this.logger.debug(LOG_TEXT.autoIncrementReset, {
-        [METADATA_KEYS.table]: tableName,
-        [METADATA_KEYS.columns]: column,
-        [METADATA_KEYS.sequences]: sequenceName,
-        index,
-      });
+      this.logger.debug(
+        "♻️ Auto increment column reset",
+        `Table ${tableName}`,
+        `Column ${column}`,
+        `Sequence ${sequenceName}`,
+        `Next value ${index}`
+      );
     }
   }
 
@@ -472,9 +421,10 @@ export class Fastypest extends SQLScript {
     });
     this.getSubscriberCollection(connection).push(subscriber);
     this.bindSubscriber(subscriber, connection);
-    this.logger.info(LOG_TEXT.subscriberRegistered, {
-      [METADATA_KEYS.databaseType]: this.getType(),
-    });
+    this.logger.info(
+      "📡 Change tracking subscriber registered",
+      `Database ${this.getType()}`
+    );
   }
 
   private isDataSource(
@@ -523,10 +473,11 @@ export class Fastypest extends SQLScript {
     if (filtered.length === 0) {
       return tables;
     }
-    this.logger.debug(LOG_TEXT.filteredTables, {
-      [METADATA_KEYS.changedTables]: filtered.length,
-      [METADATA_KEYS.totalTables]: tables.length,
-    });
+    this.logger.debug(
+      "🗜️ Filtering tables by tracked changes",
+      `Matched tables ${filtered.length}`,
+      `Total tables ${tables.length}`
+    );
     return filtered;
   }
 
@@ -537,10 +488,11 @@ export class Fastypest extends SQLScript {
     const wasTracked = this.changedTables.has(tableName);
     this.changedTables.add(tableName);
     if (!wasTracked) {
-      this.logger.debug(LOG_TEXT.changeDetected, {
-        [METADATA_KEYS.table]: tableName,
-        [METADATA_KEYS.changedTables]: this.changedTables.size,
-      });
+      this.logger.debug(
+        "🔎 Table change detected",
+        `Table ${tableName}`,
+        `Tracked tables ${this.changedTables.size}`
+      );
     }
   }
 
@@ -557,11 +509,6 @@ export class Fastypest extends SQLScript {
       return { ...logging, enabled: true };
     }
     return logging;
-  }
-
-  private formatDuration(milliseconds: number): number {
-    const seconds = milliseconds / MILLISECONDS_IN_SECOND;
-    return Number(seconds.toFixed(DURATION_PRECISION));
   }
 }
 

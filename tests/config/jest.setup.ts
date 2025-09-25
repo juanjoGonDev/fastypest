@@ -10,13 +10,7 @@ let fastypest: Fastypest;
 let connection: DataSource;
 
 const CHANGE_DETECTION_SPEC_BASENAME = "change-detection.spec.ts";
-const LOG_SCOPE = "JestSetup";
-const LOG_TEXT = {
-  skipSetup: "⏭️ Skipping default Fastypest setup",
-  skipRestore: "⏭️ Skipping default Fastypest restore",
-} as const;
-
-const logger = createScopedLogger(LOG_SCOPE, { enabled: true });
+const logger = createScopedLogger("JestSetup", { enabled: true });
 
 const shouldSkipDefaultFastypestSetup = (): boolean => {
   const testPath = expect.getState().testPath;
@@ -27,7 +21,7 @@ const shouldSkipDefaultFastypestSetup = (): boolean => {
 beforeAll(async () => {
   connection = await initialize();
   if (shouldSkipDefaultFastypestSetup()) {
-    logger.info(LOG_TEXT.skipSetup);
+    logger.warn("⏭️ Skipping default Fastypest setup");
     return;
   }
   fastypest = new Fastypest(connection);
@@ -36,7 +30,7 @@ beforeAll(async () => {
 
 afterEach(async () => {
   if (shouldSkipDefaultFastypestSetup()) {
-    logger.info(LOG_TEXT.skipRestore);
+    logger.warn("⏭️ Skipping default Fastypest restore");
     return;
   }
   await fastypest.restoreData();
