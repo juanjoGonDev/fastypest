@@ -1,7 +1,7 @@
 import path from "node:path";
 import { DataSource } from "typeorm";
 import { Fastypest } from "../../dist/core";
-import { createScopedLogger, LogLevel } from "../../src/logging";
+import { createScopedLogger } from "../../src/logging";
 import { initialize } from "./orm.config";
 
 jest.setTimeout(100_000);
@@ -10,10 +10,8 @@ let fastypest: Fastypest;
 let connection: DataSource;
 
 const CHANGE_DETECTION_SPEC_BASENAME = "change-detection.spec.ts";
-const testLogLevels = Object.values(LogLevel) as LogLevel[];
 const logger = createScopedLogger("JestSetup", {
-  enabled: true,
-  levels: testLogLevels,
+  enabled: true
 });
 
 const shouldSkipDefaultFastypestSetup = (): boolean => {
@@ -29,7 +27,7 @@ beforeAll(async () => {
     return;
   }
   fastypest = new Fastypest(connection, {
-    logging: { enabled: true, levels: testLogLevels },
+    logging: { enabled: true },
   });
   await fastypest.init();
 });

@@ -18,10 +18,9 @@ const DEFAULT_SIMPLE_ID = 1;
 
 describe("Change detection strategy", () => {
   const connection: DataSource = getConnection();
-  const testLogLevels = Object.values(LogLevel) as LogLevel[];
   const fastypest = new Fastypest(connection, {
     changeDetectionStrategy: ChangeDetectionStrategy.Subscriber,
-    logging: { enabled: true, levels: testLogLevels },
+    logging: { enabled: true },
   });
   const basicRepository = connection.getRepository(Basic);
   const simpleRepository = connection.getRepository(Simple);
