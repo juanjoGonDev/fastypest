@@ -1,9 +1,20 @@
 import { DataSourceOptions } from "typeorm";
+import type { LoggingOptions } from "../logging";
 
 export type Table = { name: string };
 export type DependencyTreeQueryOut = {
   table_name: string;
   level: number;
+};
+
+export enum ChangeDetectionStrategy {
+  None = "none",
+  Subscriber = "subscriber",
+}
+
+export type FastypestOptions = {
+  changeDetectionStrategy?: ChangeDetectionStrategy;
+  logging?: boolean | LoggingOptions;
 };
 
 export type ColumnsWithAutoIncrement = {

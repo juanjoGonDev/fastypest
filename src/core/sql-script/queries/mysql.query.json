@@ -6,7 +6,7 @@
   },
   "getTables": "SELECT table_name AS name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE'",
   "createTempTable": "CREATE TEMPORARY TABLE {{tableName}}_temp AS SELECT * FROM {{tableName}}",
-  "dropTempTable": "DROP TEMPORARY TABLE {{tableName}}_temp",
+  "dropTempTable": "DROP TEMPORARY TABLE IF EXISTS {{tableName}}_temp",
   "restoreData": "INSERT INTO {{tableName}} SELECT * FROM {{tableName}}_temp",
   "truncateTable": "TRUNCATE TABLE {{tableName}}",
   "getColumnsWithAutoIncrement": "-- NOT USED",

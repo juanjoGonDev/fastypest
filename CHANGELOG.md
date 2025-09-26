@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.5.2](https://github.com/juanjoGonDev/fastypest/compare/v1.5.1...v1.5.2) (2025-09-26)
+
+### [1.5.1](https://github.com/juanjoGonDev/fastypest/compare/v1.4.139...v1.5.1) (2025-09-25)
+
+### [1.5.0](https://github.com/juanjoGonDev/fastypest/compare/v1.4.139...v1.5.0) (2025-09-23)
+
+### Features
+
+* detect data mutations through the TypeORM subscriber strategy so only touched tables are restored during tests
+* add manual table tracking to combine subscriber detection with raw queries without breaking existing setups
+
+### Bug Fixes
+
+* drop temporary tables before recreating them across supported databases to keep repeated initializations reliable
+
+### [1.4.139](https://github.com/juanjoGonDev/fastypest/compare/v1.4.138...v1.4.139) (2025-09-23)
+
 ### [1.4.138](https://github.com/juanjoGonDev/fastypest/compare/v1.4.137...v1.4.138) (2025-09-16)
 
 ### [1.4.137](https://github.com/juanjoGonDev/fastypest/compare/v1.4.136...v1.4.137) (2025-09-15)

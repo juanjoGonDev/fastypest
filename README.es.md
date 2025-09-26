@@ -49,6 +49,47 @@ afterEach(async () => {
 });
 ```
 
+## 🔄 Estrategias de detección de cambios
+
+Por defecto Fastypest restaura todas las tablas. Puedes activar la detección de cambios mediante el subscriber de TypeORM para refrescar únicamente las tablas tocadas durante una prueba.
+
+```typescript
+const fastypest = new Fastypest(connection, {
+  changeDetectionStrategy: ChangeDetectionStrategy.Subscriber,
+});
+```
+
+- `ChangeDetectionStrategy.None` mantiene el comportamiento anterior, truncando y restaurando cada tabla.
+- `ChangeDetectionStrategy.Subscriber` escucha los eventos del subscriber de TypeORM (`insert`, `update`, `remove`) y restaura solo las tablas afectadas.
+
+### Seguimiento manual y limitaciones
+
+- Usa `fastypest.markTableAsChanged('tableName')` después de ejecutar SQL crudo para que la tabla se restaure junto con los cambios detectados por el subscriber.
+- Si no se captura ningún evento del subscriber, Fastypest vuelve a restaurar toda la base de datos y garantiza que los cambios realizados únicamente con `connection.query()` se reviertan.
+- Los subscribers de TypeORM no se activan con `.query(...)`, por lo que al habilitar la estrategia del subscriber es necesario trabajar con repositorios o query builders para disfrutar del seguimiento automático.
+
+## 🔍 Registro
+
+Fastypest incluye un logger basado en Winston que facilita seguir el flujo de inicialización y restauración.
+
+- El registro está desactivado por defecto. Actívalo con `logging: true` o define una configuración personalizada.
+- Usa `LoggingDetailLevel` para alternar entre el modo simple (errores, avisos, notices e info) y el modo detallado (todos los niveles).
+- Combina `LoggingDetailLevel` con un array `levels` cuando necesites centrarte en niveles concretos de `LogLevel`.
+
+```typescript
+import { Fastypest, LogLevel, LoggingDetailLevel } from "fastypest";
+
+const fastypest = new Fastypest(connection, {
+  logging: {
+    enabled: true,
+    detail: LoggingDetailLevel.Detailed,
+    levels: [LogLevel.Info, LogLevel.Debug],
+  },
+});
+```
+
+Cuando defines `detail` y `levels` al mismo tiempo, Fastypest solo imprime la intersección de ambos filtros para mantener el registro enfocado en los eventos relevantes.
+
 ## ⚙️ Flujo de trabajo automatizado
 
 Este proyecto usa un sistema CI/CD avanzado con GitHub Actions:

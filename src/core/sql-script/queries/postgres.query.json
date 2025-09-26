@@ -6,7 +6,7 @@
   },
   "getTables": "SELECT table_name AS name FROM information_schema.tables  WHERE table_schema = CURRENT_SCHEMA() AND table_type = 'BASE TABLE'",
   "createTempTable": "CREATE TEMPORARY TABLE \"{{tableName}}_temp\" AS SELECT * FROM \"{{tableName}}\"",
-  "dropTempTable": "DROP TABLE IF EXISTS \"{{tableName}}_temp\"",
+  "dropTempTable": "DROP TABLE IF EXISTS \"{{tableName}}_temp\";",
   "restoreData": "INSERT INTO \"{{tableName}}\" SELECT * FROM \"{{tableName}}_temp\";",
   "truncateTable": "TRUNCATE TABLE \"{{tableName}}\" RESTART IDENTITY CASCADE",
   "getColumnsWithAutoIncrement": "SELECT column_name, column_default FROM information_schema.columns WHERE table_schema = 'public' AND column_default LIKE 'nextval%' AND table_name = '{{tableName}}'",
