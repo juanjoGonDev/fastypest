@@ -13,6 +13,8 @@ updates:
       interval: "daily"
       time: "07:00"
       timezone: "Europe/Madrid"
+    target-branch: "main"
+    rebase-strategy: auto
 
   - package-ecosystem: "npm" # See documentation for possible values
     directory: "/" # Location of package manifests
@@ -22,3 +24,4 @@ updates:
       timezone: "Europe/Madrid"
     versioning-strategy: increase
     target-branch: "main"
+    rebase-strategy: auto
