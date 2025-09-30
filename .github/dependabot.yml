@@ -11,10 +11,14 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+      time: "07:00"
+      timezone: "Europe/Madrid"
 
   - package-ecosystem: "npm" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
       interval: "daily"
+      time: "07:00"
+      timezone: "Europe/Madrid"
     versioning-strategy: increase
     target-branch: "main"
