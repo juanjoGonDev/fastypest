@@ -50,7 +50,7 @@
   },
   "homepage": "https://github.com/juanjoGonDev/fastypest#readme",
   "dependencies": {
-    "winston": "^3.18.2"
+    "winston": "^3.18.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
