@@ -9,8 +9,8 @@ jobs:
   approve-release:
     runs-on: ubuntu-latest
     if: >
-      contains(github.event.pull_request.labels.*.name, 'auto-release') && 
-      github.event.pull_request.head.repo.full_name == github.repository && 
+      contains(github.event.pull_request.labels.*.name, 'auto-release') &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
       github.event.pull_request.user.login == github.repository_owner
     environment: admin
     steps:
@@ -29,23 +29,30 @@ jobs:
             return alreadyApproved;
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: ✅ Approve PR
+        id: approve
         if: steps.check-is-approved.outputs.result == 'false'
         run: gh pr review $PR_URL --approve -b "I'm **approving** this pull request because **it includes a bump of the version**"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: 🔓 Enable auto-merge for approved PRs
+        if: steps.check-is-approved.outputs.result == 'true' || steps.approve.outcome == 'success'
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.PAT_FINE }}
   dependabot:
     runs-on: ubuntu-latest
     if: >
-      github.event.pull_request.user.login == 'dependabot[bot]' && 
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
       github.event.pull_request.head.repo.full_name == github.repository
     environment: admin
     steps:
       - name: Fetch actor username
         id: get_actor_username
-        run: echo "ACTOR_USERNAME=$(gh api user -q .login)" >> $GITHUB_ENV
+        run: echo "ACTOR_USERNAME=${{ github.repository_owner }}" >> $GITHUB_ENV
         env:
-          GITHUB_TOKEN: ${{secrets.PAT_FINE}}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: 💿 Dependabot metadata
         id: metadata
         uses: dependabot/fetch-metadata@v2.4.0
@@ -65,20 +72,20 @@ jobs:
           echo "approved=$approved" >> $GITHUB_OUTPUT
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{secrets.PAT_FINE}}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: 🔓 Enable auto-merge for eligible PRs
         if: steps.approve.outputs.approved == 'true'
         run: gh pr merge --auto --squash "$PR_URL"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          GITHUB_TOKEN: ${{ secrets.PAT_FINE }}
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v5
       - name: 👤 Assign PR to user
         run: gh pr edit $PR_URL --add-assignee "${{ env.ACTOR_USERNAME }}"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{secrets.PAT_FINE}}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: 💬 Comment on major updates of non-development dependencies
         if: ${{steps.metadata.outputs.update-type == 'version-update:semver-major' && steps.metadata.outputs.dependency-type == 'direct:production'}}
         run: |
@@ -86,4 +93,4 @@ jobs:
           gh pr edit $PR_URL --add-label "requires-manual-qa"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

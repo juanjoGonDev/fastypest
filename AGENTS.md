@@ -56,6 +56,9 @@ This repository ships a TypeScript utility that snapshots and restores relationa
 - **Linting**: Run `yarn eslint` (auto-fix enabled) prior to committing. The pre-commit hook (`lefthook.yml`) also executes `scripts/pre-commit.js`; keep it passing.
 - **Formatting**: Adhere to Prettier defaults implicit in existing code (two spaces for indentation, trailing commas where allowed).
 
+## GitHub Workflows
+- The workflow `.github/workflows/dependabot-auto-merge.workflow.yml` manages both Dependabot and auto-release pull requests. Use the default `GITHUB_TOKEN` for approvals, reviewer assignments, and comments so they remain attributed to the GitHub Actions bot. Reserve `secrets.PAT_FINE` strictly for enabling auto-merge after the approvals are in place. Avoid introducing additional secrets or inline tokens.
+
 ## Git & PR Workflow
 - Keep commits focused and messages descriptive. Reference impacted domains (`core`, `logging`, `tests`, etc.).
 - Update `CHANGELOG.md` only through the release process unless explicitly instructed.
