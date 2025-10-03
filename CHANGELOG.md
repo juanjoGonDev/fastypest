@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.5.5](https://github.com/juanjoGonDev/fastypest/compare/v1.5.4...v1.5.5) (2025-10-03)
+
+
+### Bug Fixes
+
+* dependabot-auto-merge ([21c327e](https://github.com/juanjoGonDev/fastypest/commit/21c327ec4f2528c7ad5d3e4517fb07c8305529e3))
+* scope admin token to auto merge ([#1191](https://github.com/juanjoGonDev/fastypest/issues/1191)) ([f08b5d6](https://github.com/juanjoGonDev/fastypest/commit/f08b5d6682ce27be8756d92ac39c781937d2c9dc))
+
 ### [1.5.4](https://github.com/juanjoGonDev/fastypest/compare/v1.5.3...v1.5.4) (2025-10-01)
 
 
