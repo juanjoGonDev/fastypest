@@ -5342,7 +5342,7 @@ __metadata:
     "@types/winston": "npm:^2.4.4"
     "@typescript-eslint/eslint-plugin": "npm:^8.45.0"
     "@typescript-eslint/parser": "npm:^8.45.0"
-    "@typescript-eslint/types": "npm:8.45.0"
+    "@typescript-eslint/types": "npm:8.46.0"
     cpy-cli: "npm:^6.0.0"
     eslint: "npm:^9.37.0"
     eslint-config-standard-with-typescript: "npm:^43.0.1"
