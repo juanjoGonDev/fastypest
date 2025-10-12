@@ -2,8 +2,8 @@ name: 🤖 Dependabot auto-merge
 on: pull_request_target
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
+  pull-requests: read
 
 jobs:
   approve-release:
@@ -11,8 +11,12 @@ jobs:
     if: >
       contains(github.event.pull_request.labels.*.name, 'auto-release') &&
       github.event.pull_request.head.repo.full_name == github.repository &&
-      github.event.pull_request.user.login == github.repository_owner
+      github.event.pull_request.user.login == github.repository_owner &&
+      github.event.pull_request.base.ref == 'main' &&
+      github.actor == github.event.pull_request.user.login
     environment: admin
+    permissions:
+      pull-requests: write
     steps:
       - name: 🔎 Check is approved
         id: check-is-approved
@@ -37,9 +41,13 @@ jobs:
   dependabot:
     runs-on: ubuntu-latest
     if: >
+      github.actor == 'dependabot[bot]' &&
       github.event.pull_request.user.login == 'dependabot[bot]' &&
       github.event.pull_request.head.repo.full_name == github.repository
     environment: admin
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Fetch actor username
         id: get_actor_username
