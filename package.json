@@ -61,7 +61,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^24.8.1",
     "@types/winston": "^2.4.4",
-    "@typescript-eslint/eslint-plugin": "^8.46.1",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@typescript-eslint/parser": "^8.46.1",
     "@typescript-eslint/types": "8.46.1",
     "cpy-cli": "^6.0.0",
