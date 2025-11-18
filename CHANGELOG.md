@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.5.15](https://github.com/juanjoGonDev/fastypest/compare/v1.5.14...v1.5.15) (2025-11-18)
+
 ### [1.5.14](https://github.com/juanjoGonDev/fastypest/compare/v1.5.13...v1.5.14) (2025-11-11)
 
 ### [1.5.13](https://github.com/juanjoGonDev/fastypest/compare/v1.5.12...v1.5.13) (2025-11-10)
