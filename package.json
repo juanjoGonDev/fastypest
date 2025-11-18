@@ -86,7 +86,7 @@
     "tsconfig-paths": "^4.2.0",
     "typeorm": "^0.3.27",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.46.4"
+    "typescript-eslint": "^8.47.0"
   },
   "peerDependencies": {
     "typeorm": "^0.3.27"
