@@ -23,7 +23,7 @@ jobs:
     timeout-minutes: 2
     steps:
       - name: 🔶 Check repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: 🟢 Use Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v6
         with:
@@ -78,7 +78,7 @@ jobs:
     needs: build
     steps:
       - name: 🔶 Check repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: 🟢 Use Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v6
         with:
@@ -321,7 +321,7 @@ jobs:
         name: 🐋 Start a single instance with docker
         run: ${{ matrix.database.run }}
       - name: 🔶 Check repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: 🟢 Use Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v6
         with:
