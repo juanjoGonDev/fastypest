@@ -30,7 +30,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       - name: 📦 Cache Yarn dependencies
         id: yarn-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             .yarn/cache
@@ -48,7 +48,7 @@ jobs:
         run: yarn install --immutable --check-cache
       - name: 💾 Save updated Yarn cache
         if: steps.yarn-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: |
             .yarn/cache
@@ -85,7 +85,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       - name: 📦 Cache Yarn dependencies
         id: yarn-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             .yarn/cache
@@ -288,7 +288,7 @@ jobs:
           echo "digest=${DIGEST#sha256:}" >>"$GITHUB_OUTPUT"
       - name: ♻️ Restore cached image
         if: ${{ matrix.database.use-service == false }}
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: db-cache
         with:
           path: ${{ env.IMG_CACHE_DIR }}
@@ -313,7 +313,7 @@ jobs:
           docker save "$IMAGE" -o "$IMG_CACHE_DIR/$FILE_NAME"
       - name: 💾 Save image to cache
         if: ${{ matrix.database.use-service == false && steps.db-cache.outputs.cache-hit != 'true' }}
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: ${{ env.IMG_CACHE_DIR }}
           key: db-img-${{ runner.os }}-${{ matrix.database.image }}-${{ steps.digest.outputs.digest }}
@@ -328,7 +328,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       - name: 📦 Cache Yarn dependencies
         id: yarn-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             .yarn/cache
