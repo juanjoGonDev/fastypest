@@ -53,7 +53,7 @@
     "winston": "^3.19.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.1",
+    "@eslint/js": "^9.39.2",
     "@swc-node/jest": "^1.9.1",
     "@swc/cli": "^0.7.9",
     "@swc/core": "^1.15.3",
