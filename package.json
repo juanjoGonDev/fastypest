@@ -62,7 +62,7 @@
     "@types/node": "^25.0.2",
     "@types/winston": "^2.4.4",
     "@typescript-eslint/eslint-plugin": "^8.50.0",
-    "@typescript-eslint/parser": "^8.49.0",
+    "@typescript-eslint/parser": "^8.50.0",
     "@typescript-eslint/types": "8.49.0",
     "cpy-cli": "^6.0.0",
     "eslint": "^9.39.2",
