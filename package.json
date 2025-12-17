@@ -59,7 +59,7 @@
     "@swc/core": "^1.15.3",
     "@swc/helpers": "^0.5.17",
     "@types/jest": "^30.0.0",
-    "@types/node": "^25.0.2",
+    "@types/node": "^25.0.3",
     "@types/winston": "^2.4.4",
     "@typescript-eslint/eslint-plugin": "^8.50.0",
     "@typescript-eslint/parser": "^8.50.0",
