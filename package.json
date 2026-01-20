@@ -63,7 +63,7 @@
     "@types/winston": "^2.4.4",
     "@typescript-eslint/eslint-plugin": "^8.53.0",
     "@typescript-eslint/parser": "^8.53.0",
-    "@typescript-eslint/types": "8.53.0",
+    "@typescript-eslint/types": "8.53.1",
     "cpy-cli": "^6.0.0",
     "eslint": "^9.39.2",
     "eslint-config-standard-with-typescript": "^43.0.1",
