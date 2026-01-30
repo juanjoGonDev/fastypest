@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.5.32](https://github.com/juanjoGonDev/fastypest/compare/v1.5.31...v1.5.32) (2026-01-29)
+
+### [1.5.31](https://github.com/juanjoGonDev/fastypest/compare/v1.5.30...v1.5.31) (2026-01-27)
+
+### [1.5.30](https://github.com/juanjoGonDev/fastypest/compare/v1.5.29...v1.5.30) (2026-01-23)
+
+### [1.5.29](https://github.com/juanjoGonDev/fastypest/compare/v1.5.28...v1.5.29) (2026-01-20)
+
+### [1.5.28](https://github.com/juanjoGonDev/fastypest/compare/v1.5.27...v1.5.28) (2026-01-16)
+
+### [1.5.27](https://github.com/juanjoGonDev/fastypest/compare/v1.5.26...v1.5.27) (2026-01-14)
+
+### [1.5.26](https://github.com/juanjoGonDev/fastypest/compare/v1.5.25...v1.5.26) (2026-01-06)
+
 ### [1.5.25](https://github.com/juanjoGonDev/fastypest/compare/v1.5.24...v1.5.25) (2025-12-30)
 
 ### [1.5.24](https://github.com/juanjoGonDev/fastypest/compare/v1.5.23...v1.5.24) (2025-12-23)
