@@ -2107,12 +2107,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swc/helpers@npm:^0.5.18":
-  version: 0.5.18
-  resolution: "@swc/helpers@npm:0.5.18"
+"@swc/helpers@npm:^0.5.19":
+  version: 0.5.19
+  resolution: "@swc/helpers@npm:0.5.19"
   dependencies:
     tslib: "npm:^2.8.0"
-  checksum: 10c0/cb32d72e32f775c30287bffbcf61c89ea3a963608cb3a4a675a3f9af545b8b3ab0bc9930432a5520a7307daaa87538158e253584ae1cf39f3e7e6e83408a2d51
+  checksum: 10c0/30317ee644d390c88dd975b11b5260f7c70602bfb81ec386b3807d97a763215df7f501e43b0246e0773150fcfd835349bcdcb3b220d121e485ee528a72b5fd79
   languageName: node
   linkType: hard
 
@@ -5190,7 +5190,7 @@ __metadata:
     "@swc-node/jest": "npm:^1.9.1"
     "@swc/cli": "npm:^0.8.0"
     "@swc/core": "npm:^1.15.11"
-    "@swc/helpers": "npm:^0.5.18"
+    "@swc/helpers": "npm:^0.5.19"
     "@types/jest": "npm:^30.0.0"
     "@types/node": "npm:^25.3.0"
     "@types/winston": "npm:^2.4.4"
