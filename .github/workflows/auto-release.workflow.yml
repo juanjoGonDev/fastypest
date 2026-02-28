@@ -3,6 +3,7 @@ name: 🔄 Auto release
 permissions:
   contents: write
   pull-requests: write
+  id-token: write
 
 on:
   schedule:
@@ -39,7 +40,7 @@ on:
           - "false"
 
 env:
-  NODE_VERSION: "18.20"
+  NODE_VERSION: "22.14.0"
 
 run-name: 🔄 Auto release${{ github.event.inputs.dry_run == 'true' && ' (dry)' || '' }}
 
@@ -90,6 +91,9 @@ jobs:
           node-version: "${{ env.NODE_VERSION }}"
           registry-url: "https://registry.npmjs.org/"
           cache: yarn
+      - name: ⬆️ Update npm CLI
+        if: steps.check_commits.outputs.enough_commits == 'true'
+        run: npm install --global npm@11.5.1
       - name: ⚙️ Install dependencies
         if: steps.check_commits.outputs.enough_commits == 'true'
         run: yarn install --immutable --check-cache
@@ -302,8 +306,6 @@ jobs:
       - name: 🎉 Publish to npm
         if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run != 'true'
         run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_AUTH_TOKEN}}
       - name: 📦 Create Release
         if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run != 'true'
         id: create_release
