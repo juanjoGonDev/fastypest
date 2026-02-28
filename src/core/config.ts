@@ -20,7 +20,7 @@ const createInsertRegex = (): RegExp =>
 const createTruncateRegex = (): RegExp =>
   new RegExp(
     `^\\s*truncate\\s+(?:table\\s+)?${TABLE_IDENTIFIER_PATTERN}\\b`,
-    "i"
+    "i",
   );
 
 const UNSAFE_MUTATION_REGEXES: ReadonlyArray<RegExp> = [
@@ -42,22 +42,23 @@ const TRACKABLE_MUTATION_REGEXES: ReadonlyArray<RegExp> = [
   createTruncateRegex(),
 ];
 
-export const QUERY_DETECTION_CONFIG: Partial<Record<DBType, QueryDetectionConfig>> =
-  {
-    mysql: {
-      trackableMutations: TRACKABLE_MUTATION_REGEXES,
-      unsafeMutations: UNSAFE_MUTATION_REGEXES,
-    },
-    mariadb: {
-      trackableMutations: TRACKABLE_MUTATION_REGEXES,
-      unsafeMutations: UNSAFE_MUTATION_REGEXES,
-    },
-    postgres: {
-      trackableMutations: TRACKABLE_MUTATION_REGEXES,
-      unsafeMutations: UNSAFE_MUTATION_REGEXES,
-    },
-    cockroachdb: {
-      trackableMutations: TRACKABLE_MUTATION_REGEXES,
-      unsafeMutations: UNSAFE_MUTATION_REGEXES,
-    },
-  };
+export const QUERY_DETECTION_CONFIG: Partial<
+  Record<DBType, QueryDetectionConfig>
+> = {
+  mysql: {
+    trackableMutations: TRACKABLE_MUTATION_REGEXES,
+    unsafeMutations: UNSAFE_MUTATION_REGEXES,
+  },
+  mariadb: {
+    trackableMutations: TRACKABLE_MUTATION_REGEXES,
+    unsafeMutations: UNSAFE_MUTATION_REGEXES,
+  },
+  postgres: {
+    trackableMutations: TRACKABLE_MUTATION_REGEXES,
+    unsafeMutations: UNSAFE_MUTATION_REGEXES,
+  },
+  cockroachdb: {
+    trackableMutations: TRACKABLE_MUTATION_REGEXES,
+    unsafeMutations: UNSAFE_MUTATION_REGEXES,
+  },
+};

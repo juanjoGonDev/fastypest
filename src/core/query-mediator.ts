@@ -36,7 +36,7 @@ const normalizeIdentifier = (identifier: string): string => {
 
 const getTrackedTable = (
   statement: string,
-  regexes: ReadonlyArray<RegExp>
+  regexes: ReadonlyArray<RegExp>,
 ): string | null => {
   for (const regex of regexes) {
     const match = regex.exec(statement);
@@ -52,12 +52,12 @@ const getTrackedTable = (
 
 const isUnsafeMutation = (
   statement: string,
-  regexes: ReadonlyArray<RegExp>
+  regexes: ReadonlyArray<RegExp>,
 ): boolean => regexes.some((regex) => regex.test(statement));
 
 export const detectQueryEvents = (
   type: DBType,
-  query: string
+  query: string,
 ): QueryDetectionEvent[] => {
   const config = QUERY_DETECTION_CONFIG[type];
   if (!config) {
