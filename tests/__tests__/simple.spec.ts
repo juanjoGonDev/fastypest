@@ -94,9 +94,9 @@ describe("Simple", () => {
 
       it('"Simple" table must be empty', async () => {
         await connectionUtil.transaction(async (em) => {
-          await em.delete(User, { id: Not(IsNull())}); // Delete for foreign key
-          await em.delete(Basic, { name: Not(IsNull())}); // Delete for foreign key
-          await em.delete(Simple, { id: Not(IsNull())});
+          await em.delete(User, { id: Not(IsNull()) }); // Delete for foreign key
+          await em.delete(Basic, { name: Not(IsNull()) }); // Delete for foreign key
+          await em.delete(Simple, { id: Not(IsNull()) });
         });
 
         expect(await getSimpleCount()).toBe(0);
@@ -111,7 +111,7 @@ describe("Simple", () => {
       it("Row must be modified", async () => {
         const newName = "seed updated";
         await connection.query(
-          `UPDATE simple SET name = '${newName}' WHERE id = ${randomRow.id}`
+          `UPDATE simple SET name = '${newName}' WHERE id = ${randomRow.id}`,
         );
 
         const row = await getRow(randomRow.id);

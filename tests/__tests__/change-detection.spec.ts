@@ -41,41 +41,49 @@ describe("Change detection strategy", () => {
       .values({ name: TRACKED_BASIC_NAME, simpleId: DEFAULT_SIMPLE_ID })
       .execute();
 
-    const inserted = await basicRepository.findOneBy({ name: TRACKED_BASIC_NAME });
+    const inserted = await basicRepository.findOneBy({
+      name: TRACKED_BASIC_NAME,
+    });
     expect(inserted).toBeDefined();
 
     await fastypest.restoreData();
 
-    const restored = await basicRepository.findOneBy({ name: TRACKED_BASIC_NAME });
+    const restored = await basicRepository.findOneBy({
+      name: TRACKED_BASIC_NAME,
+    });
     expect(restored).toBeNull();
     const count = await basicRepository.count();
     expect(count).toBe(seedCount);
   });
 
-  it("restores changes detected from raw SQL on \"simple\"", async () => {
+  it('restores changes detected from raw SQL on "simple"', async () => {
     await connection.query(insertSimpleQuery(RAW_SIMPLE_NAME));
 
-    const inserted = await simpleRepository.findOneBy({ name: RAW_SIMPLE_NAME });
+    const inserted = await simpleRepository.findOneBy({
+      name: RAW_SIMPLE_NAME,
+    });
     expect(inserted).toBeDefined();
 
     await fastypest.restoreData();
 
-    const restored = await simpleRepository.findOneBy({ name: RAW_SIMPLE_NAME });
+    const restored = await simpleRepository.findOneBy({
+      name: RAW_SIMPLE_NAME,
+    });
     expect(restored).toBeNull();
   });
 
-  it("restores changes detected from raw SQL on related \"user\"", async () => {
+  it('restores changes detected from raw SQL on related "user"', async () => {
     await connection.query(insertUserQuery(RAW_USER_NAME, DEFAULT_SIMPLE_ID));
 
     const inserted = await connection.query(
-      selectUserByNameQuery(RAW_USER_NAME)
+      selectUserByNameQuery(RAW_USER_NAME),
     );
     expect(inserted).toHaveLength(1);
 
     await fastypest.restoreData();
 
     const restored = await connection.query(
-      selectUserByNameQuery(RAW_USER_NAME)
+      selectUserByNameQuery(RAW_USER_NAME),
     );
     expect(restored).toHaveLength(0);
   });
@@ -85,16 +93,24 @@ describe("Change detection strategy", () => {
     await connection.query(commentedUpdateBasicQuery());
     await connection.query(DROP_MISSING_TABLE_QUERY);
 
-    const inserted = await simpleRepository.findOneBy({ name: RAW_SIMPLE_NAME });
+    const inserted = await simpleRepository.findOneBy({
+      name: RAW_SIMPLE_NAME,
+    });
     expect(inserted).toBeDefined();
-    const updated = await basicRepository.findOneBy({ name: COMMENTED_UPDATE_NAME });
+    const updated = await basicRepository.findOneBy({
+      name: COMMENTED_UPDATE_NAME,
+    });
     expect(updated).toBeDefined();
 
     await fastypest.restoreData();
 
-    const restoredSimple = await simpleRepository.findOneBy({ name: RAW_SIMPLE_NAME });
+    const restoredSimple = await simpleRepository.findOneBy({
+      name: RAW_SIMPLE_NAME,
+    });
     expect(restoredSimple).toBeNull();
-    const restoredBasic = await basicRepository.findOneBy({ name: ORIGINAL_BASIC_NAME });
+    const restoredBasic = await basicRepository.findOneBy({
+      name: ORIGINAL_BASIC_NAME,
+    });
     expect(restoredBasic).toBeDefined();
   });
 

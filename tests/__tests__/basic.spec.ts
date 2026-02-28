@@ -77,7 +77,7 @@ describe("Basic", () => {
 
       it('"Basic" table must be empty', async () => {
         await connectionUtil.transaction(async (em) => {
-          await em.delete(Basic, { name: Not(IsNull())});
+          await em.delete(Basic, { name: Not(IsNull()) });
         });
 
         expect(await getBasicCount()).toBe(0);
@@ -92,7 +92,7 @@ describe("Basic", () => {
       it("Row must be modified", async () => {
         const newName = "seed updated";
         await connection.query(
-          `UPDATE basic SET name = '${newName}' WHERE name = '${randomRow.name}'`
+          `UPDATE basic SET name = '${newName}' WHERE name = '${randomRow.name}'`,
         );
 
         const row = await getRowByName(newName);

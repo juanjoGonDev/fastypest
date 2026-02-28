@@ -15,7 +15,7 @@ const run = async (command, args = [], options = { stdio: "inherit" }) => {
       "Command execution failed",
       `Command ${command}`,
       args.length > 0 ? `Arguments ${args.join(" ")}` : undefined,
-      errorMessage
+      errorMessage,
     );
     throw err;
   }
@@ -34,9 +34,9 @@ const cleanUp = () => {
 (async () => {
   logger.verbose("Starting pre-commit installation smoke test");
   try {
-    logger.debug("Running strict dead code checks");
-    await run("yarn", ["check:dead-code"]);
-    logger.info("Dead code checks completed");
+    logger.debug("Running check-format command");
+    await run("yarn", ["check-format"]);
+    logger.info("Check-format command completed");
 
     logger.debug("Running yarn build for test verification");
     await run("yarn", ["build"]);
@@ -69,7 +69,10 @@ const cleanUp = () => {
 
     logger.info("Pre-commit smoke test finished successfully");
   } catch (error) {
-    logger.error("Pre-commit smoke test failed", error.message || String(error));
+    logger.error(
+      "Pre-commit smoke test failed",
+      error.message || String(error),
+    );
     process.exitCode = 1;
   } finally {
     cleanUp();
