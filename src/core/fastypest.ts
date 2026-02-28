@@ -2,12 +2,11 @@ import {
   Connection,
   DataSource,
   EntityManager,
-  EntitySubscriberInterface,
   Table,
 } from "typeorm";
 import { INDEX_OFFSET_CONFIG } from "./config";
+import { detectQueryEvents } from "./query-mediator";
 import { SQLScript } from "./sql-script";
-import { ChangeTrackerSubscriber } from "./subscribers/change-tracker.subscriber";
 import {
   ChangeDetectionStrategy,
   type ColumnStat,
@@ -31,6 +30,14 @@ import type { LoggingOptions, ScopedLogger } from "../logging";
 
 const PROGRESS_OFFSET = 1;
 
+type QueryExecutor = {
+  query: (...args: unknown[]) => Promise<unknown>;
+};
+
+type QueryRunnerFactory = {
+  createQueryRunner: (...args: unknown[]) => QueryExecutor;
+};
+
 export class Fastypest extends SQLScript {
   private manager: EntityManager;
   private tables: Set<string> = new Set();
@@ -39,6 +46,11 @@ export class Fastypest extends SQLScript {
   private readonly options: Required<Omit<FastypestOptions, "logging">>;
   private readonly changedTables: Set<string> = new Set();
   private readonly logger: ScopedLogger;
+  private readonly dbConnection: DataSource | Connection;
+  private readonly patchedQueryExecutors: WeakSet<object> = new WeakSet();
+  private queryTrackingPaused: boolean = false;
+  private hasUnsafeMutations: boolean = false;
+  private queryMediatorRegistered: boolean = false;
 
   constructor(
     connection: DataSource | Connection,
@@ -49,6 +61,7 @@ export class Fastypest extends SQLScript {
     const resolvedLogging = configureLogging(loggingConfiguration);
     this.logger = createScopedLogger("Fastypest");
     this.manager = connection.manager;
+    this.dbConnection = connection;
     this.options = {
       changeDetectionStrategy:
         options?.changeDetectionStrategy ?? ChangeDetectionStrategy.None,
@@ -96,26 +109,25 @@ export class Fastypest extends SQLScript {
     } else {
       this.logger.warn("⚪️ Logging disabled", ...loggingDetails);
     }
-    if (
-      this.options.changeDetectionStrategy ===
-      ChangeDetectionStrategy.Subscriber
-    ) {
+    if (this.shouldTrackChanges()) {
       this.logger.info("🛰️ Change detection strategy enabled");
-      this.registerSubscriber(connection);
+      this.registerQueryMediator();
     }
   }
 
   public async init(): Promise<void> {
     const timer = this.logger.timer("Initialization");
     this.logger.verbose("🚀 Initialization started", `Database ${this.getType()}`);
-    await this.manager.transaction(async (em: EntityManager) => {
-      await this.detectTables(em);
-      await this.calculateDependencyTables(em);
-      const tables = [...this.tables];
-      await Promise.all([
-        this.createTempTable(em, tables),
-        this.detectTablesWithAutoIncrement(em, tables),
-      ]);
+    await this.withQueryTrackingPaused(async () => {
+      await this.manager.transaction(async (em: EntityManager) => {
+        await this.detectTables(em);
+        await this.calculateDependencyTables(em);
+        const tables = [...this.tables];
+        await Promise.all([
+          this.createTempTable(em, tables),
+          this.detectTablesWithAutoIncrement(em, tables),
+        ]);
+      });
     });
     timer.end(
       "✅ Initialization completed",
@@ -242,7 +254,11 @@ export class Fastypest extends SQLScript {
 
   public async restoreData(): Promise<void> {
     const tablesToRestore = this.getTablesForRestore();
-    if (this.shouldTrackChanges() && this.changedTables.size === 0) {
+    if (
+      this.shouldTrackChanges() &&
+      this.changedTables.size === 0 &&
+      !this.hasUnsafeMutations
+    ) {
       this.logger.debug(
         "🕊️ No tracked table changes detected",
         `Tables ${tablesToRestore.length}`
@@ -252,16 +268,22 @@ export class Fastypest extends SQLScript {
     const changeSummary = this.shouldTrackChanges()
       ? `Tracked changes ${this.changedTables.size}`
       : undefined;
+    const unsafeSummary = this.shouldTrackChanges()
+      ? `Unsafe queries ${this.hasUnsafeMutations ? "yes" : "no"}`
+      : undefined;
     this.logger.verbose(
       "🛠️ Restore process started",
       `Tables selected ${tablesToRestore.length}`,
-      changeSummary
+      changeSummary,
+      unsafeSummary
     );
-    await this.manager.transaction(async (em: EntityManager) => {
-      const { foreignKey, restoreOrder } = await this.restoreManager(em);
-      await foreignKey.disable();
-      await restoreOrder();
-      await foreignKey.enable();
+    await this.withQueryTrackingPaused(async () => {
+      await this.manager.transaction(async (em: EntityManager) => {
+        const { foreignKey, restoreOrder } = await this.restoreManager(em);
+        await foreignKey.disable();
+        await restoreOrder();
+        await foreignKey.enable();
+      });
     });
     timer.end(
       "🎉 Restore process completed",
@@ -388,6 +410,7 @@ export class Fastypest extends SQLScript {
     }
     if (this.shouldTrackChanges()) {
       this.changedTables.clear();
+      this.hasUnsafeMutations = false;
     }
   }
 
@@ -450,54 +473,97 @@ export class Fastypest extends SQLScript {
     }
   }
 
-  private registerSubscriber(connection: DataSource | Connection): void {
-    const subscriber = new ChangeTrackerSubscriber((tableName) => {
-      this.markTableAsChanged(tableName);
-    });
-    this.getSubscriberCollection(connection).push(subscriber);
-    this.bindSubscriber(subscriber, connection);
+  private registerQueryMediator(): void {
+    if (this.queryMediatorRegistered) {
+      return;
+    }
+    this.patchQueryExecutor(this.dbConnection as unknown as QueryExecutor);
+    this.patchQueryRunnerFactory();
+    this.queryMediatorRegistered = true;
     this.logger.info(
-      "📡 Change tracking subscriber registered",
+      "📡 Query mediator registered",
       `Database ${this.getType()}`
     );
   }
 
-  private isDataSource(
-    connection: DataSource | Connection
-  ): connection is DataSource {
-    return connection instanceof DataSource;
-  }
-
-  private getSubscriberCollection(
-    connection: DataSource | Connection
-  ): Array<EntitySubscriberInterface<unknown>> {
-    return (connection as unknown as {
-      subscribers: Array<EntitySubscriberInterface<unknown>>;
-    }).subscribers;
-  }
-
-  private bindSubscriber(
-    subscriber: ChangeTrackerSubscriber,
-    connection: DataSource | Connection
-  ): void {
-    const lifecycle = subscriber as ChangeTrackerSubscriber & SubscriberLifecycle;
-    if (this.isDataSource(connection)) {
-      lifecycle.setDataSource?.(connection);
+  private patchQueryRunnerFactory(): void {
+    const connection = this.dbConnection as unknown as Partial<QueryRunnerFactory>;
+    if (!connection.createQueryRunner) {
       return;
     }
-    lifecycle.setConnection?.(connection);
+    const originalCreateQueryRunner = connection.createQueryRunner.bind(
+      this.dbConnection
+    );
+    connection.createQueryRunner = (...args: unknown[]): QueryExecutor => {
+      const queryRunner = originalCreateQueryRunner(...args);
+      this.patchQueryExecutor(queryRunner);
+      return queryRunner;
+    };
+  }
+
+  private patchQueryExecutor(executor: QueryExecutor): void {
+    const reference = executor as unknown as object;
+    if (this.patchedQueryExecutors.has(reference)) {
+      return;
+    }
+    const originalQuery = executor.query.bind(executor);
+    executor.query = async (...args: unknown[]): Promise<unknown> => {
+      const query = args[0];
+      if (typeof query === "string") {
+        this.handleExecutedQuery(query);
+      }
+      return await originalQuery(...args);
+    };
+    this.patchedQueryExecutors.add(reference);
+  }
+
+  private handleExecutedQuery(query: string): void {
+    if (!this.shouldTrackChanges() || this.queryTrackingPaused) {
+      return;
+    }
+    const events = detectQueryEvents(this.getType(), query);
+    events.forEach((event) => {
+      if (event.type === "tableTouched") {
+        this.trackChangedTable(event.tableName);
+        return;
+      }
+      if (event.type === "unsupportedMutation" && !this.hasUnsafeMutations) {
+        this.hasUnsafeMutations = true;
+        this.logger.warn(
+          "⚠️ Unsafe query detected, full restore enabled",
+          `Database ${this.getType()}`
+        );
+      }
+    });
+  }
+
+  private trackChangedTable(tableName: string): void {
+    const normalizedTableName = this.resolveTrackedTableName(tableName);
+    const wasTracked = this.changedTables.has(normalizedTableName);
+    this.changedTables.add(normalizedTableName);
+    if (!wasTracked) {
+      this.logger.debug(
+        "🔎 Table change detected",
+        `Table ${normalizedTableName}`,
+        `Tracked tables ${this.changedTables.size}`
+      );
+    }
   }
 
   private shouldTrackChanges(): boolean {
-    return (
-      this.options.changeDetectionStrategy ===
-      ChangeDetectionStrategy.Subscriber
-    );
+    return this.options.changeDetectionStrategy === ChangeDetectionStrategy.Query;
   }
 
   private getTablesForRestore(): string[] {
     const tables = [...this.tables];
     if (!this.shouldTrackChanges()) {
+      return tables;
+    }
+    if (this.hasUnsafeMutations) {
+      this.logger.warn(
+        "🛡️ Restoring all tables because unsafe queries were detected",
+        `Tables ${tables.length}`
+      );
       return tables;
     }
     if (this.changedTables.size === 0) {
@@ -516,18 +582,28 @@ export class Fastypest extends SQLScript {
     return filtered;
   }
 
-  public markTableAsChanged(tableName: string): void {
-    if (!this.shouldTrackChanges()) {
-      return;
+  private resolveTrackedTableName(tableName: string): string {
+    if (this.tables.has(tableName)) {
+      return tableName;
     }
-    const wasTracked = this.changedTables.has(tableName);
-    this.changedTables.add(tableName);
-    if (!wasTracked) {
-      this.logger.debug(
-        "🔎 Table change detected",
-        `Table ${tableName}`,
-        `Tracked tables ${this.changedTables.size}`
-      );
+    const normalizedTableName = tableName.toLowerCase();
+    for (const knownTableName of this.tables) {
+      if (knownTableName.toLowerCase() === normalizedTableName) {
+        return knownTableName;
+      }
+    }
+    return tableName;
+  }
+
+  private async withQueryTrackingPaused<T>(
+    callback: () => Promise<T>
+  ): Promise<T> {
+    const previousTrackingState = this.queryTrackingPaused;
+    this.queryTrackingPaused = true;
+    try {
+      return await callback();
+    } finally {
+      this.queryTrackingPaused = previousTrackingState;
     }
   }
 
@@ -546,8 +622,3 @@ export class Fastypest extends SQLScript {
     return logging;
   }
 }
-
-type SubscriberLifecycle = {
-  setDataSource?: (dataSource: DataSource) => unknown;
-  setConnection?: (connection: Connection) => unknown;
-};

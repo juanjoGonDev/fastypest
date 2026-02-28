@@ -293,7 +293,7 @@ export const configureLogging = (options?: LoggingOptions): ResolvedLoggingOptio
   return globalOptions;
 };
 
-export class LoggerTimer {
+class LoggerTimer {
   private readonly start = performance.now();
   private lastMark = this.start;
   private finished = false;

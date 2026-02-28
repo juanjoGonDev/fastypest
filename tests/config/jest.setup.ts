@@ -1,6 +1,6 @@
 import path from "node:path";
 import { DataSource } from "typeorm";
-import { Fastypest } from "../../dist/core";
+import { Fastypest } from "../../src/core";
 import { createScopedLogger, LoggingDetailLevel } from "../../src/logging";
 import { initialize } from "./orm.config";
 

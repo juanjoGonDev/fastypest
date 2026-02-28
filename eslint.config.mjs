@@ -5,9 +5,19 @@ import tseslint from "typescript-eslint";
 const common = {
   files: ["src/**/*.ts"],
   ignores: ["**/dist/*", "**/node_modules/*"],
+  plugins: {
+    "@typescript-eslint": tseslint.plugin,
+  },
   rules: {
     "no-case-declarations": "off",
     "@typescript-eslint/explicit-function-return-type": "error",
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        args: "all",
+        ignoreRestSiblings: false,
+      },
+    ],
   },
 };
 

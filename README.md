@@ -52,22 +52,22 @@ afterEach(async () => {
 
 ## 🔄 Change detection strategies
 
-Fastypest restores every table by default. You can enable change detection driven by TypeORM subscribers to refresh only the tables touched during a test.
+Fastypest restores every table by default. You can enable query-based change detection to refresh only tables touched by data-changing SQL.
 
 ```typescript
 const fastypest = new Fastypest(connection, {
-  changeDetectionStrategy: ChangeDetectionStrategy.Subscriber,
+  changeDetectionStrategy: ChangeDetectionStrategy.Query,
 });
 ```
 
 - `ChangeDetectionStrategy.None` keeps the previous behaviour, truncating and restoring every table.
-- `ChangeDetectionStrategy.Subscriber` listens to TypeORM subscriber events (`insert`, `update`, `remove`) and restores only the affected tables.
+- `ChangeDetectionStrategy.Query` inspects SQL flowing through TypeORM `.query` execution and restores only affected tables for supported DML statements.
 
-### Manual tracking and limitations
+### Detection scope and safe fallback
 
-- Use `fastypest.markTableAsChanged('tableName')` after running raw SQL so the table is restored alongside subscriber-detected changes.
-- When no subscriber event is captured Fastypest falls back to restoring the whole database, ensuring that changes executed exclusively through `connection.query()` are still reverted.
-- TypeORM subscribers are not triggered by raw queries, so enabling the subscriber strategy requires using repositories or query builders for automatic tracking.
+- Supported tracked statements: `INSERT`, `UPDATE`, `DELETE`, `TRUNCATE`.
+- Unsafe schema mutations such as `ALTER`, `DROP`, `CREATE`, or `RENAME` switch restore to full-database mode for safety.
+- If Fastypest cannot determine affected tables with confidence, it falls back to full restore to keep deterministic behavior.
 
 ## 🔍 Logging
 

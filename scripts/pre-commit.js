@@ -34,6 +34,10 @@ const cleanUp = () => {
 (async () => {
   logger.verbose("Starting pre-commit installation smoke test");
   try {
+    logger.debug("Running strict dead code checks");
+    await run("yarn", ["check:dead-code"]);
+    logger.info("Dead code checks completed");
+
     logger.debug("Running yarn build for test verification");
     await run("yarn", ["build"]);
     logger.info("Package build completed for smoke test");

@@ -51,22 +51,22 @@ afterEach(async () => {
 
 ## 🔄 Estrategias de detección de cambios
 
-Por defecto Fastypest restaura todas las tablas. Puedes activar la detección de cambios mediante el subscriber de TypeORM para refrescar únicamente las tablas tocadas durante una prueba.
+Por defecto Fastypest restaura todas las tablas. Puedes activar la detección de cambios basada en consultas para refrescar únicamente las tablas tocadas por SQL que modifica datos.
 
 ```typescript
 const fastypest = new Fastypest(connection, {
-  changeDetectionStrategy: ChangeDetectionStrategy.Subscriber,
+  changeDetectionStrategy: ChangeDetectionStrategy.Query,
 });
 ```
 
 - `ChangeDetectionStrategy.None` mantiene el comportamiento anterior, truncando y restaurando cada tabla.
-- `ChangeDetectionStrategy.Subscriber` escucha los eventos del subscriber de TypeORM (`insert`, `update`, `remove`) y restaura solo las tablas afectadas.
+- `ChangeDetectionStrategy.Query` inspecciona el SQL que pasa por `.query` de TypeORM y restaura solo las tablas afectadas para sentencias DML soportadas.
 
-### Seguimiento manual y limitaciones
+### Alcance de detección y fallback seguro
 
-- Usa `fastypest.markTableAsChanged('tableName')` después de ejecutar SQL crudo para que la tabla se restaure junto con los cambios detectados por el subscriber.
-- Si no se captura ningún evento del subscriber, Fastypest vuelve a restaurar toda la base de datos y garantiza que los cambios realizados únicamente con `connection.query()` se reviertan.
-- Los subscribers de TypeORM no se activan con `.query(...)`, por lo que al habilitar la estrategia del subscriber es necesario trabajar con repositorios o query builders para disfrutar del seguimiento automático.
+- Sentencias soportadas para seguimiento: `INSERT`, `UPDATE`, `DELETE`, `TRUNCATE`.
+- Mutaciones de esquema no seguras como `ALTER`, `DROP`, `CREATE` o `RENAME` fuerzan restauración completa por seguridad.
+- Si Fastypest no puede determinar con confianza las tablas afectadas, aplica fallback a restauración completa para mantener comportamiento determinista.
 
 ## 🔍 Registro
 
