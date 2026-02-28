@@ -11,9 +11,11 @@ import { Basic, Simple } from "../entities";
 
 const TRACKED_BASIC_NAME = "tracked basic";
 const RAW_SIMPLE_NAME = "raw simple";
+const RAW_USER_NAME = "raw user";
 const COMMENTED_UPDATE_NAME = "commented update basic";
 const BASIC_TABLE_NAME = "basic";
 const SIMPLE_TABLE_NAME = "simple";
+const USER_TABLE_NAME = "user";
 const DEFAULT_SIMPLE_ID = 1;
 const DROP_MISSING_TABLE_QUERY = "DROP TABLE IF EXISTS fastypest_missing_table";
 const ORIGINAL_BASIC_NAME = "Basic 1";
@@ -50,7 +52,7 @@ describe("Change detection strategy", () => {
     expect(count).toBe(seedCount);
   });
 
-  it("restores all tables when no tracked changes exist", async () => {
+  it("restores changes detected from raw SQL on \"simple\"", async () => {
     await connection.query(insertSimpleQuery(RAW_SIMPLE_NAME));
 
     const inserted = await simpleRepository.findOneBy({ name: RAW_SIMPLE_NAME });
@@ -60,6 +62,22 @@ describe("Change detection strategy", () => {
 
     const restored = await simpleRepository.findOneBy({ name: RAW_SIMPLE_NAME });
     expect(restored).toBeNull();
+  });
+
+  it("restores changes detected from raw SQL on related \"user\"", async () => {
+    await connection.query(insertUserQuery(RAW_USER_NAME, DEFAULT_SIMPLE_ID));
+
+    const inserted = await connection.query(
+      selectUserByNameQuery(RAW_USER_NAME)
+    );
+    expect(inserted).toHaveLength(1);
+
+    await fastypest.restoreData();
+
+    const restored = await connection.query(
+      selectUserByNameQuery(RAW_USER_NAME)
+    );
+    expect(restored).toHaveLength(0);
   });
 
   it("falls back to full restore when an unsafe query is detected", async () => {
@@ -83,6 +101,16 @@ describe("Change detection strategy", () => {
   const insertSimpleQuery = (name: string) => {
     const quotes = DB_WITHOUT_QUOTES.includes(dbType) ? "" : '"';
     return `INSERT INTO ${quotes}${SIMPLE_TABLE_NAME}${quotes} (name) VALUES ('${name}')`;
+  };
+
+  const insertUserQuery = (name: string, simpleId: number) => {
+    const quotes = DB_WITHOUT_QUOTES.includes(dbType) ? "" : '"';
+    return `INSERT INTO ${quotes}${USER_TABLE_NAME}${quotes} (name, ${quotes}simpleId${quotes}) VALUES ('${name}', ${simpleId})`;
+  };
+
+  const selectUserByNameQuery = (name: string) => {
+    const quotes = DB_WITHOUT_QUOTES.includes(dbType) ? "" : '"';
+    return `SELECT * FROM ${quotes}${USER_TABLE_NAME}${quotes} WHERE name = '${name}'`;
   };
 
   const commentedUpdateBasicQuery = () => {
