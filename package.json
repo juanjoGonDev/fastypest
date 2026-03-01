@@ -19,7 +19,7 @@
     "eslint": "eslint --fix",
     "check:unused-exports": "ts-prune -p tsconfig.json -e -i \"index.ts\"",
     "check-format": "yarn typecheck && eslint \"src/**/*.ts\" --max-warnings=0 && yarn check:unused-exports",
-    "test:ci": "jest --ci --runInBand --verbose --showSeed --config ./tests/jest.config.json",
+    "test:ci": "jest --ci --runInBand --verbose --showSeed --coverage --config ./tests/jest.config.json",
     "test": "yarn build && yarn test:ci",
     "docker": "ts-node -r tsconfig-paths/register scripts/prepare-docker.ts",
     "release": "standard-version"

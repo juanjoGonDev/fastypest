@@ -1,17 +1,35 @@
 {
   "testEnvironment": "node",
   "preset": "@swc-node/jest",
-  "rootDir": ".",
+  "rootDir": "..",
   "setupFilesAfterEnv": [
-    "./config/jest.setup.ts"
+    "<rootDir>/tests/config/jest.setup.ts"
   ],
-  "globalSetup": "./config/global.setup.ts",
-  "testRegex": ".spec.ts",
+  "globalSetup": "<rootDir>/tests/config/global.setup.ts",
+  "testRegex": "tests/.*\\.spec.ts$",
+  "collectCoverageFrom": [
+    "<rootDir>/src/**/*.ts",
+    "!<rootDir>/src/**/index.ts"
+  ],
+  "coverageDirectory": "<rootDir>/coverage",
+  "coverageReporters": [
+    "text",
+    "lcov",
+    "html"
+  ],
+  "coverageThreshold": {
+    "global": {
+      "branches": 62,
+      "functions": 85,
+      "lines": 80,
+      "statements": 80
+    }
+  },
   "transform": {
     "^.+\\.tsx?$": [
       "@swc-node/jest",
       {
-        "tsconfig": "tsconfig.json"
+        "tsconfig": "<rootDir>/tsconfig.json"
       }
     ]
   }

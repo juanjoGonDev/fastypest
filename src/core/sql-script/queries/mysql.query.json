@@ -1,5 +1,6 @@
 {
   "dependencyTree": "-- NOT USED",
+  "tableDependencies": "SELECT table_name, referenced_table_name FROM information_schema.key_column_usage WHERE table_schema = DATABASE() AND referenced_table_name IS NOT NULL",
   "foreignKey": {
     "disable": "SET FOREIGN_KEY_CHECKS=0",
     "enable": "SET FOREIGN_KEY_CHECKS=1"

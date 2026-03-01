@@ -52,16 +52,16 @@ afterEach(async () => {
 
 ## 🔄 Change detection strategies
 
-Fastypest restores every table by default. You can enable query-based change detection to refresh only tables touched by data-changing SQL.
+Fastypest uses query-based change detection by default. It tracks SQL that changes data and restores only the affected tables.
 
 ```typescript
 const fastypest = new Fastypest(connection, {
-  changeDetectionStrategy: ChangeDetectionStrategy.Query,
+  changeDetectionStrategy: ChangeDetectionStrategy.None,
 });
 ```
 
-- `ChangeDetectionStrategy.None` keeps the previous behaviour, truncating and restoring every table.
-- `ChangeDetectionStrategy.Query` inspects SQL flowing through TypeORM `.query` execution and restores only affected tables for supported DML statements.
+- `ChangeDetectionStrategy.Query` is the default strategy and inspects SQL flowing through TypeORM `.query` execution to restore only affected tables for supported DML statements.
+- `ChangeDetectionStrategy.None` disables query tracking and forces full-database restore after each test.
 
 ### Detection scope and safe fallback
 

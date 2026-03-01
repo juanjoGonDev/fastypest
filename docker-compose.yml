@@ -35,11 +35,13 @@ services:
     environment:
       MYSQL_DATABASE: test
       MYSQL_ROOT_PASSWORD: password
+      MYSQL_USER: fastypest
+      MYSQL_PASSWORD: password
       MYSQL_ALLOW_EMPTY_PASSWORD: 1
     ports:
-      - "3307:3307"
+      - "3307:3306"
     expose:
-      - "3307"
+      - "3306"
 
   cockroachdb:
     image: cockroachdb/cockroach:v21.2.8

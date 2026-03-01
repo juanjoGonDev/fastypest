@@ -51,16 +51,16 @@ afterEach(async () => {
 
 ## 🔄 Estrategias de detección de cambios
 
-Por defecto Fastypest restaura todas las tablas. Puedes activar la detección de cambios basada en consultas para refrescar únicamente las tablas tocadas por SQL que modifica datos.
+Fastypest usa por defecto la detección de cambios basada en consultas. Rastrea el SQL que modifica datos y restaura únicamente las tablas afectadas.
 
 ```typescript
 const fastypest = new Fastypest(connection, {
-  changeDetectionStrategy: ChangeDetectionStrategy.Query,
+  changeDetectionStrategy: ChangeDetectionStrategy.None,
 });
 ```
 
-- `ChangeDetectionStrategy.None` mantiene el comportamiento anterior, truncando y restaurando cada tabla.
-- `ChangeDetectionStrategy.Query` inspecciona el SQL que pasa por `.query` de TypeORM y restaura solo las tablas afectadas para sentencias DML soportadas.
+- `ChangeDetectionStrategy.Query` es la estrategia por defecto e inspecciona el SQL que pasa por `.query` de TypeORM para restaurar solo las tablas afectadas en sentencias DML soportadas.
+- `ChangeDetectionStrategy.None` desactiva el rastreo por consultas y fuerza la restauración completa tras cada test.
 
 ### Alcance de detección y fallback seguro
 

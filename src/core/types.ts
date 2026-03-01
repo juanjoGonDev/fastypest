@@ -6,12 +6,29 @@ export type DependencyTreeQueryOut = {
   level: number;
 };
 
+export type TableDependencyQueryOut = {
+  table_name: string;
+  referenced_table_name: string;
+};
+
+/**
+ * Controls how Fastypest decides which tables should be restored after each test.
+ */
 export enum ChangeDetectionStrategy {
+  /**
+   * Always restore every discovered table.
+   */
   None = "none",
+  /**
+   * Track executed SQL statements and restore only the affected tables.
+   */
   Query = "query",
 }
 
 export type FastypestOptions = {
+  /**
+   * Change detection strategy used by Fastypest. Defaults to `ChangeDetectionStrategy.Query`.
+   */
   changeDetectionStrategy?: ChangeDetectionStrategy;
   logging?: boolean | LoggingOptions;
 };

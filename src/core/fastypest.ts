@@ -9,7 +9,11 @@ import {
   LoggingDetailLevel,
   LogLevel,
 } from "../logging";
-import { INDEX_OFFSET_CONFIG } from "./config";
+import {
+  INDEX_OFFSET_CONFIG,
+  MIN_SEQUENCE_VALUE_BY_TYPE,
+  PARALLEL_QUERY_SUPPORT,
+} from "./config";
 import { detectQueryEvents } from "./query-mediator";
 import { SQLScript } from "./sql-script";
 import {
@@ -21,6 +25,7 @@ import {
   type FastypestOptions,
   type IncrementDetail,
   type Manager,
+  type TableDependencyQueryOut,
 } from "./types";
 
 const PROGRESS_OFFSET = 1;
@@ -37,6 +42,7 @@ export class Fastypest extends SQLScript {
   private manager: EntityManager;
   private tables: Set<string> = new Set();
   private tablesWithAutoIncrement: Map<string, IncrementDetail[]> = new Map();
+  private tableDependents: Map<string, Set<string>> = new Map();
   private restoreInOder: boolean = false;
   private readonly options: Required<Omit<FastypestOptions, "logging">>;
   private readonly changedTables: Set<string> = new Set();
@@ -58,7 +64,7 @@ export class Fastypest extends SQLScript {
     this.dbConnection = connection;
     this.options = {
       changeDetectionStrategy:
-        options?.changeDetectionStrategy ?? ChangeDetectionStrategy.None,
+        options?.changeDetectionStrategy ?? ChangeDetectionStrategy.Query,
     };
     const detailLevels =
       resolvedLogging.detail !== undefined
@@ -119,12 +125,18 @@ export class Fastypest extends SQLScript {
     await this.withQueryTrackingPaused(async () => {
       await this.manager.transaction(async (em: EntityManager) => {
         await this.detectTables(em);
+        await this.detectTableDependencies(em);
         await this.calculateDependencyTables(em);
         const tables = [...this.tables];
-        await Promise.all([
-          this.createTempTable(em, tables),
-          this.detectTablesWithAutoIncrement(em, tables),
-        ]);
+        if (this.canRunQueriesInParallel()) {
+          await Promise.all([
+            this.createTempTable(em, tables),
+            this.detectTablesWithAutoIncrement(em, tables),
+          ]);
+        } else {
+          await this.createTempTable(em, tables);
+          await this.detectTablesWithAutoIncrement(em, tables);
+        }
       });
     });
     timer.end(
@@ -140,17 +152,30 @@ export class Fastypest extends SQLScript {
     tables: string[],
   ): Promise<void> {
     const totalTables = tables.length;
-    await Promise.all(
-      tables.map(async (tableName, index) => {
-        await this.execQuery(em, "dropTempTable", { tableName });
-        await this.execQuery(em, "createTempTable", { tableName });
-        this.logger.debug(
-          "🧪 Temporary table prepared",
-          `Table ${tableName}`,
-          `Progress ${index + PROGRESS_OFFSET}/${totalTables}`,
-        );
-      }),
-    );
+    if (this.canRunQueriesInParallel()) {
+      await Promise.all(
+        tables.map(async (tableName, index) => {
+          await this.execQuery(em, "dropTempTable", { tableName });
+          await this.execQuery(em, "createTempTable", { tableName });
+          this.logger.debug(
+            "🧪 Temporary table prepared",
+            `Table ${tableName}`,
+            `Progress ${index + PROGRESS_OFFSET}/${totalTables}`,
+          );
+        }),
+      );
+      return;
+    }
+
+    for (const [index, tableName] of tables.entries()) {
+      await this.execQuery(em, "dropTempTable", { tableName });
+      await this.execQuery(em, "createTempTable", { tableName });
+      this.logger.debug(
+        "🧪 Temporary table prepared",
+        `Table ${tableName}`,
+        `Progress ${index + PROGRESS_OFFSET}/${totalTables}`,
+      );
+    }
   }
 
   private async detectTablesWithAutoIncrement(
@@ -213,11 +238,14 @@ export class Fastypest extends SQLScript {
     const sequenceName = this.getSequenceName(column.column_default);
     if (!sequenceName) return;
 
-    const index = Number(stat?.maxindex) || 0;
+    const maxIndex = Number(stat?.maxindex) || 0;
+    const offset = INDEX_OFFSET_CONFIG[this.getType()] ?? 0;
+    const minimumSequenceValue = MIN_SEQUENCE_VALUE_BY_TYPE[this.getType()] ?? 0;
+    const index = Math.max(maxIndex + offset, minimumSequenceValue);
     this.updateTablesWithAutoIncrement(tableName, {
       column: column.column_name,
       sequenceName,
-      index: String(index + (INDEX_OFFSET_CONFIG[this.getType()] ?? 0)),
+      index: String(index),
     });
     this.logger.debug(
       "🔁 Auto increment column processed",
@@ -385,28 +413,64 @@ export class Fastypest extends SQLScript {
     );
   }
 
+  private async detectTableDependencies(em: EntityManager): Promise<void> {
+    const timer = this.logger.timer("Dependency mapping");
+    const dependencies = await this.execQuery<TableDependencyQueryOut>(
+      em,
+      "tableDependencies",
+    );
+    this.tableDependents.clear();
+    for (const { table_name, referenced_table_name } of dependencies) {
+      const dependentTable = this.resolveTrackedTableName(table_name);
+      const referencedTable = this.resolveTrackedTableName(
+        referenced_table_name,
+      );
+      if (!this.tables.has(dependentTable) || !this.tables.has(referencedTable)) {
+        continue;
+      }
+      if (!this.tableDependents.has(referencedTable)) {
+        this.tableDependents.set(referencedTable, new Set());
+      }
+      this.tableDependents.get(referencedTable)?.add(dependentTable);
+    }
+    timer.end(
+      "🧭 Dependency mapping completed",
+      LogLevel.Debug,
+      `Tables with dependents ${this.tableDependents.size}`,
+    );
+  }
+
   private async restoreOrder(em: EntityManager): Promise<void> {
     const tables = this.getTablesForRestore();
-    const totalTables = tables.length;
-    if (this.restoreInOder) {
+    const orderedTables = this.sortTablesForRestore(tables);
+    const totalTables = orderedTables.length;
+    const useBatchTruncate = this.shouldUseBatchTruncate(orderedTables);
+    const runOrderedRestore =
+      this.restoreInOder || !this.canRunQueriesInParallel();
+    if (useBatchTruncate) {
+      await this.truncateTablesInBatch(em, orderedTables);
+    }
+    if (runOrderedRestore) {
       this.logger.verbose("🧱 Restore mode ordered", `Tables ${totalTables}`);
-      for (const [index, tableName] of tables.entries()) {
+      for (const [index, tableName] of orderedTables.entries()) {
         await this.recreateData(
           em,
           tableName,
           index + PROGRESS_OFFSET,
           totalTables,
+          useBatchTruncate,
         );
       }
     } else {
       this.logger.verbose("🧱 Restore mode parallel", `Tables ${totalTables}`);
       await Promise.all(
-        tables.map((tableName, index) =>
+        orderedTables.map((tableName, index) =>
           this.recreateData(
             em,
             tableName,
             index + PROGRESS_OFFSET,
             totalTables,
+            useBatchTruncate,
           ),
         ),
       );
@@ -422,6 +486,7 @@ export class Fastypest extends SQLScript {
     tableName: string,
     position: number,
     total: number,
+    skipTruncate: boolean = false,
   ): Promise<void> {
     const timer = this.logger.timer(`Restore ${tableName}`);
     this.logger.debug(
@@ -429,13 +494,22 @@ export class Fastypest extends SQLScript {
       `Table ${tableName}`,
       `Progress ${position}/${total}`,
     );
-    await this.execQuery(em, "truncateTable", { tableName });
-    timer.mark(
-      "🧹 Table truncated",
-      LogLevel.Debug,
-      `Table ${tableName}`,
-      `Progress ${position}/${total}`,
-    );
+    if (!skipTruncate) {
+      await this.execQuery(em, "truncateTable", { tableName });
+      timer.mark(
+        "🧹 Table truncated",
+        LogLevel.Debug,
+        `Table ${tableName}`,
+        `Progress ${position}/${total}`,
+      );
+    } else {
+      timer.mark(
+        "🧹 Table truncation reused",
+        LogLevel.Debug,
+        `Table ${tableName}`,
+        `Progress ${position}/${total}`,
+      );
+    }
     await this.execQuery(em, "restoreData", { tableName });
     timer.mark(
       "📦 Table data restored",
@@ -560,6 +634,10 @@ export class Fastypest extends SQLScript {
     );
   }
 
+  private canRunQueriesInParallel(): boolean {
+    return PARALLEL_QUERY_SUPPORT[this.getType()] ?? true;
+  }
+
   private getTablesForRestore(): string[] {
     const tables = [...this.tables];
     if (!this.shouldTrackChanges()) {
@@ -575,14 +653,17 @@ export class Fastypest extends SQLScript {
     if (this.changedTables.size === 0) {
       return tables;
     }
-    const changed = new Set(this.changedTables);
-    const filtered = tables.filter((table) => changed.has(table));
+    const changedAndDependents = this.expandTablesForRestore(
+      new Set(this.changedTables),
+    );
+    const filtered = tables.filter((table) => changedAndDependents.has(table));
     if (filtered.length === 0) {
       return tables;
     }
     this.logger.debug(
       "🗜️ Filtering tables by tracked changes",
       `Matched tables ${filtered.length}`,
+      `Tracked tables ${this.changedTables.size}`,
       `Total tables ${tables.length}`,
     );
     return filtered;
@@ -599,6 +680,103 @@ export class Fastypest extends SQLScript {
       }
     }
     return tableName;
+  }
+
+  private expandTablesForRestore(changedTables: Set<string>): Set<string> {
+    const tablesToRestore = new Set(changedTables);
+    const queue = [...changedTables];
+    while (queue.length > 0) {
+      const current = queue.shift();
+      if (!current) {
+        continue;
+      }
+      const dependentTables = this.tableDependents.get(current);
+      if (!dependentTables) {
+        continue;
+      }
+      for (const dependentTable of dependentTables) {
+        if (tablesToRestore.has(dependentTable)) {
+          continue;
+        }
+        tablesToRestore.add(dependentTable);
+        queue.push(dependentTable);
+      }
+    }
+    return tablesToRestore;
+  }
+
+  private sortTablesForRestore(tables: string[]): string[] {
+    if (tables.length < 2) {
+      return tables;
+    }
+    const tableSet = new Set(tables);
+    const inDegree = new Map<string, number>();
+    const adjacency = new Map<string, string[]>();
+    for (const table of tables) {
+      inDegree.set(table, 0);
+      adjacency.set(table, []);
+    }
+    for (const [referencedTable, dependentTables] of this.tableDependents) {
+      if (!tableSet.has(referencedTable)) {
+        continue;
+      }
+      for (const dependentTable of dependentTables) {
+        if (!tableSet.has(dependentTable)) {
+          continue;
+        }
+        adjacency.get(referencedTable)?.push(dependentTable);
+        inDegree.set(dependentTable, (inDegree.get(dependentTable) ?? 0) + 1);
+      }
+    }
+    for (const dependentTables of adjacency.values()) {
+      dependentTables.sort((left, right) => left.localeCompare(right));
+    }
+    const queue = tables
+      .filter((table) => (inDegree.get(table) ?? 0) === 0)
+      .sort((left, right) => left.localeCompare(right));
+    const sorted: string[] = [];
+    while (queue.length > 0) {
+      const tableName = queue.shift();
+      if (!tableName) {
+        break;
+      }
+      sorted.push(tableName);
+      const dependentTables = adjacency.get(tableName) ?? [];
+      for (const dependentTable of dependentTables) {
+        const nextDegree = (inDegree.get(dependentTable) ?? 0) - 1;
+        inDegree.set(dependentTable, nextDegree);
+        if (nextDegree === 0) {
+          queue.push(dependentTable);
+          queue.sort((left, right) => left.localeCompare(right));
+        }
+      }
+    }
+    if (sorted.length !== tables.length) {
+      return tables;
+    }
+    return sorted;
+  }
+
+  private shouldUseBatchTruncate(tables: string[]): boolean {
+    const type = this.getType();
+    return (
+      (type === "cockroachdb" || type === "postgres") && tables.length > 1
+    );
+  }
+
+  private async truncateTablesInBatch(
+    em: EntityManager,
+    tables: string[],
+  ): Promise<void> {
+    const quotedTables = tables
+      .map((tableName) => `"${tableName}"`)
+      .join(", ");
+    await em.query(`TRUNCATE TABLE ${quotedTables} CASCADE;`);
+    this.logger.debug(
+      "🧹 Batch table truncation completed",
+      `Tables ${tables.length}`,
+      `Database ${this.getType()}`,
+    );
   }
 
   private async withQueryTrackingPaused<T>(

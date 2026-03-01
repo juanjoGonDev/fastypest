@@ -5,21 +5,39 @@ export const INDEX_OFFSET_CONFIG: Partial<Record<DBType, number>> = {
   cockroachdb: 0,
 };
 
+export const MIN_SEQUENCE_VALUE_BY_TYPE: Partial<Record<DBType, number>> = {
+  cockroachdb: 1,
+};
+
+export const PARALLEL_QUERY_SUPPORT: Partial<Record<DBType, boolean>> = {
+  postgres: false,
+};
+
 const TABLE_IDENTIFIER_PATTERN =
   '((?:(?:"[^"]+")|(?:`[^`]+`)|(?:[a-zA-Z_][a-zA-Z0-9_$]*))(?:\\.(?:(?:"[^"]+")|(?:`[^`]+`)|(?:[a-zA-Z_][a-zA-Z0-9_$]*)))?)';
+const TABLE_IDENTIFIER_SUFFIX_PATTERN = "(?:\\s|$)";
 
 const createTableRegex = (statement: string): RegExp =>
-  new RegExp(`^\\s*${statement}\\s+${TABLE_IDENTIFIER_PATTERN}\\b`, "i");
+  new RegExp(
+    `^\\s*${statement}\\s+${TABLE_IDENTIFIER_PATTERN}${TABLE_IDENTIFIER_SUFFIX_PATTERN}`,
+    "i",
+  );
 
 const createDeleteRegex = (): RegExp =>
-  new RegExp(`^\\s*delete\\s+from\\s+${TABLE_IDENTIFIER_PATTERN}\\b`, "i");
+  new RegExp(
+    `^\\s*delete\\s+from\\s+${TABLE_IDENTIFIER_PATTERN}${TABLE_IDENTIFIER_SUFFIX_PATTERN}`,
+    "i",
+  );
 
 const createInsertRegex = (): RegExp =>
-  new RegExp(`^\\s*insert\\s+into\\s+${TABLE_IDENTIFIER_PATTERN}\\b`, "i");
+  new RegExp(
+    `^\\s*insert\\s+into\\s+${TABLE_IDENTIFIER_PATTERN}${TABLE_IDENTIFIER_SUFFIX_PATTERN}`,
+    "i",
+  );
 
 const createTruncateRegex = (): RegExp =>
   new RegExp(
-    `^\\s*truncate\\s+(?:table\\s+)?${TABLE_IDENTIFIER_PATTERN}\\b`,
+    `^\\s*truncate\\s+(?:table\\s+)?${TABLE_IDENTIFIER_PATTERN}${TABLE_IDENTIFIER_SUFFIX_PATTERN}`,
     "i",
   );
 
