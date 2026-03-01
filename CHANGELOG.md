@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.0.0](https://github.com/juanjoGonDev/fastypest/compare/v1.5.54...v3.0.0) (2026-03-01)
+
+
+### ⚠ BREAKING CHANGES
+
+* Default change detection switched to Query strategy. ChangeDetectionStrategy.Subscriber and subscriber-based manual table tracking were removed. If you need previous behavior, set changeDetectionStrategy to None for full-database restore after each test.
+
+### Features
+
+* **core:** switch change detection to query mediator ([#1437](https://github.com/juanjoGonDev/fastypest/issues/1437)) ([96ae17b](https://github.com/juanjoGonDev/fastypest/commit/96ae17b7c7553b2f77b2c6cf30c570909e3219cb)), closes [#1438](https://github.com/juanjoGonDev/fastypest/issues/1438)
+* mark breaking change release ([7b99c7f](https://github.com/juanjoGonDev/fastypest/commit/7b99c7f626a3a87b100904c4a538e4619ac283b3))
+
 ### [1.5.54](https://github.com/juanjoGonDev/fastypest/compare/v1.5.33...v1.5.54) (2026-02-28)
 
 ### [1.5.53](https://github.com/juanjoGonDev/fastypest/compare/v1.5.33...v1.5.53) (2026-02-28)
