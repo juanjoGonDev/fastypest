@@ -1,5 +1,6 @@
 {
   "dependencyTree": "-- NOT USED",
+  "tableDependencies": "SELECT tc.table_name, ccu.table_name AS referenced_table_name FROM information_schema.table_constraints tc JOIN information_schema.constraint_column_usage ccu ON ccu.constraint_catalog = tc.constraint_catalog AND ccu.constraint_schema = tc.constraint_schema AND ccu.constraint_name = tc.constraint_name WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_schema = CURRENT_SCHEMA()",
   "foreignKey": {
     "disable": "DO $$ DECLARE table_name text; BEGIN FOR table_name IN (SELECT tablename FROM pg_tables WHERE schemaname = current_schema()) LOOP EXECUTE 'ALTER TABLE \"' || table_name || '\" DISABLE TRIGGER ALL;'; END LOOP; END $$;",
     "enable": "DO $$ DECLARE table_name text; BEGIN FOR table_name IN (SELECT tablename FROM pg_tables WHERE schemaname = current_schema()) LOOP EXECUTE 'ALTER TABLE \"' || table_name || '\" ENABLE TRIGGER ALL;'; END LOOP; END $$;"

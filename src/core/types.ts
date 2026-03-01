@@ -1,18 +1,38 @@
 import { DataSourceOptions } from "typeorm";
 import type { LoggingOptions } from "../logging";
 
-export type Table = { name: string };
 export type DependencyTreeQueryOut = {
   table_name: string;
   level: number;
 };
 
+export type TableDependencyQueryOut = {
+  table_name: string;
+  referenced_table_name: string;
+};
+
+export type TableDependencyQueryOutWithUpperCase = Partial<
+  Record<"TABLE_NAME" | "REFERENCED_TABLE_NAME", string | null>
+>;
+
+/**
+ * Controls how Fastypest decides which tables should be restored after each test.
+ */
 export enum ChangeDetectionStrategy {
+  /**
+   * Always restore every discovered table.
+   */
   None = "none",
-  Subscriber = "subscriber",
+  /**
+   * Track executed SQL statements and restore only the affected tables.
+   */
+  Query = "query",
 }
 
 export type FastypestOptions = {
+  /**
+   * Change detection strategy used by Fastypest. Defaults to `ChangeDetectionStrategy.Query`.
+   */
   changeDetectionStrategy?: ChangeDetectionStrategy;
   logging?: boolean | LoggingOptions;
 };

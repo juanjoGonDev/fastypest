@@ -4,18 +4,23 @@ import { seedCount } from "../config/seed.config";
 import { Basic, Simple, User } from "../entities";
 import { ConnectionUtil } from "../utils/connection.util";
 
-const randomIndex = Math.floor(Math.random() * seedCount) + 1;
+const TRACKED_SIMPLE_ID = 1;
 
 describe("Simple", () => {
   const connection = getConnection();
   const simpleRepository = connection.getRepository(Simple);
-  let randomRow: Simple;
-  const connectionUtil = new ConnectionUtil();
+  const basicRepository = connection.getRepository(Basic);
+  const userRepository = connection.getRepository(User);
+  let trackedRow: Simple;
+  let connectionUtil: ConnectionUtil;
 
   beforeAll(async () => {
-    const row = await simpleRepository.findOneBy({ id: randomIndex });
-    if (!row) return;
-    randomRow = row;
+    const row = await simpleRepository.findOneBy({ id: TRACKED_SIMPLE_ID });
+    if (!row) {
+      throw new Error(`Seed row with id ${TRACKED_SIMPLE_ID} is not defined`);
+    }
+    trackedRow = row;
+    connectionUtil = new ConnectionUtil(connection);
   });
 
   describe("Changes with typeorm methods", () => {
@@ -29,18 +34,18 @@ describe("Simple", () => {
         await simpleRepository
           .createQueryBuilder("simple")
           .update({ name: newName })
-          .where({ id: randomRow.id })
+          .where({ id: trackedRow.id })
           .execute();
 
         const rowUpdated = await getRowByName(newName);
 
         expect(rowUpdated).toBeDefined();
-        expect(rowUpdated?.id).toBe(randomRow.id);
+        expect(rowUpdated?.id).toBe(trackedRow.id);
       });
 
-      it(`Row with index ${randomIndex} must have initial name`, async () => {
-        const row = await getRow(randomRow.id);
-        expect(row?.name).toBe(randomRow.name);
+      it(`Row with index ${TRACKED_SIMPLE_ID} must have initial name`, async () => {
+        const row = await getRow(trackedRow.id);
+        expect(row?.name).toBe(trackedRow.name);
       });
     });
 
@@ -61,6 +66,24 @@ describe("Simple", () => {
       it("New row must be undefined", async () => {
         const newRow = await getRowByName(name);
         expect(newRow).toBeNull();
+      });
+    });
+
+    describe("Delete seeded rows", () => {
+      it("Seed row must be deleted", async () => {
+        await connectionUtil.transaction(async (em) => {
+          await em.delete(User, { simpleId: trackedRow.id });
+          await em.delete(Basic, { simpleId: trackedRow.id });
+          await em.delete(Simple, { id: trackedRow.id });
+        });
+
+        const deletedRow = await getRow(trackedRow.id);
+        expect(deletedRow).toBeNull();
+      });
+
+      it(`Row with index ${TRACKED_SIMPLE_ID} must be restored`, async () => {
+        const row = await getRow(trackedRow.id);
+        expect(row?.name).toBe(trackedRow.name);
       });
     });
 
@@ -94,9 +117,9 @@ describe("Simple", () => {
 
       it('"Simple" table must be empty', async () => {
         await connectionUtil.transaction(async (em) => {
-          await em.delete(User, { id: Not(IsNull())}); // Delete for foreign key
-          await em.delete(Basic, { name: Not(IsNull())}); // Delete for foreign key
-          await em.delete(Simple, { id: Not(IsNull())});
+          await em.delete(User, { id: Not(IsNull()) }); // Delete for foreign key
+          await em.delete(Basic, { name: Not(IsNull()) }); // Delete for foreign key
+          await em.delete(Simple, { id: Not(IsNull()) });
         });
 
         expect(await getSimpleCount()).toBe(0);
@@ -104,6 +127,8 @@ describe("Simple", () => {
 
       it('After restore, "simple" table must have the same number of data as at the beginning', async () => {
         expect(await getSimpleCount()).toBe(seedCount);
+        expect(await getBasicCount()).toBe(seedCount);
+        expect(await getUserCount()).toBe(seedCount);
       });
     });
 
@@ -111,16 +136,16 @@ describe("Simple", () => {
       it("Row must be modified", async () => {
         const newName = "seed updated";
         await connection.query(
-          `UPDATE simple SET name = '${newName}' WHERE id = ${randomRow.id}`
+          `UPDATE simple SET name = '${newName}' WHERE id = ${trackedRow.id}`,
         );
 
-        const row = await getRow(randomRow.id);
+        const row = await getRow(trackedRow.id);
         expect(row?.name).toBe(newName);
       });
 
-      it(`Row with index ${randomIndex} must have initial name`, async () => {
-        const row = await getRow(randomRow.id);
-        expect(row?.name).toBe(randomRow.name);
+      it(`Row with index ${TRACKED_SIMPLE_ID} must have initial name`, async () => {
+        const row = await getRow(trackedRow.id);
+        expect(row?.name).toBe(trackedRow.name);
       });
     });
 
@@ -137,6 +162,24 @@ describe("Simple", () => {
       it("New row must be undefined", async () => {
         const newRow = await getRowByName(name);
         expect(newRow).toBeNull();
+      });
+    });
+
+    describe("Delete seeded rows", () => {
+      it("Seed row must be deleted", async () => {
+        await connectionUtil.transaction(async (em) => {
+          await em.delete(User, { simpleId: trackedRow.id });
+          await em.delete(Basic, { simpleId: trackedRow.id });
+          await em.delete(Simple, { id: trackedRow.id });
+        });
+
+        const deletedRow = await getRow(trackedRow.id);
+        expect(deletedRow).toBeNull();
+      });
+
+      it(`Row with index ${TRACKED_SIMPLE_ID} must be restored`, async () => {
+        const row = await getRow(trackedRow.id);
+        expect(row?.name).toBe(trackedRow.name);
       });
     });
 
@@ -159,6 +202,8 @@ describe("Simple", () => {
   });
 
   const getSimpleCount = () => simpleRepository.count();
+  const getBasicCount = () => basicRepository.count();
+  const getUserCount = () => userRepository.count();
 
   const getLastRow = () =>
     simpleRepository

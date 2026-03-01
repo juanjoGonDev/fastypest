@@ -59,7 +59,8 @@ const trimDecimals = (value: number): string => {
 };
 
 const formatSeconds = (seconds: number): string => {
-  const precision = seconds < 10 ? DECIMAL_PRECISION_SHORT : DECIMAL_PRECISION_LONG;
+  const precision =
+    seconds < 10 ? DECIMAL_PRECISION_SHORT : DECIMAL_PRECISION_LONG;
   const rounded = Number(seconds.toFixed(precision));
   return `${trimDecimals(rounded)}s`;
 };
@@ -75,7 +76,9 @@ const formatDurationText = (durationMs: number): string => {
   remaining -= minutes * MILLISECONDS_IN_MINUTE;
   const seconds = remaining / MILLISECONDS_IN_SECOND;
   const wholeSeconds = Math.floor(seconds);
-  const leftoverMs = Math.round(remaining - wholeSeconds * MILLISECONDS_IN_SECOND);
+  const leftoverMs = Math.round(
+    remaining - wholeSeconds * MILLISECONDS_IN_SECOND,
+  );
 
   if (hours > 0) {
     segments.push(`${hours}h`);
@@ -100,7 +103,15 @@ const formatDurationText = (durationMs: number): string => {
   return segments.join(" ");
 };
 
-type LogDetail = string | number | boolean | bigint | Date | Error | null | undefined;
+type LogDetail =
+  | string
+  | number
+  | boolean
+  | bigint
+  | Date
+  | Error
+  | null
+  | undefined;
 
 type LogDetailsInput = LogDetail | LogDetail[];
 
@@ -114,7 +125,11 @@ type LoggerPayload = LoggerInfo & {
   [LOG_FIELD_LABEL]: string;
 };
 
-type TimerEmitter = (level: LogLevel, message: string, details: LogDetail[]) => void;
+type TimerEmitter = (
+  level: LogLevel,
+  message: string,
+  details: LogDetail[],
+) => void;
 
 const extractLevel = (info: LoggerInfo): LogLevel | undefined => {
   const levelText = (info[LOG_FIELD_LEVEL] as string | undefined) ?? info.level;
@@ -122,7 +137,9 @@ const extractLevel = (info: LoggerInfo): LogLevel | undefined => {
     return undefined;
   }
   const normalized = levelText.replace(ANSI_ESCAPE_PATTERN, "").toLowerCase();
-  return normalized in LOGGING_LEVEL_WEIGHTS ? (normalized as LogLevel) : undefined;
+  return normalized in LOGGING_LEVEL_WEIGHTS
+    ? (normalized as LogLevel)
+    : undefined;
 };
 
 const formatDetails = (details: LogDetail[]): string | undefined => {
@@ -139,11 +156,17 @@ const formatLogMessage = (info: LoggerInfo): string => {
   const label = info[LOG_FIELD_LABEL] as string | undefined;
   const timestamp = info[LOG_FIELD_TIMESTAMP] as string | undefined;
   const level = extractLevel(info);
-  const fallbackLevel = info.level.replace(ANSI_ESCAPE_PATTERN, "").toUpperCase();
-  const message = info[LOG_FIELD_MESSAGE] ? String(info[LOG_FIELD_MESSAGE]) : info.message;
+  const fallbackLevel = info.level
+    .replace(ANSI_ESCAPE_PATTERN, "")
+    .toUpperCase();
+  const message = info[LOG_FIELD_MESSAGE]
+    ? String(info[LOG_FIELD_MESSAGE])
+    : info.message;
   const levelLabel = level ? LOGGING_LEVEL_LABELS[level] : fallbackLevel;
   const levelIcon = level ? `${LOGGING_LEVEL_ICONS[level]} ` : "";
-  const detailText = info[LOG_FIELD_DETAILS] ? String(info[LOG_FIELD_DETAILS]) : "";
+  const detailText = info[LOG_FIELD_DETAILS]
+    ? String(info[LOG_FIELD_DETAILS])
+    : "";
   const formattedDetails = detailText ? `${DETAIL_PREFIX}${detailText}` : "";
   const timestampText = timestamp ? `${timestamp} ` : "";
   return `${timestampText}${levelIcon}[${label ?? ""}] ${levelLabel} ${message}${formattedDetails}`;
@@ -157,7 +180,7 @@ const baseLogger = createLogger({
   format: format.combine(
     format.timestamp({ format: LOGGING_TIMESTAMP_FORMAT }),
     format.colorize({ all: true }),
-    format.printf((info: unknown) => formatLogMessage(info as LoggerInfo))
+    format.printf((info: unknown) => formatLogMessage(info as LoggerInfo)),
   ),
   transports: [new transports.Console()],
   silent: false,
@@ -169,7 +192,10 @@ let globalOptions: ResolvedLoggingOptions = {
   detail: undefined,
 };
 
-const resolveEnabled = (enabled: boolean | undefined, hasOptions: boolean): boolean => {
+const resolveEnabled = (
+  enabled: boolean | undefined,
+  hasOptions: boolean,
+): boolean => {
   if (enabled !== undefined) {
     return enabled;
   }
@@ -194,7 +220,9 @@ const hasLevelsOption = (options?: LoggingOptions): boolean => {
   return Object.prototype.hasOwnProperty.call(options, LOGGING_LEVELS_KEY);
 };
 
-const resolveLoggingOptions = (options?: LoggingOptions): ResolvedLoggingOptions => {
+const resolveLoggingOptions = (
+  options?: LoggingOptions,
+): ResolvedLoggingOptions => {
   const hasOptions = Boolean(options);
   const enabled = resolveEnabled(options?.enabled, hasOptions);
   if (!enabled) {
@@ -208,7 +236,7 @@ const resolveLoggingOptions = (options?: LoggingOptions): ResolvedLoggingOptions
 };
 
 const getDetailLevels = (
-  detail: LoggingDetailLevel | undefined
+  detail: LoggingDetailLevel | undefined,
 ): LogLevel[] | undefined => {
   if (!detail) {
     return undefined;
@@ -216,7 +244,10 @@ const getDetailLevels = (
   return LOGGING_DETAIL_LEVELS[detail];
 };
 
-const shouldLog = (level: LogLevel, options: ResolvedLoggingOptions): boolean => {
+const shouldLog = (
+  level: LogLevel,
+  options: ResolvedLoggingOptions,
+): boolean => {
   if (!options.enabled) {
     return false;
   }
@@ -243,7 +274,7 @@ const mergeOptions = (local?: LoggingOptions): ResolvedLoggingOptions => {
   const hasLocalLevels = hasLevelsOption(local);
   const hasLocalDetail = Object.prototype.hasOwnProperty.call(
     local,
-    LOGGING_DETAIL_KEY
+    LOGGING_DETAIL_KEY,
   );
   const ignoreGlobalLevels = hasLocalDetail && !hasLocalLevels;
   return {
@@ -251,8 +282,8 @@ const mergeOptions = (local?: LoggingOptions): ResolvedLoggingOptions => {
     levels: hasLocalLevels
       ? resolvedLocal.levels
       : ignoreGlobalLevels
-      ? undefined
-      : globalOptions.levels,
+        ? undefined
+        : globalOptions.levels,
     detail: hasLocalDetail ? resolvedLocal.detail : globalOptions.detail,
   };
 };
@@ -271,7 +302,7 @@ const logWithDetails = (
   scope: string,
   message: string,
   details: LogDetail[],
-  options: ResolvedLoggingOptions
+  options: ResolvedLoggingOptions,
 ): void => {
   if (!shouldLog(level, options)) {
     return;
@@ -288,22 +319,28 @@ const logWithDetails = (
   baseLogger.log(logPayload);
 };
 
-export const configureLogging = (options?: LoggingOptions): ResolvedLoggingOptions => {
+export const configureLogging = (
+  options?: LoggingOptions,
+): ResolvedLoggingOptions => {
   globalOptions = resolveLoggingOptions(options);
   return globalOptions;
 };
 
-export class LoggerTimer {
+class LoggerTimer {
   private readonly start = performance.now();
   private lastMark = this.start;
   private finished = false;
 
   constructor(
     private readonly label: string,
-    private readonly emit: TimerEmitter
+    private readonly emit: TimerEmitter,
   ) {}
 
-  public mark(message: string, level: LogLevel = LogLevel.Debug, ...details: LogDetailsInput[]): void {
+  public mark(
+    message: string,
+    level: LogLevel = LogLevel.Debug,
+    ...details: LogDetailsInput[]
+  ): void {
     if (this.finished) {
       return;
     }
@@ -331,14 +368,22 @@ export class LoggerTimer {
     }
     const totalElapsed = performance.now() - this.start;
     const normalized = normalizeDetails(details);
-    const timerDetails: LogDetail[] = [`${this.label} total ${formatDurationText(totalElapsed)}`];
-    this.emit(level, message ?? `${this.label} completed`, [...timerDetails, ...normalized]);
+    const timerDetails: LogDetail[] = [
+      `${this.label} total ${formatDurationText(totalElapsed)}`,
+    ];
+    this.emit(level, message ?? `${this.label} completed`, [
+      ...timerDetails,
+      ...normalized,
+    ]);
     this.finished = true;
   }
 }
 
 export class ScopedLogger {
-  constructor(private readonly scope: string, private readonly localOptions?: LoggingOptions) {}
+  constructor(
+    private readonly scope: string,
+    private readonly localOptions?: LoggingOptions,
+  ) {}
 
   public error(message: string, ...details: LogDetailsInput[]): void {
     this.write(LogLevel.Error, message, details);
@@ -374,14 +419,26 @@ export class ScopedLogger {
     return formatDurationText(durationMs);
   }
 
-  private write(level: LogLevel, message: string, details: LogDetailsInput[]): void {
+  private write(
+    level: LogLevel,
+    message: string,
+    details: LogDetailsInput[],
+  ): void {
     const normalized = normalizeDetails(details);
-    logWithDetails(level, this.scope, message, normalized, mergeOptions(this.localOptions));
+    logWithDetails(
+      level,
+      this.scope,
+      message,
+      normalized,
+      mergeOptions(this.localOptions),
+    );
   }
 }
 
-export const createScopedLogger = (scope: string, options?: LoggingOptions): ScopedLogger =>
-  new ScopedLogger(scope, options);
+export const createScopedLogger = (
+  scope: string,
+  options?: LoggingOptions,
+): ScopedLogger => new ScopedLogger(scope, options);
 
 export const getLoggingOptions = (): ResolvedLoggingOptions => ({
   ...globalOptions,

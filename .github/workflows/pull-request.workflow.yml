@@ -101,8 +101,8 @@ jobs:
             yarn-dependencies-
       - name: ⚙️ yarn install
         run: yarn install --immutable --check-cache
-      - name: ✔️ Run eslint
-        run: yarn eslint
+      - name: ✔️ Run check-format
+        run: yarn check-format
 
   all-test-ok:
     name: ✅ Check all tests

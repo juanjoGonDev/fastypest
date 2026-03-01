@@ -1,12 +1,21 @@
-import { DataSource, EntityManager, EntityTarget } from "typeorm";
-import { Fastypest, type FastypestOptions } from "../../dist/core";
+import {
+  DataSource,
+  EntityManager,
+  EntityTarget,
+  ObjectLiteral,
+} from "typeorm";
+import {
+  Fastypest,
+  type FastypestOptions,
+} from "../../src/core";
 import { getConnection } from "../config/orm.config";
 
 export class ConnectionUtil extends Fastypest {
   private connection: DataSource;
   constructor(connection?: DataSource, options?: FastypestOptions) {
-    super(connection || getConnection(), options);
-    this.connection = connection || getConnection();
+    const resolvedConnection = connection || getConnection();
+    super(resolvedConnection, options);
+    this.connection = resolvedConnection;
   }
 
   async transaction(
@@ -20,7 +29,11 @@ export class ConnectionUtil extends Fastypest {
     });
   }
 
-  async seed(em: EntityManager, target: EntityTarget<any>, data: object[]) {
+  async seed<Entity extends ObjectLiteral>(
+    em: EntityManager,
+    target: EntityTarget<Entity>,
+    data: Array<Partial<Entity>>,
+  ) {
     const repository = em.getRepository(target);
     const tableName = repository.metadata.tableName;
 

@@ -12,5 +12,8 @@
 !.yarn/sdks
 !.yarn/versions
 
+# test coverage
+coverage
+
 # test relase
 test-install

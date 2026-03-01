@@ -21,8 +21,10 @@ on:
       strategy:
         description: "Release strategy (if force=yes):\nmajor→2.0.0 • minor→1.1.0 • patch→1.0.1\npremajor→2.0.0-0 • preminor→1.1.0-0 • prepatch→1.0.1-0\nprerelease→1.0.1-0"
         required: true
+        default: "auto"
         type: choice
         options:
+          - "auto"
           - "major"
           - "minor"
           - "patch"
@@ -38,6 +40,16 @@ on:
         options:
           - "true"
           - "false"
+      breaking_change:
+        description: "Mark this release as breaking change (forces major strategy)"
+        required: false
+        default: false
+        type: boolean
+      breaking_change_reason:
+        description: "Breaking change note included in release changelog"
+        required: false
+        default: ""
+        type: string
 
 env:
   NODE_VERSION: "22.14.0"
@@ -109,17 +121,46 @@ jobs:
           yarn init -y
           touch yarn.lock
           yarn add -D ./package.tar.gz
+      - name: 🧭 Resolve release strategy
+        if: steps.check_commits.outputs.enough_commits == 'true'
+        id: resolve_strategy
+        run: |
+          AUTO_STRATEGY="auto"
+          STRATEGY="$AUTO_STRATEGY"
+          if [[ "${{ github.event.inputs.strategy }}" ]]; then
+            STRATEGY="${{ github.event.inputs.strategy }}"
+          fi
+          if [[ "${STRATEGY}" == "" ]]; then
+            STRATEGY="$AUTO_STRATEGY"
+          fi
+          if [[ "${{ github.event.inputs.breaking_change || 'false' }}" == "true" ]]; then
+            STRATEGY="major"
+          fi
+          echo "strategy=${STRATEGY}" >> "$GITHUB_OUTPUT"
+      - name: ✅ Validate breaking change inputs
+        if: steps.check_commits.outputs.enough_commits == 'true'
+        run: |
+          if [[ "${{ github.event.inputs.breaking_change || 'false' }}" == "true" ]] && [[ -z "${{ github.event.inputs.breaking_change_reason }}" ]]; then
+            echo "breaking_change_reason is required when breaking_change is true"
+            exit 1
+          fi
+
       - name: 🆙 Dry run release
         if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run == 'true'
         run: |
           git checkout main
           git pull origin main
-          STRATEGY="patch"
-          if [[ "${{ github.event.inputs.strategy }}" ]]; then
-            STRATEGY=${{ github.event.inputs.strategy }}
+          if [[ "${{ github.event.inputs.breaking_change || 'false' }}" == "true" ]]; then
+            MARKER_MESSAGE="feat!: mark breaking change release"
+            BREAKING_REASON="${{ github.event.inputs.breaking_change_reason }}"
+            git commit --allow-empty -m "$MARKER_MESSAGE" -m "BREAKING CHANGE: $BREAKING_REASON"
           fi
-
-          yarn release --release-as "$STRATEGY" --dry-run
+          STRATEGY="${{ steps.resolve_strategy.outputs.strategy }}"
+          if [[ "$STRATEGY" == "auto" ]]; then
+            yarn release --dry-run
+          else
+            yarn release --release-as "$STRATEGY" --dry-run
+          fi
       - name: 🚫 Dry run active
         if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run == 'true'
         run: echo "🔍 Dry run is enabled. Skipping publishing, tagging and PR steps."
@@ -133,12 +174,17 @@ jobs:
           if [ $EXISTS -eq 1 ]; then
             git pull origin release/${{ github.run_number }}
           fi
-          STRATEGY="patch"
-          if [[ "${{ github.event.inputs.strategy }}" ]]; then
-            STRATEGY=${{ github.event.inputs.strategy }}
+          if [[ "${{ github.event.inputs.breaking_change || 'false' }}" == "true" ]]; then
+            MARKER_MESSAGE="feat!: mark breaking change release"
+            BREAKING_REASON="${{ github.event.inputs.breaking_change_reason }}"
+            git commit --allow-empty -m "$MARKER_MESSAGE" -m "BREAKING CHANGE: $BREAKING_REASON"
           fi
-
-          yarn release --release-as $STRATEGY
+          STRATEGY="${{ steps.resolve_strategy.outputs.strategy }}"
+          if [[ "$STRATEGY" == "auto" ]]; then
+            yarn release
+          else
+            yarn release --release-as "$STRATEGY"
+          fi
           git push --follow-tags origin release/${{ github.run_number }}
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_FINE }}
