@@ -29,6 +29,7 @@ import {
 } from "./types";
 
 const PROGRESS_OFFSET = 1;
+const MYSQL_SNAPSHOT_TABLE_PREFIX = "__fastypest_snapshot__";
 
 type QueryExecutor = {
   query: (...args: unknown[]) => Promise<unknown>;
@@ -155,8 +156,15 @@ export class Fastypest extends SQLScript {
     if (this.canRunQueriesInParallel()) {
       await Promise.all(
         tables.map(async (tableName, index) => {
-          await this.execQuery(em, "dropTempTable", { tableName });
-          await this.execQuery(em, "createTempTable", { tableName });
+          const snapshotTableName = this.getSnapshotTableName(tableName);
+          await this.execQuery(em, "dropTempTable", {
+            tableName,
+            snapshotTableName,
+          });
+          await this.execQuery(em, "createTempTable", {
+            tableName,
+            snapshotTableName,
+          });
           this.logger.debug(
             "🧪 Temporary table prepared",
             `Table ${tableName}`,
@@ -168,8 +176,15 @@ export class Fastypest extends SQLScript {
     }
 
     for (const [index, tableName] of tables.entries()) {
-      await this.execQuery(em, "dropTempTable", { tableName });
-      await this.execQuery(em, "createTempTable", { tableName });
+      const snapshotTableName = this.getSnapshotTableName(tableName);
+      await this.execQuery(em, "dropTempTable", {
+        tableName,
+        snapshotTableName,
+      });
+      await this.execQuery(em, "createTempTable", {
+        tableName,
+        snapshotTableName,
+      });
       this.logger.debug(
         "🧪 Temporary table prepared",
         `Table ${tableName}`,
@@ -510,7 +525,10 @@ export class Fastypest extends SQLScript {
         `Progress ${position}/${total}`,
       );
     }
-    await this.execQuery(em, "restoreData", { tableName });
+    await this.execQuery(em, "restoreData", {
+      tableName,
+      snapshotTableName: this.getSnapshotTableName(tableName),
+    });
     timer.mark(
       "📦 Table data restored",
       LogLevel.Debug,
@@ -762,6 +780,14 @@ export class Fastypest extends SQLScript {
     return (
       (type === "cockroachdb" || type === "postgres") && tables.length > 1
     );
+  }
+
+  private getSnapshotTableName(tableName: string): string {
+    const type = this.getType();
+    if (type === "mysql" || type === "mariadb") {
+      return `${MYSQL_SNAPSHOT_TABLE_PREFIX}${tableName}`;
+    }
+    return `${tableName}_temp`;
   }
 
   private async truncateTablesInBatch(
