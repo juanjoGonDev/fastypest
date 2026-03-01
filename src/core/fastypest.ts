@@ -26,10 +26,10 @@ import {
   type IncrementDetail,
   type Manager,
   type TableDependencyQueryOut,
+  type TableDependencyQueryOutWithUpperCase,
 } from "./types";
 
 const PROGRESS_OFFSET = 1;
-const MYSQL_SNAPSHOT_TABLE_PREFIX = "__fastypest_snapshot__";
 
 type QueryExecutor = {
   query: (...args: unknown[]) => Promise<unknown>;
@@ -156,15 +156,8 @@ export class Fastypest extends SQLScript {
     if (this.canRunQueriesInParallel()) {
       await Promise.all(
         tables.map(async (tableName, index) => {
-          const snapshotTableName = this.getSnapshotTableName(tableName);
-          await this.execQuery(em, "dropTempTable", {
-            tableName,
-            snapshotTableName,
-          });
-          await this.execQuery(em, "createTempTable", {
-            tableName,
-            snapshotTableName,
-          });
+          await this.execQuery(em, "dropTempTable", { tableName });
+          await this.execQuery(em, "createTempTable", { tableName });
           this.logger.debug(
             "🧪 Temporary table prepared",
             `Table ${tableName}`,
@@ -176,15 +169,8 @@ export class Fastypest extends SQLScript {
     }
 
     for (const [index, tableName] of tables.entries()) {
-      const snapshotTableName = this.getSnapshotTableName(tableName);
-      await this.execQuery(em, "dropTempTable", {
-        tableName,
-        snapshotTableName,
-      });
-      await this.execQuery(em, "createTempTable", {
-        tableName,
-        snapshotTableName,
-      });
+      await this.execQuery(em, "dropTempTable", { tableName });
+      await this.execQuery(em, "createTempTable", { tableName });
       this.logger.debug(
         "🧪 Temporary table prepared",
         `Table ${tableName}`,
@@ -430,16 +416,33 @@ export class Fastypest extends SQLScript {
 
   private async detectTableDependencies(em: EntityManager): Promise<void> {
     const timer = this.logger.timer("Dependency mapping");
-    const dependencies = await this.execQuery<TableDependencyQueryOut>(
+    const dependencies = await this.execQuery<
+      TableDependencyQueryOut & TableDependencyQueryOutWithUpperCase
+    >(
       em,
       "tableDependencies",
     );
     this.tableDependents.clear();
-    for (const { table_name, referenced_table_name } of dependencies) {
-      const dependentTable = this.resolveTrackedTableName(table_name);
-      const referencedTable = this.resolveTrackedTableName(
-        referenced_table_name,
+    for (const dependency of dependencies) {
+      const dependentTableName = this.getDependencyTableName(
+        dependency,
+        "table_name",
+        "TABLE_NAME",
       );
+      const referencedTableName = this.getDependencyTableName(
+        dependency,
+        "referenced_table_name",
+        "REFERENCED_TABLE_NAME",
+      );
+      if (!dependentTableName || !referencedTableName) {
+        this.logger.warn(
+          "⚠️ Invalid dependency row ignored",
+          `Database ${this.getType()}`,
+        );
+        continue;
+      }
+      const dependentTable = this.resolveTrackedTableName(dependentTableName);
+      const referencedTable = this.resolveTrackedTableName(referencedTableName);
       if (!this.tables.has(dependentTable) || !this.tables.has(referencedTable)) {
         continue;
       }
@@ -525,10 +528,7 @@ export class Fastypest extends SQLScript {
         `Progress ${position}/${total}`,
       );
     }
-    await this.execQuery(em, "restoreData", {
-      tableName,
-      snapshotTableName: this.getSnapshotTableName(tableName),
-    });
+    await this.execQuery(em, "restoreData", { tableName });
     timer.mark(
       "📦 Table data restored",
       LogLevel.Debug,
@@ -687,7 +687,26 @@ export class Fastypest extends SQLScript {
     return filtered;
   }
 
-  private resolveTrackedTableName(tableName: string): string {
+  private getDependencyTableName(
+    dependency: TableDependencyQueryOut & TableDependencyQueryOutWithUpperCase,
+    lowerCaseKey: keyof TableDependencyQueryOut,
+    upperCaseKey: keyof TableDependencyQueryOutWithUpperCase,
+  ): string | null {
+    const rawValue = dependency[lowerCaseKey] ?? dependency[upperCaseKey];
+    if (typeof rawValue !== "string") {
+      return null;
+    }
+    const tableName = rawValue.trim();
+    if (tableName.length === 0) {
+      return null;
+    }
+    return tableName;
+  }
+
+  private resolveTrackedTableName(tableName: string | null | undefined): string {
+    if (!tableName) {
+      return "";
+    }
     if (this.tables.has(tableName)) {
       return tableName;
     }
@@ -780,14 +799,6 @@ export class Fastypest extends SQLScript {
     return (
       (type === "cockroachdb" || type === "postgres") && tables.length > 1
     );
-  }
-
-  private getSnapshotTableName(tableName: string): string {
-    const type = this.getType();
-    if (type === "mysql" || type === "mariadb") {
-      return `${MYSQL_SNAPSHOT_TABLE_PREFIX}${tableName}`;
-    }
-    return `${tableName}_temp`;
   }
 
   private async truncateTablesInBatch(

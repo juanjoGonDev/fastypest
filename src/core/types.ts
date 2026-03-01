@@ -11,6 +11,10 @@ export type TableDependencyQueryOut = {
   referenced_table_name: string;
 };
 
+export type TableDependencyQueryOutWithUpperCase = Partial<
+  Record<"TABLE_NAME" | "REFERENCED_TABLE_NAME", string | null>
+>;
+
 /**
  * Controls how Fastypest decides which tables should be restored after each test.
  */
