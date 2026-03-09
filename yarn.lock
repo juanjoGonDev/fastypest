@@ -2242,6 +2242,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/geojson@npm:^7946.0.16":
+  version: 7946.0.16
+  resolution: "@types/geojson@npm:7946.0.16"
+  checksum: 10c0/1ff24a288bd5860b766b073ead337d31d73bdc715e5b50a2cee5cb0af57a1ed02cc04ef295f5fa68dc40fe3e4f104dd31282b2b818a5ba3231bc1001ba084e3c
+  languageName: node
+  linkType: hard
+
 "@types/http-cache-semantics@npm:^4.0.2":
   version: 4.0.4
   resolution: "@types/http-cache-semantics@npm:4.0.4"
@@ -2314,7 +2321,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^25.3.5":
+"@types/node@npm:>=18, @types/node@npm:^25.3.5":
   version: 25.3.5
   resolution: "@types/node@npm:25.3.5"
   dependencies:
@@ -5257,7 +5264,7 @@ __metadata:
     jest: "npm:^30.2.0"
     lefthook: "npm:^2.1.2"
     lint-staged: "npm:^16.3.2"
-    mariadb: "npm:^3.5.1"
+    mariadb: "npm:^3.5.2"
     mysql: "npm:^2.18.1"
     pg: "npm:^8.20.0"
     prettier: "npm:^3.8.1"
@@ -7842,22 +7849,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mariadb@npm:^3.5.1":
-  version: 3.5.1
-  resolution: "mariadb@npm:3.5.1"
+"mariadb@npm:^3.5.2":
+  version: 3.5.2
+  resolution: "mariadb@npm:3.5.2"
   dependencies:
+    "@types/geojson": "npm:^7946.0.16"
+    "@types/node": "npm:>=18"
     denque: "npm:^2.1.0"
     iconv-lite: "npm:^0.7.2"
     lru-cache: "npm:^10.4.3"
-  peerDependencies:
-    "@types/geojson": ">=7946.0.0"
-    "@types/node": ">=18"
-  peerDependenciesMeta:
-    "@types/geojson":
-      optional: true
-    "@types/node":
-      optional: true
-  checksum: 10c0/363fa79ded684c4786b14b5db7c517ad7cae1d3529ed3da6f6e2c671d82ba56d769052f98acf1a936e599e811eec91f4acc9daae3df0afc4f6745ed326fde7e8
+  checksum: 10c0/3fe61ede40e38eddf7b32d975fe55a67d342620909deb282c87fa03c943206739adbf31e3767ebd20211d73b66f6d424c0e09166ba35dfa6079b04c084d5c69d
   languageName: node
   linkType: hard
 
