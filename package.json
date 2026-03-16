@@ -77,7 +77,7 @@
     "globals": "^17.4.0",
     "jest": "^30.3.0",
     "lefthook": "^2.1.4",
-    "lint-staged": "^16.3.3",
+    "lint-staged": "^16.4.0",
     "mariadb": "^3.5.2",
     "mysql": "^2.18.1",
     "pg": "^8.20.0",
