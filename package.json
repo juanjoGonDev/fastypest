@@ -58,7 +58,7 @@
     "@eslint/js": "^10.0.1",
     "@swc-node/jest": "^1.9.1",
     "@swc/cli": "^0.8.1",
-    "@swc/core": "^1.15.21",
+    "@swc/core": "^1.15.24",
     "@swc/helpers": "^0.5.21",
     "@types/jest": "^30.0.0",
     "@types/node": "^25.5.0",
