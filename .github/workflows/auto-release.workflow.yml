@@ -247,7 +247,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PAT_FINE }}
       - name: 🕵️ Check if PR is approved
         if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run != 'true'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         timeout-minutes: 5
         env:
           PULL_REQUEST_NUMBER: ${{ steps.create_pr.outputs.prNumber }}
@@ -279,7 +279,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: ⌛ Wait for all checks to pass
         if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run != 'true'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         timeout-minutes: 5
         env:
           PULL_REQUEST_NUMBER: ${{ steps.create_pr.outputs.prNumber }}
@@ -321,7 +321,7 @@ jobs:
             }
       - name: ✅ Merge PR
         if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run != 'true'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           PULL_REQUEST_NUMBER: ${{ steps.create_pr.outputs.prNumber }}
           TAG: ${{ steps.get_new_tag.outputs.lastTag }}
@@ -366,7 +366,7 @@ jobs:
           makeLatest: true
       - name: 🧹 Cleanup on failure or cancellation
         if: ${{ failure() || cancelled() }}
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const runNumber = ${{ github.run_number }};

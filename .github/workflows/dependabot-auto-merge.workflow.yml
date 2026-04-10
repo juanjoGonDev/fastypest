@@ -20,7 +20,7 @@ jobs:
     steps:
       - name: 🔎 Check is approved
         id: check-is-approved
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const prNumber = context.issue.number;
