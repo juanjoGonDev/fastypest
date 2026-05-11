@@ -5330,7 +5330,7 @@ __metadata:
     globals: "npm:^17.6.0"
     jest: "npm:^30.4.0"
     lefthook: "npm:^2.1.6"
-    lint-staged: "npm:^17.0.2"
+    lint-staged: "npm:^17.0.4"
     mariadb: "npm:^3.5.2"
     mysql: "npm:^2.18.1"
     pg: "npm:^8.20.0"
@@ -7759,9 +7759,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lint-staged@npm:^17.0.2":
-  version: 17.0.2
-  resolution: "lint-staged@npm:17.0.2"
+"lint-staged@npm:^17.0.4":
+  version: 17.0.4
+  resolution: "lint-staged@npm:17.0.4"
   dependencies:
     listr2: "npm:^10.2.1"
     picomatch: "npm:^4.0.4"
@@ -7773,7 +7773,7 @@ __metadata:
       optional: true
   bin:
     lint-staged: bin/lint-staged.js
-  checksum: 10c0/c1ecf8478988bb586de7023d424d01f8a2a1b0114c1782b7d1da2e0706ebfdf7c9f48cc67407c5e7f7e93b7efe97b8dbb75e264b8ae72f63711a31607b82b1a4
+  checksum: 10c0/7a1057eb3dff21236e3efcf199241282488d7cb875caabe3d0cd0cc21886b726a8dad65214f9e509b6f722630be6d5b7eace84c016fac35ecb6e2350843c738d
   languageName: node
   linkType: hard
 
