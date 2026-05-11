@@ -87,11 +87,11 @@
     "standard-version": "^9.5.0",
     "ts-prune": "^0.10.3",
     "tsconfig-paths": "^4.2.0",
-    "typeorm": "^0.3.28",
+    "typeorm": "^0.3.29",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.59.2"
   },
   "peerDependencies": {
-    "typeorm": "^0.3.28"
+    "typeorm": "^0.3.29"
   }
 }
