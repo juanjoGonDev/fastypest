@@ -76,7 +76,7 @@
     "execa": "^9.6.1",
     "globals": "^17.6.0",
     "jest": "^30.4.2",
-    "lefthook": "^2.1.8",
+    "lefthook": "^2.1.9",
     "lint-staged": "^17.0.5",
     "mariadb": "^3.5.2",
     "mysql": "^2.18.1",
