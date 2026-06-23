@@ -74,7 +74,7 @@
     "eslint-plugin-prettier": "^5.5.6",
     "eslint-plugin-promise": "^7.3.0",
     "execa": "^9.6.1",
-    "globals": "^17.6.0",
+    "globals": "^17.7.0",
     "jest": "^30.4.2",
     "lefthook": "^2.1.9",
     "lint-staged": "^17.0.8",
