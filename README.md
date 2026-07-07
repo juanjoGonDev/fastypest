@@ -107,4 +107,10 @@ This automation ensures high-quality, low-friction delivery while keeping full c
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=juanjoGonDev/fastypest&type=Date)](https://www.star-history.com/#juanjoGonDev/fastypest&Date)
+<a href="https://www.star-history.com/?repos=juanjoGonDev%2Ffastypest&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=juanjoGonDev/fastypest&type=date&theme=dark&legend=top-left&sealed_token=iF-2kr-jQp_RD-aG6xgv5Xsxprln5Q5hSF03QmSbblWyNg4BLAmzR4LRd5crdqWaCV9rWKt_1yZIX7h59N47L1IhMlGgK9UUY2epKlh-o4PQWnWVz4HGPaPOFPU41IJzU4KgyAsR5V9G5kEXmn5Q9lrYkamD5RkVqwKrBTcjnV__cRl-KdFERUNeEefb" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=juanjoGonDev/fastypest&type=date&legend=top-left&sealed_token=iF-2kr-jQp_RD-aG6xgv5Xsxprln5Q5hSF03QmSbblWyNg4BLAmzR4LRd5crdqWaCV9rWKt_1yZIX7h59N47L1IhMlGgK9UUY2epKlh-o4PQWnWVz4HGPaPOFPU41IJzU4KgyAsR5V9G5kEXmn5Q9lrYkamD5RkVqwKrBTcjnV__cRl-KdFERUNeEefb" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=juanjoGonDev/fastypest&type=date&legend=top-left&sealed_token=iF-2kr-jQp_RD-aG6xgv5Xsxprln5Q5hSF03QmSbblWyNg4BLAmzR4LRd5crdqWaCV9rWKt_1yZIX7h59N47L1IhMlGgK9UUY2epKlh-o4PQWnWVz4HGPaPOFPU41IJzU4KgyAsR5V9G5kEXmn5Q9lrYkamD5RkVqwKrBTcjnV__cRl-KdFERUNeEefb" />
+ </picture>
+</a>
