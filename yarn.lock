@@ -1840,46 +1840,48 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swc-node/core@npm:^1.14.1":
-  version: 1.14.1
-  resolution: "@swc-node/core@npm:1.14.1"
+"@swc-node/core@npm:1.15.0":
+  version: 1.15.0
+  resolution: "@swc-node/core@npm:1.15.0"
   peerDependencies:
     "@swc/core": ">= 1.13.3"
     "@swc/types": ">= 0.1"
-  checksum: 10c0/073a0a1d782eafcfc3d2056ad9c5232ec4a0a0a098abafa3eafdde30832eb04a2430cec943fef3bbf9754eb37b0bf6e749f9303304ac42e318936ced35f6144b
+  checksum: 10c0/093568ba30f7e0235717704833c6c64ea8f8dac7573f2e235d3a157f2039bba08e3422dc0ba1d5df45e28f36ea3fcd55a21f4fe0302d3aafcebe4e77169d7c5b
   languageName: node
   linkType: hard
 
-"@swc-node/jest@npm:^1.9.1":
-  version: 1.9.1
-  resolution: "@swc-node/jest@npm:1.9.1"
+"@swc-node/jest@npm:^1.10.0":
+  version: 1.10.0
+  resolution: "@swc-node/jest@npm:1.10.0"
   dependencies:
     "@node-rs/xxhash": "npm:^1.7.6"
-    "@swc-node/core": "npm:^1.14.1"
-    "@swc-node/register": "npm:^1.11.1"
+    "@swc-node/core": "npm:1.15.0"
+    "@swc-node/register": "npm:1.12.0"
   peerDependencies:
     "@swc/core": ">= 1.4.13"
     "@swc/types": ">= 0.1"
     typescript: ">= 5.0"
-  checksum: 10c0/72b11f610633e41d80482b1cc3b2b4cb73bb6ec92b8fcbfc3728355c32157a7eccde2a68679aefc695d5b09f1a3e6f362a79648bdd38f677832aee73adf4960b
+  checksum: 10c0/27ea60b45a018996889f6a2d1f6d27a82d8f4b508cdfc0f4e6b4077c3703111458eb668b8d5f4f8eefeeda821503c4caaeee447f9f9baa4c2b2b52391fb5c9cd
   languageName: node
   linkType: hard
 
-"@swc-node/register@npm:^1.11.1":
-  version: 1.11.1
-  resolution: "@swc-node/register@npm:1.11.1"
+"@swc-node/register@npm:1.12.0":
+  version: 1.12.0
+  resolution: "@swc-node/register@npm:1.12.0"
   dependencies:
-    "@swc-node/core": "npm:^1.14.1"
+    "@node-rs/xxhash": "npm:^1.7.6"
+    "@swc-node/core": "npm:1.15.0"
     "@swc-node/sourcemap-support": "npm:^0.6.1"
     colorette: "npm:^2.0.20"
     debug: "npm:^4.4.1"
+    json-stable-stringify: "npm:^1.3.0"
     oxc-resolver: "npm:^11.6.1"
     pirates: "npm:^4.0.7"
     tslib: "npm:^2.8.1"
   peerDependencies:
     "@swc/core": ">= 1.4.13"
-    typescript: ">= 4.3"
-  checksum: 10c0/ac4c4f7a6cbf96a83c5f1edb346d0db3290f39be4c56e9a255b1cba672303074a53cdd06956b6b9ada96c386def6f9cb59d0f274ce81fbc04f7178e2974ec7f0
+    typescript: ">= 4.3 < 7"
+  checksum: 10c0/3d04125f16bba8bf485b1d8e1c889428f73d39b24f6b720ef2d420c919b593949c697c9408fde099d1dd6df2a34d048ee31b35cd6db7ffc84f654131ff8c01f3
   languageName: node
   linkType: hard
 
@@ -5219,7 +5221,7 @@ __metadata:
   resolution: "fastypest@workspace:."
   dependencies:
     "@eslint/js": "npm:^10.0.1"
-    "@swc-node/jest": "npm:^1.9.1"
+    "@swc-node/jest": "npm:^1.10.0"
     "@swc/cli": "npm:^0.8.1"
     "@swc/core": "npm:^1.15.43"
     "@swc/helpers": "npm:^0.5.23"
@@ -7445,6 +7447,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"json-stable-stringify@npm:^1.3.0":
+  version: 1.3.0
+  resolution: "json-stable-stringify@npm:1.3.0"
+  dependencies:
+    call-bind: "npm:^1.0.8"
+    call-bound: "npm:^1.0.4"
+    isarray: "npm:^2.0.5"
+    jsonify: "npm:^0.0.1"
+    object-keys: "npm:^1.1.1"
+  checksum: 10c0/8b3ff19e4c23c0ad591a49bc3a015d89a538db787d12fe9c4072e1d64d8cfa481f8c37719c629c3d84e848847617bf49f5fee894cf1d25959ab5b67e1c517f31
+  languageName: node
+  linkType: hard
+
 "json-stringify-safe@npm:^5.0.1":
   version: 5.0.1
   resolution: "json-stringify-safe@npm:5.0.1"
@@ -7469,6 +7484,13 @@ __metadata:
   bin:
     json5: lib/cli.js
   checksum: 10c0/5a04eed94810fa55c5ea138b2f7a5c12b97c3750bc63d11e511dcecbfef758003861522a070c2272764ee0f4e3e323862f386945aeb5b85b87ee43f084ba586c
+  languageName: node
+  linkType: hard
+
+"jsonify@npm:^0.0.1":
+  version: 0.0.1
+  resolution: "jsonify@npm:0.0.1"
+  checksum: 10c0/7f5499cdd59a0967ed35bda48b7cec43d850bbc8fb955cdd3a1717bb0efadbe300724d5646de765bb7a99fc1c3ab06eb80d93503c6faaf99b4ff50a3326692f6
   languageName: node
   linkType: hard
 
