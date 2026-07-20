@@ -1850,38 +1850,38 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swc-node/jest@npm:^1.10.0":
-  version: 1.10.0
-  resolution: "@swc-node/jest@npm:1.10.0"
+"@swc-node/jest@npm:^1.10.1":
+  version: 1.10.1
+  resolution: "@swc-node/jest@npm:1.10.1"
   dependencies:
     "@node-rs/xxhash": "npm:^1.7.6"
     "@swc-node/core": "npm:1.15.0"
-    "@swc-node/register": "npm:1.12.0"
+    "@swc-node/register": "npm:1.12.1"
   peerDependencies:
     "@swc/core": ">= 1.4.13"
     "@swc/types": ">= 0.1"
     typescript: ">= 5.0"
-  checksum: 10c0/27ea60b45a018996889f6a2d1f6d27a82d8f4b508cdfc0f4e6b4077c3703111458eb668b8d5f4f8eefeeda821503c4caaeee447f9f9baa4c2b2b52391fb5c9cd
+  checksum: 10c0/925e897bb202a109880e5d48a2cf6e03a708133b6059bb3e947e2ed9af455cb501b7cfa45c61aed770946bb2ef1f13cc20bca0c0c6f5d75c4d1ee0f7e612e19c
   languageName: node
   linkType: hard
 
-"@swc-node/register@npm:1.12.0":
-  version: 1.12.0
-  resolution: "@swc-node/register@npm:1.12.0"
+"@swc-node/register@npm:1.12.1":
+  version: 1.12.1
+  resolution: "@swc-node/register@npm:1.12.1"
   dependencies:
     "@node-rs/xxhash": "npm:^1.7.6"
     "@swc-node/core": "npm:1.15.0"
     "@swc-node/sourcemap-support": "npm:^0.6.1"
     colorette: "npm:^2.0.20"
     debug: "npm:^4.4.1"
-    json-stable-stringify: "npm:^1.3.0"
+    fast-json-stable-stringify: "npm:^2.1.0"
     oxc-resolver: "npm:^11.6.1"
     pirates: "npm:^4.0.7"
     tslib: "npm:^2.8.1"
   peerDependencies:
     "@swc/core": ">= 1.4.13"
     typescript: ">= 4.3 < 7"
-  checksum: 10c0/3d04125f16bba8bf485b1d8e1c889428f73d39b24f6b720ef2d420c919b593949c697c9408fde099d1dd6df2a34d048ee31b35cd6db7ffc84f654131ff8c01f3
+  checksum: 10c0/e6ea39ba099d1616f1163f329bc2c1263141f5a6c763d4fb2bf979d84013d221cf235561c6b087278c1b19af4d438a3a27797361444eb36a0f3c688fa985896a
   languageName: node
   linkType: hard
 
@@ -5221,7 +5221,7 @@ __metadata:
   resolution: "fastypest@workspace:."
   dependencies:
     "@eslint/js": "npm:^10.0.1"
-    "@swc-node/jest": "npm:^1.10.0"
+    "@swc-node/jest": "npm:^1.10.1"
     "@swc/cli": "npm:^0.8.1"
     "@swc/core": "npm:^1.15.43"
     "@swc/helpers": "npm:^0.5.23"
@@ -7447,19 +7447,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"json-stable-stringify@npm:^1.3.0":
-  version: 1.3.0
-  resolution: "json-stable-stringify@npm:1.3.0"
-  dependencies:
-    call-bind: "npm:^1.0.8"
-    call-bound: "npm:^1.0.4"
-    isarray: "npm:^2.0.5"
-    jsonify: "npm:^0.0.1"
-    object-keys: "npm:^1.1.1"
-  checksum: 10c0/8b3ff19e4c23c0ad591a49bc3a015d89a538db787d12fe9c4072e1d64d8cfa481f8c37719c629c3d84e848847617bf49f5fee894cf1d25959ab5b67e1c517f31
-  languageName: node
-  linkType: hard
-
 "json-stringify-safe@npm:^5.0.1":
   version: 5.0.1
   resolution: "json-stringify-safe@npm:5.0.1"
@@ -7484,13 +7471,6 @@ __metadata:
   bin:
     json5: lib/cli.js
   checksum: 10c0/5a04eed94810fa55c5ea138b2f7a5c12b97c3750bc63d11e511dcecbfef758003861522a070c2272764ee0f4e3e323862f386945aeb5b85b87ee43f084ba586c
-  languageName: node
-  linkType: hard
-
-"jsonify@npm:^0.0.1":
-  version: 0.0.1
-  resolution: "jsonify@npm:0.0.1"
-  checksum: 10c0/7f5499cdd59a0967ed35bda48b7cec43d850bbc8fb955cdd3a1717bb0efadbe300724d5646de765bb7a99fc1c3ab06eb80d93503c6faaf99b4ff50a3326692f6
   languageName: node
   linkType: hard
 
