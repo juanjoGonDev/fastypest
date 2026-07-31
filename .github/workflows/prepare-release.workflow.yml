@@ -85,6 +85,9 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: 🌿 Attach exact default-branch commit
+        run: git checkout -B "$DEFAULT_BRANCH" "$GITHUB_SHA"
+
       - name: 🔐 Validate release automation identity
         id: automation
         env:
@@ -167,6 +170,7 @@ jobs:
           fi
 
           existing_pr=$(gh pr list \
+            --limit 100 \
             --state open \
             --base "$DEFAULT_BRANCH" \
             --label auto-release \
