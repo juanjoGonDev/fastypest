@@ -126,10 +126,21 @@ jobs:
           current_version=$(node -p "require('./package.json').version")
           current_tag="v${current_version}"
 
-          if ! gh release view "$current_tag" --json tagName >/dev/null 2>&1; then
+          if ! current_release_json=$(gh release view "$current_tag" --json tagName,isDraft,isPrerelease 2>/dev/null); then
             echo "ready=false" >> "$GITHUB_OUTPUT"
             echo "Current package version $current_version has no GitHub Release yet. Waiting for release recovery instead of preparing another version."
             exit 0
+          fi
+
+          expected_prerelease=false
+          if [[ "$current_version" == *-* ]]; then
+            expected_prerelease=true
+          fi
+          current_release_draft=$(jq -r .isDraft <<<"$current_release_json")
+          current_release_prerelease=$(jq -r .isPrerelease <<<"$current_release_json")
+          if [[ "$current_release_draft" != "false" || "$current_release_prerelease" != "$expected_prerelease" ]]; then
+            echo "::error title=Release metadata mismatch::$current_tag has draft=$current_release_draft and prerelease=$current_release_prerelease."
+            exit 1
           fi
 
           latest_tag=$(gh release list --exclude-drafts --limit 1 --json tagName --jq '.[0].tagName // empty')
@@ -146,6 +157,12 @@ jobs:
           release_sha=$(git rev-list -n 1 "$current_tag")
           if ! git merge-base --is-ancestor "$release_sha" HEAD; then
             echo "::error title=Invalid release baseline::$current_tag is not an ancestor of the default branch."
+            exit 1
+          fi
+          release_version=$(git show "${release_sha}:package.json" \
+            | node -e "let value=''; process.stdin.on('data', chunk => value += chunk); process.stdin.on('end', () => process.stdout.write(JSON.parse(value).version));")
+          if [[ "$release_version" != "$current_version" ]]; then
+            echo "::error title=Release package mismatch::$current_tag targets package version $release_version instead of $current_version."
             exit 1
           fi
 
