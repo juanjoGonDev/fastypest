@@ -1,0 +1,294 @@
+name: 🏗️ Prepare release
+
+on:
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Force release"
+        required: true
+        default: "no"
+        type: choice
+        options:
+          - "yes"
+          - "no"
+      strategy:
+        description: "Release strategy (if force=yes):\nmajor→2.0.0 • minor→1.1.0 • patch→1.0.1\npremajor→2.0.0-0 • preminor→1.1.0-0 • prepatch→1.0.1-0\nprerelease→1.0.1-0"
+        required: true
+        default: "auto"
+        type: choice
+        options:
+          - "auto"
+          - "major"
+          - "minor"
+          - "patch"
+          - "premajor"
+          - "preminor"
+          - "prepatch"
+          - "prerelease"
+      dry_run:
+        description: "Do everything except push, PR and publish"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      breaking_change:
+        description: "Mark this release as breaking change (forces major strategy)"
+        required: false
+        default: false
+        type: boolean
+      breaking_change_reason:
+        description: "Breaking change note included in release changelog"
+        required: false
+        default: ""
+        type: string
+
+permissions: read-all
+
+concurrency:
+  group: prepare-release-${{ github.repository }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "22.14.0"
+
+run-name: 🏗️ Prepare release${{ github.event.inputs.dry_run == 'true' && ' (dry)' || '' }}
+
+jobs:
+  release:
+    name: 🚀 Prepare release${{ github.event.inputs.dry_run == 'true' && ' (dry)' || '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: admin
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PAT_FINE }}
+
+      - name: 🕵️ Check release threshold
+        id: check_commits
+        env:
+          FORCE_RELEASE: ${{ github.event.inputs.force }}
+        run: |
+          set -euo pipefail
+          minimum_commits=4
+
+          if [[ "$FORCE_RELEASE" == "yes" ]]; then
+            echo "enough_commits=true" >> "$GITHUB_OUTPUT"
+            echo "Force release is enabled. Skipping commit threshold."
+            exit 0
+          fi
+
+          last_tag=$(git for-each-ref --sort=-version:refname --count=1 --format='%(refname:short)' refs/tags)
+          if [[ -z "$last_tag" ]]; then
+            commit_count=$(git rev-list --count HEAD)
+            echo "No release tag found. Counting all commits."
+          else
+            commit_count=$(git rev-list --count "${last_tag}..HEAD")
+            echo "Last tag: $last_tag"
+          fi
+          echo "Commits since release baseline: $commit_count"
+
+          if (( commit_count < minimum_commits )); then
+            echo "enough_commits=false" >> "$GITHUB_OUTPUT"
+            echo "Fewer than $minimum_commits commits are available. No release PR will be created."
+            exit 0
+          fi
+
+          echo "enough_commits=true" >> "$GITHUB_OUTPUT"
+
+      - name: 🎫 Configure Git
+        if: steps.check_commits.outputs.enough_commits == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.PAT_FINE }}
+        run: |
+          set -euo pipefail
+          actor_username=$(gh api user --jq .login)
+          actor_email=$(gh api user --jq '.email // empty')
+          if [[ -z "$actor_email" ]]; then
+            actor_email="${actor_username}@users.noreply.github.com"
+          fi
+          echo "ACTOR_USERNAME=$actor_username" >> "$GITHUB_ENV"
+          git config --global user.name "$actor_username"
+          git config --global user.email "$actor_email"
+
+      - name: 🟢 Setup Node.js
+        if: steps.check_commits.outputs.enough_commits == 'true'
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "${{ env.NODE_VERSION }}"
+          registry-url: "https://registry.npmjs.org/"
+          cache: yarn
+
+      - name: ⬆️ Update npm CLI
+        if: steps.check_commits.outputs.enough_commits == 'true'
+        run: npm install --global npm@11.5.1
+
+      - name: ⚙️ Install dependencies
+        if: steps.check_commits.outputs.enough_commits == 'true'
+        run: yarn install --immutable --check-cache
+
+      - name: 🚧 Run build
+        if: steps.check_commits.outputs.enough_commits == 'true'
+        run: yarn run build
+
+      - name: 🧪 Install package test
+        if: steps.check_commits.outputs.enough_commits == 'true'
+        run: |
+          set -euo pipefail
+          test_dir=$(mktemp -d)
+          yarn pack --filename "$test_dir/package.tar.gz"
+          cd "$test_dir"
+          yarn init -y
+          touch yarn.lock
+          yarn add -D ./package.tar.gz
+
+      - name: 🧭 Resolve release strategy
+        if: steps.check_commits.outputs.enough_commits == 'true'
+        id: resolve_strategy
+        env:
+          REQUESTED_STRATEGY: ${{ github.event.inputs.strategy }}
+          BREAKING_CHANGE: ${{ github.event.inputs.breaking_change || 'false' }}
+        run: |
+          set -euo pipefail
+          strategy=${REQUESTED_STRATEGY:-auto}
+          if [[ "$BREAKING_CHANGE" == "true" ]]; then
+            strategy=major
+          fi
+          echo "strategy=$strategy" >> "$GITHUB_OUTPUT"
+
+      - name: ✅ Validate breaking change inputs
+        if: steps.check_commits.outputs.enough_commits == 'true'
+        env:
+          BREAKING_CHANGE: ${{ github.event.inputs.breaking_change || 'false' }}
+          BREAKING_CHANGE_REASON: ${{ github.event.inputs.breaking_change_reason }}
+        run: |
+          set -euo pipefail
+          if [[ "$BREAKING_CHANGE" == "true" && -z "$BREAKING_CHANGE_REASON" ]]; then
+            echo "breaking_change_reason is required when breaking_change is true"
+            exit 1
+          fi
+
+      - name: 🆙 Dry run release
+        if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run == 'true'
+        env:
+          STRATEGY: ${{ steps.resolve_strategy.outputs.strategy }}
+          BREAKING_CHANGE: ${{ github.event.inputs.breaking_change || 'false' }}
+          BREAKING_CHANGE_REASON: ${{ github.event.inputs.breaking_change_reason }}
+        run: |
+          set -euo pipefail
+          git checkout main
+          git pull --ff-only origin main
+          if [[ "$BREAKING_CHANGE" == "true" ]]; then
+            git commit --allow-empty -m "feat!: mark breaking change release" -m "BREAKING CHANGE: $BREAKING_CHANGE_REASON"
+          fi
+          if [[ "$STRATEGY" == "auto" ]]; then
+            yarn release --dry-run
+          else
+            yarn release --release-as "$STRATEGY" --dry-run
+          fi
+
+      - name: 📝 Prepare release pull request
+        if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run != 'true'
+        id: prepare_release
+        env:
+          GH_TOKEN: ${{ secrets.PAT_FINE }}
+          STRATEGY: ${{ steps.resolve_strategy.outputs.strategy }}
+          BREAKING_CHANGE: ${{ github.event.inputs.breaking_change || 'false' }}
+          BREAKING_CHANGE_REASON: ${{ github.event.inputs.breaking_change_reason }}
+        run: |
+          set -euo pipefail
+          release_branch="release/${GITHUB_RUN_NUMBER}"
+
+          if git ls-remote --exit-code --heads origin "$release_branch" >/dev/null 2>&1; then
+            existing_pr=$(gh pr list --head "$release_branch" --base main --state open --json url --jq '.[0].url // empty')
+            if [[ -z "$existing_pr" ]]; then
+              echo "::error title=Release branch collision::$release_branch exists without an open pull request."
+              exit 1
+            fi
+            head_sha=$(gh pr view "$existing_pr" --json headRefOid --jq .headRefOid)
+            release_title=$(gh pr view "$existing_pr" --json title --jq .title)
+            if [[ "$release_title" != "Bump version to v"* ]]; then
+              echo "::error title=Invalid existing release PR::$existing_pr has unexpected title '$release_title'."
+              exit 1
+            fi
+            release_tag=${release_title#Bump version to }
+            git fetch origin "refs/heads/${release_branch}:refs/remotes/origin/${release_branch}"
+            remote_head=$(git rev-parse "refs/remotes/origin/${release_branch}")
+            if [[ "$remote_head" != "$head_sha" ]]; then
+              echo "::error title=Release head mismatch::$release_branch points to $remote_head but the pull request reports $head_sha."
+              exit 1
+            fi
+            head_version=$(git show "${remote_head}:package.json" | jq -r .version)
+            if [[ "v${head_version}" != "$release_tag" ]]; then
+              echo "::error title=Release version mismatch::PR title resolves to $release_tag but package.json contains $head_version."
+              exit 1
+            fi
+            gh pr edit "$existing_pr" --add-label auto-release --add-assignee "$ACTOR_USERNAME"
+            echo "pr_url=$existing_pr" >> "$GITHUB_OUTPUT"
+            echo "head_sha=$head_sha" >> "$GITHUB_OUTPUT"
+            echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git checkout main
+          git pull --ff-only origin main
+          git checkout -b "$release_branch"
+
+          if [[ "$BREAKING_CHANGE" == "true" ]]; then
+            git commit --allow-empty -m "feat!: mark breaking change release" -m "BREAKING CHANGE: $BREAKING_CHANGE_REASON"
+          fi
+
+          if [[ "$STRATEGY" == "auto" ]]; then
+            yarn release
+          else
+            yarn release --release-as "$STRATEGY"
+          fi
+
+          release_version=$(node -p "require('./package.json').version")
+          release_tag="v${release_version}"
+          if ! git rev-parse --verify "refs/tags/${release_tag}" >/dev/null 2>&1; then
+            echo "::error title=Missing local release tag::standard-version did not create ${release_tag}."
+            exit 1
+          fi
+          git tag -d "$release_tag"
+          if git ls-remote --exit-code --tags origin "refs/tags/${release_tag}" >/dev/null 2>&1; then
+            echo "::error title=Remote release tag collision::$release_tag already exists on origin."
+            exit 1
+          fi
+          git push origin "HEAD:refs/heads/${release_branch}"
+
+          pr_url=$(gh pr create \
+            --base main \
+            --head "$release_branch" \
+            --title "Bump version to ${release_tag}" \
+            --body "Bumps version to ${release_tag}. Publication starts only after this pull request is merged by the repository requirements.")
+          gh pr edit "$pr_url" --add-label auto-release --add-assignee "$ACTOR_USERNAME"
+
+          head_sha=$(git rev-parse HEAD)
+          echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$head_sha" >> "$GITHUB_OUTPUT"
+          echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
+
+      - name: 📋 Report release pull request
+        if: steps.prepare_release.outputs.pr_url != ''
+        env:
+          PR_URL: ${{ steps.prepare_release.outputs.pr_url }}
+          HEAD_SHA: ${{ steps.prepare_release.outputs.head_sha }}
+          RELEASE_TAG: ${{ steps.prepare_release.outputs.release_tag }}
+        run: |
+          {
+            echo "### Release pull request prepared"
+            echo "- Pull request: $PR_URL"
+            echo "- Head: $HEAD_SHA"
+            echo "- Version: $RELEASE_TAG"
+            echo "- Delivery: repository requirements and auto-merge"
+          } >> "$GITHUB_STEP_SUMMARY"
