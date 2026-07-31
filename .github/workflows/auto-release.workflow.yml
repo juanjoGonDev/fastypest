@@ -1,10 +1,5 @@
 name: 🔄 Auto release
 
-permissions:
-  contents: write
-  pull-requests: write
-  id-token: write
-
 on:
   schedule:
     - cron: "0 7 * * *"
@@ -51,6 +46,12 @@ on:
         default: ""
         type: string
 
+permissions: read-all
+
+concurrency:
+  group: auto-release-${{ github.repository }}
+  cancel-in-progress: false
+
 env:
   NODE_VERSION: "22.14.0"
 
@@ -58,347 +59,221 @@ run-name: 🔄 Auto release${{ github.event.inputs.dry_run == 'true' && ' (dry)'
 
 jobs:
   release:
-    name: 🚀 Auto release${{ github.event.inputs.dry_run == 'true' && ' (dry)' || '' }}
+    name: 🚀 Prepare release${{ github.event.inputs.dry_run == 'true' && ' (dry)' || '' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     environment: admin
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - name: 📥 Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
           token: ${{ secrets.PAT_FINE }}
-      - name: 🕵️ Check if there are at least 3 new commits since the last version
+
+      - name: 🕵️ Check release threshold
         id: check_commits
-        run: |
-          if [[ "${{ github.event.inputs.force }}" == "yes" ]]; then
-            echo "enough_commits=true" >> $GITHUB_OUTPUT
-            echo "Force release is enabled. Skipping commit check."
-          else
-            LAST_TAG=$(git tag | sed 's/^v\.//;s/^v//' | sort -V | tail -n 1)
-            LAST_TAG="v${LAST_TAG}"
-            echo "Last tag: $LAST_TAG"
-            COMMITS=$(git log --oneline ${LAST_TAG}..HEAD | wc -l)
-            echo "Commits since last tag: $COMMITS"
-            if [ $COMMITS -lt 4 ]; then
-              echo "There are less than 3 new commits since last release, skipping the rest of the job"
-              echo "enough_commits=false" >> $GITHUB_OUTPUT
-            else
-              echo "enough_commits=true" >> $GITHUB_OUTPUT
-            fi
-          fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORCE_RELEASE: ${{ github.event.inputs.force }}
+        run: |
+          set -euo pipefail
+          minimum_commits=4
+
+          if [[ "$FORCE_RELEASE" == "yes" ]]; then
+            echo "enough_commits=true" >> "$GITHUB_OUTPUT"
+            echo "Force release is enabled. Skipping commit threshold."
+            exit 0
+          fi
+
+          last_tag=$(git tag | sed 's/^v\.//;s/^v//' | sort -V | tail -n 1)
+          last_tag="v${last_tag}"
+          commit_count=$(git rev-list --count "${last_tag}..HEAD")
+          echo "Last tag: $last_tag"
+          echo "Commits since last tag: $commit_count"
+
+          if (( commit_count < minimum_commits )); then
+            echo "enough_commits=false" >> "$GITHUB_OUTPUT"
+            echo "Fewer than $minimum_commits commits are available. No release PR will be created."
+            exit 0
+          fi
+
+          echo "enough_commits=true" >> "$GITHUB_OUTPUT"
+
       - name: 🎫 Configure Git
         if: steps.check_commits.outputs.enough_commits == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.PAT_FINE }}
         run: |
-          USER_LOGIN=$(curl -s -H "Authorization: token ${{ secrets.PAT_FINE }}" https://api.github.com/user | jq -r '.login')
-          USER_EMAIL=$(curl -s -H "Authorization: token ${{ secrets.PAT_FINE }}" https://api.github.com/user | jq -r '.email')
-          echo "ACTOR_USERNAME=${USER_LOGIN}" >> $GITHUB_ENV
-          git config --global user.name "$USER_LOGIN"
-          git config --global user.email "$USER_EMAIL"
+          set -euo pipefail
+          actor_username=$(gh api user --jq .login)
+          actor_email=$(gh api user --jq '.email // empty')
+          if [[ -z "$actor_email" ]]; then
+            actor_email="${actor_username}@users.noreply.github.com"
+          fi
+          echo "ACTOR_USERNAME=$actor_username" >> "$GITHUB_ENV"
+          git config --global user.name "$actor_username"
+          git config --global user.email "$actor_email"
+
       - name: 🟢 Setup Node.js
         if: steps.check_commits.outputs.enough_commits == 'true'
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: "${{ env.NODE_VERSION }}"
           registry-url: "https://registry.npmjs.org/"
           cache: yarn
+
       - name: ⬆️ Update npm CLI
         if: steps.check_commits.outputs.enough_commits == 'true'
         run: npm install --global npm@11.5.1
+
       - name: ⚙️ Install dependencies
         if: steps.check_commits.outputs.enough_commits == 'true'
         run: yarn install --immutable --check-cache
+
       - name: 🚧 Run build
         if: steps.check_commits.outputs.enough_commits == 'true'
         run: yarn run build
+
       - name: 🧪 Install package test
         if: steps.check_commits.outputs.enough_commits == 'true'
         run: |
-          mkdir test-install
-          yarn pack --filename test-install/package.tar.gz
-          cd test-install
+          set -euo pipefail
+          test_dir=$(mktemp -d)
+          yarn pack --filename "$test_dir/package.tar.gz"
+          cd "$test_dir"
           yarn init -y
           touch yarn.lock
           yarn add -D ./package.tar.gz
+
       - name: 🧭 Resolve release strategy
         if: steps.check_commits.outputs.enough_commits == 'true'
         id: resolve_strategy
+        env:
+          REQUESTED_STRATEGY: ${{ github.event.inputs.strategy }}
+          BREAKING_CHANGE: ${{ github.event.inputs.breaking_change || 'false' }}
         run: |
-          AUTO_STRATEGY="auto"
-          STRATEGY="$AUTO_STRATEGY"
-          if [[ "${{ github.event.inputs.strategy }}" ]]; then
-            STRATEGY="${{ github.event.inputs.strategy }}"
+          set -euo pipefail
+          strategy=${REQUESTED_STRATEGY:-auto}
+          if [[ "$BREAKING_CHANGE" == "true" ]]; then
+            strategy=major
           fi
-          if [[ "${STRATEGY}" == "" ]]; then
-            STRATEGY="$AUTO_STRATEGY"
-          fi
-          if [[ "${{ github.event.inputs.breaking_change || 'false' }}" == "true" ]]; then
-            STRATEGY="major"
-          fi
-          echo "strategy=${STRATEGY}" >> "$GITHUB_OUTPUT"
+          echo "strategy=$strategy" >> "$GITHUB_OUTPUT"
+
       - name: ✅ Validate breaking change inputs
         if: steps.check_commits.outputs.enough_commits == 'true'
+        env:
+          BREAKING_CHANGE: ${{ github.event.inputs.breaking_change || 'false' }}
+          BREAKING_CHANGE_REASON: ${{ github.event.inputs.breaking_change_reason }}
         run: |
-          if [[ "${{ github.event.inputs.breaking_change || 'false' }}" == "true" ]] && [[ -z "${{ github.event.inputs.breaking_change_reason }}" ]]; then
+          set -euo pipefail
+          if [[ "$BREAKING_CHANGE" == "true" && -z "$BREAKING_CHANGE_REASON" ]]; then
             echo "breaking_change_reason is required when breaking_change is true"
             exit 1
           fi
 
       - name: 🆙 Dry run release
         if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run == 'true'
+        env:
+          STRATEGY: ${{ steps.resolve_strategy.outputs.strategy }}
+          BREAKING_CHANGE: ${{ github.event.inputs.breaking_change || 'false' }}
+          BREAKING_CHANGE_REASON: ${{ github.event.inputs.breaking_change_reason }}
         run: |
+          set -euo pipefail
           git checkout main
-          git pull origin main
-          if [[ "${{ github.event.inputs.breaking_change || 'false' }}" == "true" ]]; then
-            MARKER_MESSAGE="feat!: mark breaking change release"
-            BREAKING_REASON="${{ github.event.inputs.breaking_change_reason }}"
-            git commit --allow-empty -m "$MARKER_MESSAGE" -m "BREAKING CHANGE: $BREAKING_REASON"
+          git pull --ff-only origin main
+          if [[ "$BREAKING_CHANGE" == "true" ]]; then
+            git commit --allow-empty -m "feat!: mark breaking change release" -m "BREAKING CHANGE: $BREAKING_CHANGE_REASON"
           fi
-          STRATEGY="${{ steps.resolve_strategy.outputs.strategy }}"
           if [[ "$STRATEGY" == "auto" ]]; then
             yarn release --dry-run
           else
             yarn release --release-as "$STRATEGY" --dry-run
           fi
-      - name: 🚫 Dry run active
-        if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run == 'true'
-        run: echo "🔍 Dry run is enabled. Skipping publishing, tagging and PR steps."
-      - name: 🆙 Bump version and create a git tag
+
+      - name: 📝 Prepare release pull request
         if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run != 'true'
+        id: prepare_release
+        env:
+          GH_TOKEN: ${{ secrets.PAT_FINE }}
+          STRATEGY: ${{ steps.resolve_strategy.outputs.strategy }}
+          BREAKING_CHANGE: ${{ github.event.inputs.breaking_change || 'false' }}
+          BREAKING_CHANGE_REASON: ${{ github.event.inputs.breaking_change_reason }}
         run: |
+          set -euo pipefail
+          release_branch="release/${GITHUB_RUN_NUMBER}"
+
+          if git ls-remote --exit-code --heads origin "$release_branch" >/dev/null 2>&1; then
+            existing_pr=$(gh pr list --head "$release_branch" --base main --state open --json url --jq '.[0].url // empty')
+            if [[ -z "$existing_pr" ]]; then
+              echo "::error title=Release branch collision::$release_branch exists without an open pull request."
+              exit 1
+            fi
+            head_sha=$(gh pr view "$existing_pr" --json headRefOid --jq .headRefOid)
+            release_title=$(gh pr view "$existing_pr" --json title --jq .title)
+            if [[ "$release_title" != "Bump version to v"* ]]; then
+              echo "::error title=Invalid existing release PR::$existing_pr has unexpected title '$release_title'."
+              exit 1
+            fi
+            release_tag=${release_title#Bump version to }
+            gh pr edit "$existing_pr" --add-label auto-release --add-assignee "$ACTOR_USERNAME"
+            echo "pr_url=$existing_pr" >> "$GITHUB_OUTPUT"
+            echo "head_sha=$head_sha" >> "$GITHUB_OUTPUT"
+            echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           git checkout main
-          git pull origin main
-          git checkout -b release/${{ github.run_number }}
-          EXISTS=$(git ls-remote --heads origin release/${{ github.run_number }} | wc -l)
-          if [ $EXISTS -eq 1 ]; then
-            git pull origin release/${{ github.run_number }}
+          git pull --ff-only origin main
+          git checkout -b "$release_branch"
+
+          if [[ "$BREAKING_CHANGE" == "true" ]]; then
+            git commit --allow-empty -m "feat!: mark breaking change release" -m "BREAKING CHANGE: $BREAKING_CHANGE_REASON"
           fi
-          if [[ "${{ github.event.inputs.breaking_change || 'false' }}" == "true" ]]; then
-            MARKER_MESSAGE="feat!: mark breaking change release"
-            BREAKING_REASON="${{ github.event.inputs.breaking_change_reason }}"
-            git commit --allow-empty -m "$MARKER_MESSAGE" -m "BREAKING CHANGE: $BREAKING_REASON"
-          fi
-          STRATEGY="${{ steps.resolve_strategy.outputs.strategy }}"
+
           if [[ "$STRATEGY" == "auto" ]]; then
             yarn release
           else
             yarn release --release-as "$STRATEGY"
           fi
-          git push --follow-tags origin release/${{ github.run_number }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT_FINE }}
-      - name: ⏱️ Wait for changes to be registered
-        if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run != 'true'
-        timeout-minutes: 2
-        run: |
-          while true; do
-            git fetch origin
-            DIFF=$(git diff main..release/${{ github.run_number }})
-            echo "$DIFF"
-            if [ "$DIFF" != "" ]; then
-              break
-            fi
-            echo "Waiting for changes to be registered..."
-            sleep 5s
-          done
-      - name: 🏷️ Get last existing tag
-        if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run != 'true'
-        id: get_new_tag
-        run: |
-          LAST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
-          if [ -z "$LAST_TAG" ]; then
-            echo "No tag found, exiting"
+
+          release_version=$(node -p "require('./package.json').version")
+          release_tag="v${release_version}"
+          if ! git rev-parse --verify "refs/tags/${release_tag}" >/dev/null 2>&1; then
+            echo "::error title=Missing local release tag::standard-version did not create ${release_tag}."
             exit 1
           fi
-          echo "Last tag found: $LAST_TAG"
-          echo "lastTag=$LAST_TAG" >> $GITHUB_OUTPUT
-      - name: 📝 Create pull request
-        if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run != 'true'
-        id: create_pr
+          git tag -d "$release_tag"
+          if git ls-remote --exit-code --tags origin "refs/tags/${release_tag}" >/dev/null 2>&1; then
+            echo "::error title=Remote release tag collision::$release_tag already exists on origin."
+            exit 1
+          fi
+          git push origin "HEAD:refs/heads/${release_branch}"
+
+          pr_url=$(gh pr create \
+            --base main \
+            --head "$release_branch" \
+            --title "Bump version to ${release_tag}" \
+            --body "Bumps version to ${release_tag}. Publication starts only after this pull request is merged by the repository requirements.")
+          gh pr edit "$pr_url" --add-label auto-release --add-assignee "$ACTOR_USERNAME"
+
+          head_sha=$(git rev-parse HEAD)
+          echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$head_sha" >> "$GITHUB_OUTPUT"
+          echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
+
+      - name: 📋 Report release pull request
+        if: steps.prepare_release.outputs.pr_url != ''
+        env:
+          PR_URL: ${{ steps.prepare_release.outputs.pr_url }}
+          HEAD_SHA: ${{ steps.prepare_release.outputs.head_sha }}
+          RELEASE_TAG: ${{ steps.prepare_release.outputs.release_tag }}
         run: |
-          PR_DATA=$(curl \
-            -X POST \
-            -H "Authorization: token ${{ secrets.PAT_FINE }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/pulls \
-            -d '{
-              "title": "Bump version to ${{ steps.get_new_tag.outputs.lastTag }}",
-              "body": "Bumps version to ${{ steps.get_new_tag.outputs.lastTag }}",
-              "head": "release/${{ github.run_number }}",
-              "base": "main"
-            }')
-          PR_NUMBER=$(echo "$PR_DATA" | jq '.number')
-
-          curl \
-          -X POST \
-          -H "Authorization: token ${{ secrets.PAT_FINE }}" \
-          -H "Accept: application/vnd.github.v3+json" \
-          https://api.github.com/repos/${{ github.repository }}/issues/$PR_NUMBER/labels \
-          -d '{
-            "labels": ["auto-release"]
-          }'
-          echo "Detected PR number: $PR_NUMBER"
-          echo "prNumber=$PR_NUMBER" >> $GITHUB_OUTPUT
-      - name: 👤 Assign PR to user
-        if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run != 'true'
-        run: gh pr edit ${{ steps.create_pr.outputs.prNumber }} --add-assignee "${{ env.ACTOR_USERNAME }}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT_FINE }}
-      - name: 🕵️ Check if PR is approved
-        if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run != 'true'
-        uses: actions/github-script@v9
-        timeout-minutes: 5
-        env:
-          PULL_REQUEST_NUMBER: ${{ steps.create_pr.outputs.prNumber }}
-        with:
-          script: |
-            const timeout = 5 * 60 * 1000; // 5 minutes
-            const interval = 5 * 1000; // 5 seconds
-            const startTime = Date.now();
-            const prNumber = process.env.PULL_REQUEST_NUMBER;
-            console.log('PR number:', prNumber);
-
-            while (Date.now() - startTime < timeout) {
-              const { data: reviews } = await github.rest.pulls.listReviews({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: prNumber
-              });
-
-              const approved = reviews.some(review => review.state === 'APPROVED');
-              if (approved) {
-                console.log(`PR #${prNumber} has been approved`);
-                return;
-              }
-
-              await new Promise(resolve => setTimeout(resolve, interval));
-            }
-
-            throw new Error('PR approval timed out');
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: ⌛ Wait for all checks to pass
-        if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run != 'true'
-        uses: actions/github-script@v9
-        timeout-minutes: 5
-        env:
-          PULL_REQUEST_NUMBER: ${{ steps.create_pr.outputs.prNumber }}
-          PAT_FINE: ${{ secrets.PAT_FINE }}
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const prNumber = process.env.PULL_REQUEST_NUMBER;
-            const { owner, repo } = context.repo;
-            const timeout = 5 * 60 * 1000; // 5 minutes
-            const interval = 5000; // 5 seconds
-            const deadline = Date.now() + timeout;
-
-            const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNumber });
-            const ref = pr.head.sha;
-
-            console.log(`⌛ Waiting for all checks on PR #${prNumber}...`);
-            while (Date.now() < deadline) {
-              const { data: checks } = await github.rest.checks.listForRef({
-                owner,
-                repo,
-                ref
-              });
-
-              const expectedChecks = checks.check_runs.filter(run => run.conclusion !== 'skipped');
-              const passedChecks = expectedChecks.filter(run => run.status === 'completed' && run.conclusion === 'success').length;
-              const allPassed = passedChecks === expectedChecks.length;
-
-              if (allPassed) {
-                console.log(`✅ All checks passed! Proceeding to approve the PR #${prNumber}`);
-                break;
-              }
-
-              const anyFailed = expectedChecks.some(run => run.conclusion === 'failure');
-              if (anyFailed) throw new Error(`❌ Some checks failed for PR #${prNumber}.`);
-
-              console.log(`⏳ Waiting for all checks to pass (${passedChecks}/${expectedChecks.length}). Retrying in ${interval / 1000}s...`);
-              await new Promise(resolve => setTimeout(resolve, interval));
-            }
-      - name: ✅ Merge PR
-        if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run != 'true'
-        uses: actions/github-script@v9
-        env:
-          PULL_REQUEST_NUMBER: ${{ steps.create_pr.outputs.prNumber }}
-          TAG: ${{ steps.get_new_tag.outputs.lastTag }}
-        with:
-          github-token: ${{ secrets.PAT_FINE }}
-          script: |
-            const { owner, repo } = context.repo;
-            const prNumber = process.env.PULL_REQUEST_NUMBER;
-            const merge = await github.rest.pulls.merge({
-              owner,
-              repo,
-              pull_number: prNumber,
-              merge_method: 'squash'
-            });
-            const mergeSha = merge.data.sha;
-            console.log(`Squashed into ${mergeSha}`);
-
-            const tag = process.env.TAG;
-            try {
-              await exec.exec('git', ['tag', '-d', tag]);
-            } catch {}
-
-            await exec.exec('git', ['fetch', '--tags']);
-            await exec.exec('git', ['tag', '-f', tag, mergeSha]);
-            await exec.exec('git', ['push', '-f', 'origin', `refs/tags/${tag}`]);
-
-            console.log(`Tag ${tag} moved to ${mergeSha}`);
-      - name: 🎉 Publish to npm
-        if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run != 'true'
-        run: npm publish
-      - name: 📦 Create Release
-        if: steps.check_commits.outputs.enough_commits == 'true' && github.event.inputs.dry_run != 'true'
-        id: create_release
-        uses: ncipollo/release-action@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag: ${{ steps.get_new_tag.outputs.lastTag }}
-          name: Release ${{ steps.get_new_tag.outputs.lastTag }}
-          draft: false
-          prerelease: false
-          makeLatest: true
-      - name: 🧹 Cleanup on failure or cancellation
-        if: ${{ failure() || cancelled() }}
-        uses: actions/github-script@v9
-        with:
-          script: |
-            const runNumber = ${{ github.run_number }};
-            const newTag = '${{ steps.get_new_tag.outputs.lastTag }}';
-            const { owner, repo } = context.repo;
-            // Delete branch
-            try {
-              if (await github.rest.git.getRef({ owner, repo, ref: `heads/release/${runNumber}` })) {
-                await github.rest.git.deleteRef({ owner, repo, ref: `heads/release/${runNumber}` });
-                console.log(`Deleted branch release/${runNumber}`);
-              }
-            } catch (error) {
-              console.log(`Branch release/${runNumber} not found`);
-            }
-            // Delete tag
-            try {
-              if (await github.rest.git.getRef({ owner, repo, ref: `tags/${newTag}` })) {
-                await github.rest.git.deleteRef({ owner, repo, ref: `tags/${newTag}` });
-                console.log(`Deleted tag ${newTag}`);
-              }
-            } catch (error) {
-              console.log(`Tag ${newTag} not found`);
-            }
-            // Delete release
-            try {
-              const { data: releases } = await github.rest.repos.listReleases({ owner, repo });
-              const release = releases.find(r => r.tag_name === newTag);
-              if (release) {
-                await github.rest.repos.deleteRelease({ owner, repo, release_id: release.id });
-                console.log(`Deleted release ${newTag}`);
-              }
-            } catch (error) {
-              console.log(`Release ${newTag} not found`);
-            }
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          {
+            echo "### Release pull request prepared"
+            echo "- Pull request: $PR_URL"
+            echo "- Head: $HEAD_SHA"
+            echo "- Version: $RELEASE_TAG"
+            echo "- Delivery: repository requirements and auto-merge"
+          } >> "$GITHUB_STEP_SUMMARY"
