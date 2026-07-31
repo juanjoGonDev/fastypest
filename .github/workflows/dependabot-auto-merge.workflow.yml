@@ -1,46 +1,88 @@
 name: 🤖 Dependabot auto-merge
-on: pull_request_target
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - labeled
 
 permissions:
   contents: read
   pull-requests: read
 
+concurrency:
+  group: dependabot-auto-merge-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   approve-release:
+    name: Approve and queue trusted release pull request
     runs-on: ubuntu-latest
-    if: >
+    timeout-minutes: 5
+    if: >-
+      github.event.repository.fork == false &&
       contains(github.event.pull_request.labels.*.name, 'auto-release') &&
       github.event.pull_request.head.repo.full_name == github.repository &&
       github.event.pull_request.user.login == github.repository_owner &&
-      github.event.pull_request.base.ref == 'main' &&
-      github.actor == github.event.pull_request.user.login
+      github.event.pull_request.base.ref == github.event.repository.default_branch
     environment: admin
     permissions:
       pull-requests: write
+    env:
+      PR_URL: ${{ github.event.pull_request.html_url }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
     steps:
-      - name: 🔎 Check is approved
+      - name: 🔎 Check current approval
         id: check-is-approved
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
+          github-token: ${{ github.token }}
           script: |
-            const prNumber = context.issue.number;
-            const reviews = await github.rest.pulls.listReviews({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: prNumber
-            });
-            const alreadyApproved = reviews.data.some(review => review.state === 'APPROVED');
-            return alreadyApproved;
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: ✅ Approve PR
+            const { owner, repo } = context.repo;
+            const pullNumber = context.payload.pull_request.number;
+            const headSha = context.payload.pull_request.head.sha;
+            const reviews = await github.paginate(
+              github.rest.pulls.listReviews,
+              { owner, repo, pull_number: pullNumber, per_page: 100 },
+            );
+            return reviews.some(
+              (review) =>
+                review.user?.login === 'github-actions[bot]' &&
+                review.state === 'APPROVED' &&
+                review.commit_id === headSha,
+            );
+
+      - name: ✅ Approve current release head
         if: steps.check-is-approved.outputs.result == 'false'
-        run: gh pr review $PR_URL --approve -b "I'm **approving** this pull request because **it includes a bump of the version**"
         env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr review "$PR_URL" --approve --body "Approved by the trusted release workflow contract."
+
+      - name: 🔓 Enable squash auto-merge
+        env:
+          GH_TOKEN: ${{ secrets.PAT_FINE }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$GH_TOKEN" ]]; then
+            echo "::error title=Missing release secret::Configure PAT_FINE in the admin environment."
+            exit 1
+          fi
+          auto_merge_enabled=$(gh pr view "$PR_URL" --json autoMergeRequest --jq '.autoMergeRequest != null')
+          if [[ "$auto_merge_enabled" == "true" ]]; then
+            echo "Auto-merge is already enabled for $HEAD_SHA."
+            exit 0
+          fi
+          gh pr merge "$PR_URL" \
+            --auto \
+            --squash \
+            --delete-branch \
+            --match-head-commit "$HEAD_SHA"
+
   dependabot:
     runs-on: ubuntu-latest
-    if: >
+    if: >-
       github.actor == 'dependabot[bot]' &&
       github.event.pull_request.user.login == 'dependabot[bot]' &&
       github.event.pull_request.head.repo.full_name == github.repository
@@ -56,9 +98,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PAT_FINE }}
       - name: 💿 Dependabot metadata
         id: metadata
-        uses: dependabot/fetch-metadata@v3.1.0
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
         with:
-          github-token: "${{secrets.GITHUB_TOKEN}}"
+          github-token: "${{ github.token }}"
       - name: ✅ Approve PR if eligible
         id: approve
         run: |
@@ -70,28 +112,28 @@ jobs:
             gh pr review "$PR_URL" --approve -b "I'm **approving** this pull request because **it includes a major update of a dependency used only in development**"
             approved=true
           fi
-          echo "approved=$approved" >> $GITHUB_OUTPUT
+          echo "approved=$approved" >> "$GITHUB_OUTPUT"
         env:
-          PR_URL: ${{github.event.pull_request.html_url}}
+          PR_URL: ${{ github.event.pull_request.html_url }}
           GITHUB_TOKEN: ${{ secrets.PAT_FINE }}
       - name: 🔓 Enable auto-merge for eligible PRs
         if: steps.approve.outputs.approved == 'true'
         run: gh pr merge --auto --squash "$PR_URL"
         env:
-          PR_URL: ${{github.event.pull_request.html_url}}
+          PR_URL: ${{ github.event.pull_request.html_url }}
           GITHUB_TOKEN: ${{ secrets.PAT_FINE }}
       - name: ⬇️ Checkout repo
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: 👤 Assign PR to user
-        run: gh pr edit $PR_URL --add-assignee "${{ env.ACTOR_USERNAME }}"
+        run: gh pr edit "$PR_URL" --add-assignee "${{ env.ACTOR_USERNAME }}"
         env:
-          PR_URL: ${{github.event.pull_request.html_url}}
+          PR_URL: ${{ github.event.pull_request.html_url }}
           GITHUB_TOKEN: ${{ secrets.PAT_FINE }}
       - name: 💬 Comment on major updates of non-development dependencies
-        if: ${{steps.metadata.outputs.update-type == 'version-update:semver-major' && steps.metadata.outputs.dependency-type == 'direct:production'}}
+        if: ${{ steps.metadata.outputs.update-type == 'version-update:semver-major' && steps.metadata.outputs.dependency-type == 'direct:production' }}
         run: |
-          gh pr comment $PR_URL --body "I'm **not approving** this PR because **it includes a major update of a dependency used in production**"
-          gh pr edit $PR_URL --add-label "requires-manual-qa"
+          gh pr comment "$PR_URL" --body "I'm **not approving** this PR because **it includes a major update of a dependency used in production**"
+          gh pr edit "$PR_URL" --add-label "requires-manual-qa"
         env:
-          PR_URL: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ github.token }}
