@@ -1,0 +1,188 @@
+name: 🏷️ Create GitHub release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Exact package.json version to recover as a GitHub Release
+        required: true
+        type: string
+
+permissions: read-all
+
+concurrency:
+  group: create-github-release-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Create immutable GitHub Release
+    if: >-
+      github.event.repository.fork == false &&
+      github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: admin
+    permissions:
+      contents: read
+    env:
+      DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+    steps:
+      - name: 📥 Checkout release commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: 🧭 Resolve changed package version
+        id: candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          REQUESTED_VERSION: ${{ inputs.version || '' }}
+        run: |
+          set -euo pipefail
+          current_version=$(node -p "require('./package.json').version")
+          if ! [[ "$current_version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error title=Invalid package version::$current_version is not a supported semantic version."
+            exit 1
+          fi
+
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            requested_version="${REQUESTED_VERSION#v}"
+            if [[ "$requested_version" != "$current_version" ]]; then
+              echo "::error title=Version mismatch::Requested $requested_version but package.json contains $current_version."
+              exit 1
+            fi
+          else
+            zero_sha=0000000000000000000000000000000000000000
+            previous_version=
+            if [[ -n "$BEFORE_SHA" && "$BEFORE_SHA" != "$zero_sha" ]]; then
+              previous_version=$(git show "${BEFORE_SHA}:package.json" 2>/dev/null \
+                | node -e "let value=''; process.stdin.on('data', chunk => value += chunk); process.stdin.on('end', () => process.stdout.write(JSON.parse(value).version));" \
+                2>/dev/null || true)
+            fi
+            if [[ -z "$previous_version" || "$previous_version" == "$current_version" ]]; then
+              echo "create=false" >> "$GITHUB_OUTPUT"
+              echo "package.json version did not change on this push."
+              exit 0
+            fi
+          fi
+
+          release_tag="v${current_version}"
+          if gh release view "$release_tag" --json tagName >/dev/null 2>&1; then
+            echo "create=false" >> "$GITHUB_OUTPUT"
+            echo "GitHub Release $release_tag already exists."
+            exit 0
+          fi
+
+          if git rev-parse --verify "${release_tag}^{commit}" >/dev/null 2>&1; then
+            existing_sha=$(git rev-list -n 1 "$release_tag")
+            if [[ "$existing_sha" != "$GITHUB_SHA" ]]; then
+              echo "::error title=Release tag collision::$release_tag points to $existing_sha instead of $GITHUB_SHA."
+              exit 1
+            fi
+          fi
+
+          prerelease=false
+          if [[ "$current_version" == *-* ]]; then
+            prerelease=true
+          fi
+
+          echo "create=true" >> "$GITHUB_OUTPUT"
+          echo "version=$current_version" >> "$GITHUB_OUTPUT"
+          echo "tag=$release_tag" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
+
+      - name: 🔐 Validate release publisher identity
+        if: steps.candidate.outputs.create == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.PAT_FINE }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$GH_TOKEN" ]]; then
+            echo "::error title=Missing release secret::Configure PAT_FINE in the admin environment."
+            exit 1
+          fi
+          actor_username=$(gh api user --jq .login)
+          if [[ "$actor_username" != "$GITHUB_REPOSITORY_OWNER" ]]; then
+            echo "::error title=Invalid release actor::PAT_FINE authenticates as $actor_username instead of $GITHUB_REPOSITORY_OWNER."
+            exit 1
+          fi
+
+      - name: 🏷️ Create immutable release tag
+        if: steps.candidate.outputs.create == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.PAT_FINE }}
+          RELEASE_TAG: ${{ steps.candidate.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${RELEASE_TAG}" >/dev/null 2>&1; then
+            git fetch --force origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+            existing_sha=$(git rev-list -n 1 "$RELEASE_TAG")
+            if [[ "$existing_sha" != "$GITHUB_SHA" ]]; then
+              echo "::error title=Release tag collision::$RELEASE_TAG points to $existing_sha instead of $GITHUB_SHA."
+              exit 1
+            fi
+            echo "Tag $RELEASE_TAG already points to the release commit."
+            exit 0
+          fi
+
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/git/refs" \
+            -f ref="refs/tags/${RELEASE_TAG}" \
+            -f sha="$GITHUB_SHA" >/dev/null
+
+      - name: 📦 Publish GitHub Release
+        if: steps.candidate.outputs.create == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.PAT_FINE }}
+          RELEASE_TAG: ${{ steps.candidate.outputs.tag }}
+          IS_PRERELEASE: ${{ steps.candidate.outputs.prerelease }}
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "GitHub Release $RELEASE_TAG already exists."
+            exit 0
+          fi
+
+          release_args=(
+            "$RELEASE_TAG"
+            --verify-tag
+            --target "$GITHUB_SHA"
+            --title "Release $RELEASE_TAG"
+            --generate-notes
+          )
+          if [[ "$IS_PRERELEASE" == "true" ]]; then
+            release_args+=(--prerelease)
+          fi
+          gh release create "${release_args[@]}"
+
+      - name: ✅ Verify GitHub Release
+        if: steps.candidate.outputs.create == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.PAT_FINE }}
+          RELEASE_TAG: ${{ steps.candidate.outputs.tag }}
+          IS_PRERELEASE: ${{ steps.candidate.outputs.prerelease }}
+        run: |
+          set -euo pipefail
+          release_json=$(gh release view "$RELEASE_TAG" --json tagName,isDraft,isPrerelease,url)
+          [[ "$(jq -r .tagName <<<"$release_json")" == "$RELEASE_TAG" ]]
+          [[ "$(jq -r .isDraft <<<"$release_json")" == "false" ]]
+          [[ "$(jq -r .isPrerelease <<<"$release_json")" == "$IS_PRERELEASE" ]]
+
+          git fetch --force origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+          tag_sha=$(git rev-list -n 1 "$RELEASE_TAG")
+          [[ "$tag_sha" == "$GITHUB_SHA" ]]
+
+          release_url=$(jq -r .url <<<"$release_json")
+          {
+            echo "### GitHub Release created"
+            echo "- Release: $release_url"
+            echo "- Tag: $RELEASE_TAG"
+            echo "- Commit: $GITHUB_SHA"
+            echo "- npm delivery: release.published event"
+          } >> "$GITHUB_STEP_SUMMARY"
