@@ -66,6 +66,8 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
+    env:
+      DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -185,8 +187,8 @@ jobs:
           BREAKING_CHANGE_REASON: ${{ github.event.inputs.breaking_change_reason }}
         run: |
           set -euo pipefail
-          git checkout main
-          git pull --ff-only origin main
+          git checkout "$DEFAULT_BRANCH"
+          git pull --ff-only origin "$DEFAULT_BRANCH"
           if [[ "$BREAKING_CHANGE" == "true" ]]; then
             git commit --allow-empty -m "feat!: mark breaking change release" -m "BREAKING CHANGE: $BREAKING_CHANGE_REASON"
           fi
@@ -209,7 +211,7 @@ jobs:
           release_branch="release/${GITHUB_RUN_NUMBER}"
 
           if git ls-remote --exit-code --heads origin "$release_branch" >/dev/null 2>&1; then
-            existing_pr=$(gh pr list --head "$release_branch" --base main --state open --json url --jq '.[0].url // empty')
+            existing_pr=$(gh pr list --head "$release_branch" --base "$DEFAULT_BRANCH" --state open --json url --jq '.[0].url // empty')
             if [[ -z "$existing_pr" ]]; then
               echo "::error title=Release branch collision::$release_branch exists without an open pull request."
               exit 1
@@ -239,8 +241,8 @@ jobs:
             exit 0
           fi
 
-          git checkout main
-          git pull --ff-only origin main
+          git checkout "$DEFAULT_BRANCH"
+          git pull --ff-only origin "$DEFAULT_BRANCH"
           git checkout -b "$release_branch"
 
           if [[ "$BREAKING_CHANGE" == "true" ]]; then
@@ -267,7 +269,7 @@ jobs:
           git push origin "HEAD:refs/heads/${release_branch}"
 
           pr_url=$(gh pr create \
-            --base main \
+            --base "$DEFAULT_BRANCH" \
             --head "$release_branch" \
             --title "Bump version to ${release_tag}" \
             --body "Bumps version to ${release_tag}. Publication starts only after this pull request is merged by the repository requirements.")
