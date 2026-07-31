@@ -63,4 +63,4 @@ Revert the pull request. Existing failed release PRs remain closed and no packag
 - Publication: not triggered by this implementation pull request
 
 ## Status
-Implemented on the delivery branch. Initial pull-request CI passed; review hardening and final CI validation are in progress.
+Implementation, review hardening, and static validation are complete. Delivery remains gated by pull-request CI and explicit owner merge approval; no merge or publication has been performed.
