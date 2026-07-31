@@ -47,6 +47,52 @@ jobs:
             const eventHeadSha = context.payload.pull_request.head.sha;
             const repositoryOwner = context.payload.repository.owner.login;
             const defaultBranch = context.payload.repository.default_branch;
+            const semverPattern = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?$/;
+
+            const parseSemver = (value) => {
+              const match = semverPattern.exec(value);
+              if (!match) return null;
+              return {
+                core: [Number(match[1]), Number(match[2]), Number(match[3])],
+                prerelease: match[4]?.split('.') ?? [],
+              };
+            };
+
+            const compareSemver = (left, right) => {
+              for (let index = 0; index < left.core.length; index += 1) {
+                if (left.core[index] !== right.core[index]) {
+                  return left.core[index] > right.core[index] ? 1 : -1;
+                }
+              }
+              if (left.prerelease.length === 0 || right.prerelease.length === 0) {
+                if (left.prerelease.length === right.prerelease.length) return 0;
+                return left.prerelease.length === 0 ? 1 : -1;
+              }
+              const length = Math.max(left.prerelease.length, right.prerelease.length);
+              for (let index = 0; index < length; index += 1) {
+                const leftIdentifier = left.prerelease[index];
+                const rightIdentifier = right.prerelease[index];
+                if (leftIdentifier === undefined) return -1;
+                if (rightIdentifier === undefined) return 1;
+                if (leftIdentifier === rightIdentifier) continue;
+                const leftNumeric = /^\d+$/.test(leftIdentifier);
+                const rightNumeric = /^\d+$/.test(rightIdentifier);
+                if (leftNumeric && rightNumeric) {
+                  return Number(leftIdentifier) > Number(rightIdentifier) ? 1 : -1;
+                }
+                if (leftNumeric !== rightNumeric) return leftNumeric ? -1 : 1;
+                return leftIdentifier > rightIdentifier ? 1 : -1;
+              }
+              return 0;
+            };
+
+            const readRepositoryFile = async (path, ref) => {
+              const response = await github.rest.repos.getContent({ owner, repo, path, ref });
+              if (Array.isArray(response.data) || response.data.type !== 'file') {
+                throw new Error(`${path} did not resolve to a repository file at ${ref}.`);
+              }
+              return Buffer.from(response.data.content, 'base64').toString('utf8');
+            };
 
             const { data: pullRequest } = await github.rest.pulls.get({
               owner,
@@ -62,15 +108,18 @@ jobs:
               return;
             }
 
-            const titleMatch = /^Bump version to v((0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z.-]+)?)$/.exec(
-              pullRequest.title,
-            );
-            if (!titleMatch) {
+            const titlePrefix = 'Bump version to v';
+            if (!pullRequest.title.startsWith(titlePrefix)) {
               core.setFailed(`Unexpected release pull request title: ${pullRequest.title}`);
               return;
             }
+            const version = pullRequest.title.slice(titlePrefix.length);
+            const parsedVersion = parseSemver(version);
+            if (!parsedVersion || pullRequest.title !== `${titlePrefix}${version}`) {
+              core.setFailed(`Invalid release version in title: ${pullRequest.title}`);
+              return;
+            }
 
-            const version = titleMatch[1];
             const expectedBranch = `release/v${version}`;
             const labels = pullRequest.labels.map((label) =>
               typeof label === 'string' ? label : label.name,
@@ -105,25 +154,45 @@ jobs:
               return;
             }
 
-            const packageResponse = await github.rest.repos.getContent({
-              owner,
-              repo,
-              path: 'package.json',
-              ref: pullRequest.head.sha,
-            });
-            if (Array.isArray(packageResponse.data) || packageResponse.data.type !== 'file') {
-              core.setFailed('package.json did not resolve to a repository file.');
+            const packageJson = JSON.parse(
+              await readRepositoryFile('package.json', pullRequest.head.sha),
+            );
+            const basePackageJson = JSON.parse(
+              await readRepositoryFile('package.json', pullRequest.base.sha),
+            );
+            const parsedBaseVersion = parseSemver(basePackageJson.version);
+            if (
+              packageJson.name !== 'fastypest' ||
+              basePackageJson.name !== 'fastypest' ||
+              packageJson.version !== version ||
+              !parsedBaseVersion ||
+              compareSemver(parsedVersion, parsedBaseVersion) <= 0
+            ) {
+              core.setFailed(
+                `Expected a monotonic fastypest version bump from ${basePackageJson.version} to ${version}.`,
+              );
               return;
             }
 
-            const packageJson = JSON.parse(
-              Buffer.from(packageResponse.data.content, 'base64').toString('utf8'),
-            );
-            if (packageJson.version !== version || packageJson.name !== 'fastypest') {
-              core.setFailed(
-                `package.json contains ${packageJson.name}@${packageJson.version}, expected fastypest@${version}.`,
-              );
+            const changelog = await readRepositoryFile('CHANGELOG.md', pullRequest.head.sha);
+            if (!changelog.includes(`[${version}]`)) {
+              core.setFailed(`CHANGELOG.md does not contain the release entry [${version}].`);
               return;
+            }
+
+            try {
+              await github.rest.repos.getReleaseByTag({ owner, repo, tag: `v${version}` });
+              core.setFailed(`GitHub Release v${version} already exists.`);
+              return;
+            } catch (error) {
+              if (error.status !== 404) throw error;
+            }
+            try {
+              await github.rest.git.getRef({ owner, repo, ref: `tags/v${version}` });
+              core.setFailed(`Git tag v${version} already exists.`);
+              return;
+            } catch (error) {
+              if (error.status !== 404) throw error;
             }
 
             const reviews = await github.paginate(github.rest.pulls.listReviews, {
@@ -147,9 +216,34 @@ jobs:
         if: >-
           steps.contract.outputs.eligible == 'true' &&
           steps.contract.outputs.already_approved != 'true'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh pr review "$PR_URL" --approve --body "Approved by the trusted release workflow contract."
+          VALIDATED_HEAD_SHA: ${{ steps.contract.outputs.head_sha }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const { owner, repo } = context.repo;
+            const pullNumber = context.payload.pull_request.number;
+            const validatedHeadSha = process.env.VALIDATED_HEAD_SHA;
+            const { data: pullRequest } = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: pullNumber,
+            });
+            if (pullRequest.head.sha !== validatedHeadSha) {
+              core.notice(
+                `Skipping stale approval for ${validatedHeadSha}; current head is ${pullRequest.head.sha}.`,
+              );
+              return;
+            }
+            await github.rest.pulls.createReview({
+              owner,
+              repo,
+              pull_number: pullNumber,
+              commit_id: validatedHeadSha,
+              event: 'APPROVE',
+              body: 'Approved by the trusted release workflow contract.',
+            });
 
       - name: 🔓 Enable squash auto-merge
         if: steps.contract.outputs.eligible == 'true'
