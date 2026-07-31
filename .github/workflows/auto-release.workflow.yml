@@ -153,6 +153,8 @@ jobs:
           PACKAGE_NAME: ${{ steps.release.outputs.package_name }}
           PACKAGE_VERSION: ${{ steps.release.outputs.package_version }}
           NPM_TAG: ${{ steps.release.outputs.npm_tag }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          ALREADY_PUBLISHED: ${{ steps.npm.outputs.published }}
         run: |
           set -euo pipefail
           for attempt in $(seq 1 12); do
@@ -167,7 +169,7 @@ jobs:
             sleep 5
           done
 
-          if [[ "${{ steps.npm.outputs.published }}" != "true" ]]; then
+          if [[ "$ALREADY_PUBLISHED" != "true" ]]; then
             dist_tag_version=$(npm view "${PACKAGE_NAME}" "dist-tags.${NPM_TAG}" --json | jq -r .)
             if [[ "$dist_tag_version" != "$PACKAGE_VERSION" ]]; then
               echo "::error title=npm dist-tag mismatch::$NPM_TAG points to $dist_tag_version instead of $PACKAGE_VERSION."
@@ -179,5 +181,5 @@ jobs:
             echo "### npm package published"
             echo "- Package: ${PACKAGE_NAME}@${PACKAGE_VERSION}"
             echo "- Dist-tag: $NPM_TAG"
-            echo "- Source tag: ${{ github.event.release.tag_name }}"
+            echo "- Source tag: $RELEASE_TAG"
           } >> "$GITHUB_STEP_SUMMARY"
