@@ -19,7 +19,8 @@ Only `fastypest` is in scope. `typeorm-test-db` and DevBar are excluded.
 - A personal access token or GitHub App token can create the release branch and pull request while allowing normal pull-request checks to run.
 - The `release.published` event supports both manually and automatically published GitHub Releases.
 - npm trusted publishing binds the package to an exact workflow filename and requires OIDC.
-- The current implementation combines npm publication, tag creation, and GitHub Release creation after a pull-request state transition.
+- The previous implementation combined npm publication, tag creation, and GitHub Release creation after a pull-request state transition.
+- Review found and the implementation corrected exact-release-commit targeting, shell template expansion, persisted checkout credentials, label validation under `pipefail`, and missing approval-workflow ownership documentation.
 
 ## Scope
 
@@ -52,13 +53,16 @@ release.published
 
 - A default-branch push below the threshold does not create a release pull request.
 - A default-branch push at or above the threshold creates at most one owner-authored `release/v<version>` pull request.
+- Release preparation is attached to the exact default-branch event SHA and does not drift to a newer branch head.
 - The generated pull request changes exactly `package.json` and `CHANGELOG.md`.
-- The trusted workflow validates the current head, title, branch, author, repository, base, label, package name/version, and changed files before approving.
-- The approval body remains `Approved by the trusted release workflow contract.`
+- The trusted workflow validates the current head, title, exact branch, author, repository, base, label, package name, monotonic version, changelog entry, destination tag/release state, and changed files before approving.
+- The approval is submitted through the reviews API against the validated commit SHA with body `Approved by the trusted release workflow contract.`
 - Auto-merge is enabled only for the validated current head and repository rules remain the merge authority.
 - A release pull-request merge does not immediately create another version pull request while the new package version lacks its GitHub Release.
-- A changed package version creates an immutable tag and GitHub Release targeting the exact default-branch commit.
-- Existing wrong-target tags fail without force-updating or deleting them.
+- The release baseline tag must target a commit whose `package.json` contains the current version and whose release metadata matches stable or prerelease state.
+- A changed package version creates an immutable tag and GitHub Release targeting the exact first-parent commit that introduced that version, including multi-commit push cases.
+- Existing releases are accepted as idempotent only when tag target, draft state, and prerelease state match the resolved contract.
+- Existing wrong-target tags or releases fail without force-updating or deleting them.
 - Generated GitHub Releases use `PAT_FINE`, so `release.published` can trigger the npm workflow.
 - Manually published owner releases trigger the same npm workflow.
 - npm publication validates package name, semantic version, tag, prerelease state, default-branch ancestry, build, package archive, and existing npm state.
@@ -75,6 +79,7 @@ release.published
 - Release creation can partially complete after tag creation.
 - Manual releases could target an untrusted commit or mismatched package version.
 - A prerelease could accidentally replace npm `latest`.
+- A multi-commit default-branch push could place commits after the version change and accidentally expand the release target.
 
 ## Controls
 
@@ -82,34 +87,43 @@ release.published
 - Keep PAT-backed jobs behind the `admin` environment and verify the authenticated actor is the repository owner.
 - Never checkout or execute pull-request code in the privileged approval job.
 - Serialize release preparation and GitHub Release creation with repository-scoped concurrency.
+- Attach release preparation to the event SHA before creating the release commit and branch.
 - Treat an open trusted release pull request as a preparation barrier.
 - Treat a package version without a GitHub Release as a preparation barrier.
 - Bind approval and auto-merge to the live head SHA.
-- Validate exact changed files and package metadata through the GitHub API.
-- Reject tag collisions and verify tag targets after creation.
+- Validate exact changed files, monotonic versioning, changelog content, and package metadata through the GitHub API.
+- Resolve the exact first-parent commit that introduced the package version.
+- Reject tag/release collisions and verify tag targets and release metadata after creation.
 - Require release tags to be reachable from the default branch before npm publication.
+- Pass event and action values into shell blocks through explicit environment variables.
 - Use npm OIDC without a token fallback.
 
 ## Tests
 
-- Parse every changed workflow as YAML.
-- Check each changed shell block with `bash -n` after neutralizing GitHub expressions.
-- Assert every third-party action reference is pinned to a full commit SHA.
-- Assert the preparation workflow contains no check polling, direct merge, npm publish, GitHub Release creation, force push, or destructive cleanup.
-- Assert the release creator uses a package-version-change gate, exact tag target validation, generated notes, and `PAT_FINE`.
-- Assert the npm publisher is triggered only by `release.published`, retains its filename, has `id-token: write`, and contains no npm token fallback.
-- Assert the trusted approval validates branch, title, package metadata, changed files, and current head before bot approval and PAT-backed auto-merge.
-- Run the repository pull-request workflow on the implementation branch.
-- Inspect CodeQL and review feedback before delivery.
+- Parsed every changed workflow as YAML.
+- Checked every changed shell block with `bash -n` after neutralizing GitHub expressions.
+- Checked every changed `actions/github-script` program by parsing it inside an async function wrapper.
+- Asserted every third-party action reference is pinned to a full commit SHA.
+- Asserted the preparation workflow contains no check polling, direct merge, npm publish, GitHub Release creation, force push, or destructive cleanup.
+- Asserted the release creator uses a package-version-change gate, exact tag target validation, generated notes, and `PAT_FINE`.
+- Asserted the npm publisher is triggered only by `release.published`, retains its filename, has `id-token: write`, and contains no npm token fallback.
+- Asserted the trusted approval validates branch, title, monotonic package metadata, changelog, changed files, destination collisions, and current head before bot approval and PAT-backed auto-merge.
+- Exercised the exact release-SHA resolver with synthetic histories covering a multi-commit push, manual recovery, and a later `package.json` edit that retained the same version.
+- Exercised the strict semantic-version parser and comparator for patch, minor, major, prerelease, stable-versus-prerelease, numeric-versus-string identifiers, and invalid leading-zero identifiers.
+- Ran the repository pull-request build, format, package-install smoke, and database matrix on implementation heads.
+- Resolved all initial review findings and confirmed no unresolved review threads before final delivery validation.
 
 ## Checks
 
-- YAML syntax.
-- Shell syntax.
-- Static workflow contract assertions.
-- Pull-request build, format, package smoke, and database matrix.
-- CodeQL and repository review checks.
-- Final diff inspection for secret exposure, mutable tags, privileged execution of PR code, and duplicate release ownership.
+- YAML syntax: passed.
+- Shell syntax: passed.
+- GitHub-script syntax: passed.
+- Static workflow contract assertions: passed.
+- Exact release-SHA synthetic cases: passed.
+- Semantic-version parser/comparator cases: passed.
+- Pull-request build, format, package smoke, and database matrix: passed on hardened implementation heads; the final documentation head remains subject to the normal pull-request CI gate.
+- Initial review findings: resolved.
+- Final diff inspection: no secret values, mutable release tags, privileged execution of pull-request code, duplicate release ownership, or destructive failure cleanup found.
 
 ## Rollback
 
@@ -118,10 +132,10 @@ Revert the implementation pull request. Existing tags, releases, packages, and g
 ## Delivery
 
 - Branch: `agent/refactor-event-driven-release`
-- Pull request: pending
+- Pull request: `https://github.com/juanjoGonDev/fastypest/pull/1681`
 - Merge: requires explicit owner approval
 - Release/publication: not permitted from this implementation branch
 
 ## Status
 
-Implementation in progress.
+Implementation, review hardening, and static validation are complete. Delivery remains gated by pull-request CI and explicit owner merge approval; no merge, GitHub Release, tag, or npm publication has been performed.
