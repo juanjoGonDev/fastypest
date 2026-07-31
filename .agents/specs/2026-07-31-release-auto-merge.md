@@ -16,7 +16,7 @@ Replace the auto-release workflow's direct check polling and merge logic with re
 - Preserve scheduled releases, manual strategies, dry runs, breaking-change metadata, package build, and package installation smoke tests.
 
 ## Decision
-GitHub branch requirements are the source of truth for release eligibility. The preparation workflow does not enumerate check runs, wait for checks, merge directly, publish, or delete release evidence. The trusted pull-request workflow enables auto-merge for the exact head SHA. A separate merged-release workflow validates the pull-request contract before checking out the merge commit and publishing.
+GitHub branch requirements are the source of truth for release eligibility. A dedicated preparation workflow does not enumerate check runs, wait for checks, merge directly, publish, or delete release evidence. The trusted pull-request workflow enables auto-merge for the exact head SHA. The existing `auto-release.workflow.yml` remains the owner of npm publication so its trusted-publisher identity is preserved; its merged-release job validates the pull-request contract before checking out the merge commit and publishing.
 
 ## Risks
 - A malformed release pull request could trigger privileged publication.
@@ -58,9 +58,9 @@ Revert the pull request. Existing failed release PRs remain closed and no packag
 
 ## Delivery
 - Branch: `agent/fix-release-auto-merge`
-- Pull request: pending
+- Pull request: #1680
 - Merge: requires explicit owner approval
 - Publication: not triggered by this implementation pull request
 
 ## Status
-Implemented locally for delivery through a pull request; validation and CI pending.
+Implemented on the delivery branch. Initial pull-request CI passed; review hardening and final CI validation are in progress.
