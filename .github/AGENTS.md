@@ -6,11 +6,12 @@ These rules apply to files under `.github/`.
 
 ## Release pipeline ownership
 
-Release automation is split into three single-purpose workflows:
+Release delivery is split into three single-purpose workflows, with trusted pull-request approval kept in its existing automation owner:
 
 - `prepare-release.workflow.yml` detects the commit threshold and creates a version pull request.
 - `create-github-release.workflow.yml` reacts to a changed `package.json` version on the default branch and creates the immutable tag and GitHub Release.
 - `auto-release.workflow.yml` is the npm trusted-publisher workflow. Its filename is part of the npm OIDC trust configuration and must not be renamed.
+- `dependabot-auto-merge.workflow.yml` owns the `approve-release` job that validates, approves, and queues trusted release pull requests.
 
 Do not merge these responsibilities back into one workflow. GitHub branch requirements remain the source of truth for merging release pull requests.
 
