@@ -101,15 +101,17 @@ jobs:
         run: yarn build
 
       - name: 🧪 Verify package archive and installation
+        env:
+          NPM_CONFIG_USERCONFIG: /dev/null
         run: |
           set -euo pipefail
           package_dir=$(mktemp -d)
+          package_manager=$(node -p "require('./package.json').packageManager")
           yarn pack --filename "$package_dir/package.tar.gz"
           tar -tzf "$package_dir/package.tar.gz" >/dev/null
           cd "$package_dir"
-          yarn init -y
-          touch yarn.lock
-          yarn add -D ./package.tar.gz
+          printf '{"name":"fastypest-install-smoke","version":"1.0.0","private":true,"packageManager":"%s"}\n' "$package_manager" > package.json
+          corepack yarn add -D ./package.tar.gz
 
       - name: 🔎 Check npm publication state
         id: npm
