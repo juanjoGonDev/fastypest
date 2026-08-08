@@ -80,8 +80,10 @@ jobs:
             const defaultBranch = context.payload.repository.default_branch;
             const repository = await github.rest.repos.get({ owner, repo });
             const autoMergeAllowed = repository.data.allow_auto_merge === true;
+            const hasRequiredQaLabel = (pullRequest) => pullRequest.labels.some((label) => label.name === 'requires-manual-qa');
+            const isTrustedCandidate = (pullRequest) => pullRequest.user?.login === 'dependabot[bot]' && pullRequest.base.ref === defaultBranch && pullRequest.head.repo?.full_name === `${owner}/${repo}` && hasRequiredQaLabel(pullRequest);
             const pullRequests = await github.paginate(github.rest.pulls.list, { owner, repo, state: 'open', per_page: 100 });
-            const candidates = pullRequests.filter((pullRequest) => pullRequest.user?.login === 'dependabot[bot]' && pullRequest.base.ref === defaultBranch && pullRequest.head.repo?.full_name === `${owner}/${repo}` && pullRequest.labels.some((label) => label.name === 'requires-manual-qa'));
+            const candidates = pullRequests.filter(isTrustedCandidate);
             const permissionCache = new Map();
             const decisiveReviewStates = new Set(['APPROVED', 'CHANGES_REQUESTED', 'DISMISSED']);
             const hasWritePermission = async (login) => {
@@ -130,6 +132,7 @@ jobs:
               try {
                 const current = await github.rest.pulls.get({ owner, repo, pull_number: candidate.number });
                 const currentHeadSha = current.data.head.sha;
+                if (!isTrustedCandidate(current.data)) { results.push({ number: candidate.number, action: 'skipped', reason: 'candidate trust contract changed' }); continue; }
                 if (current.data.mergeable_state === 'behind') {
                   if (await hasWorkflowChanges(candidate.number)) { results.push({ number: candidate.number, action: 'manual-branch-update-required', reason: 'branch is behind and changes workflow files; automation will not request workflows permission' }); continue; }
                   if (dryRun) { results.push({ number: candidate.number, action: 'would-update-branch', reason: 'fresh approval required after the update' }); continue; }
@@ -145,6 +148,7 @@ jobs:
                 const approval = await readApprovalState(candidate.number, currentHeadSha);
                 if (!approval.approved || approval.changesRequested) { results.push({ number: candidate.number, action: 'skipped', reason: approval.changesRequested ? 'current maintainer review requests changes' : 'no maintainer approval for the current head commit' }); continue; }
                 const verified = await github.rest.pulls.get({ owner, repo, pull_number: candidate.number });
+                if (!isTrustedCandidate(verified.data)) { results.push({ number: candidate.number, action: 'skipped', reason: 'candidate trust contract changed during validation' }); continue; }
                 if (verified.data.head.sha !== currentHeadSha) { results.push({ number: candidate.number, action: 'skipped', reason: 'head commit changed during validation' }); continue; }
                 const verifiedApproval = await readApprovalState(candidate.number, currentHeadSha);
                 if (!verifiedApproval.approved || verifiedApproval.changesRequested) { results.push({ number: candidate.number, action: 'skipped', reason: 'maintainer approval changed during validation' }); continue; }
@@ -159,7 +163,7 @@ jobs:
                     if (!becameClean) throw error;
                     const clean = await github.rest.pulls.get({ owner, repo, pull_number: candidate.number });
                     const cleanApproval = await readApprovalState(candidate.number, currentHeadSha);
-                    if (clean.data.head.sha !== currentHeadSha || clean.data.mergeable_state !== 'clean' || !cleanApproval.approved || cleanApproval.changesRequested) { results.push({ number: candidate.number, action: 'skipped', reason: 'pull request changed while enabling auto-merge' }); continue; }
+                    if (!isTrustedCandidate(clean.data) || clean.data.head.sha !== currentHeadSha || clean.data.mergeable_state !== 'clean' || !cleanApproval.approved || cleanApproval.changesRequested) { results.push({ number: candidate.number, action: 'skipped', reason: 'pull request changed while enabling auto-merge' }); continue; }
                     await mergeCleanPullRequest(candidate.number, currentHeadSha);
                     results.push({ number: candidate.number, action: 'merged-after-clean-race' });
                     continue;
