@@ -1,6 +1,6 @@
 {
   "name": "fastypest",
-  "version": "3.0.40",
+  "version": "3.0.41",
   "description": "Restores the database automatically after each test. Allows serial execution of tests without having to delete and restore the database having to stop the application",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -63,7 +63,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^26.1.2",
     "@types/winston": "^2.4.4",
-    "@typescript-eslint/eslint-plugin": "^8.65.0",
+    "@typescript-eslint/eslint-plugin": "^8.66.0",
     "@typescript-eslint/parser": "^8.65.0",
     "@typescript-eslint/types": "8.65.0",
     "cpy-cli": "^6.0.0",
@@ -73,11 +73,11 @@
     "eslint-plugin-n": "^18.2.2",
     "eslint-plugin-prettier": "^5.5.6",
     "eslint-plugin-promise": "^7.3.0",
-    "execa": "^10.0.0",
-    "globals": "^17.8.0",
+    "execa": "^10.0.1",
+    "globals": "^17.9.0",
     "jest": "^30.4.2",
     "lefthook": "^2.1.10",
-    "lint-staged": "^17.2.0",
+    "lint-staged": "^17.3.0",
     "mariadb": "^3.5.3",
     "mysql": "^2.18.1",
     "pg": "^8.22.0",
@@ -89,7 +89,7 @@
     "tsconfig-paths": "^4.2.0",
     "typeorm": "^0.3.29",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.65.0"
+    "typescript-eslint": "^8.66.0"
   },
   "peerDependencies": {
     "typeorm": "^0.3.29"
