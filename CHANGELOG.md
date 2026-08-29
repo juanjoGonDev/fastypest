@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.43](https://github.com/juanjoGonDev/fastypest/compare/v3.0.42...v3.0.43) (2026-08-11)
+
+
+### Bug Fixes
+
+* **actions:** harden release and required QA runtime ([#1692](https://github.com/juanjoGonDev/fastypest/issues/1692)) ([5ec7cc3](https://github.com/juanjoGonDev/fastypest/commit/5ec7cc3be4799affe57eabc32de232138a0552f7))
+
 ### [3.0.42](https://github.com/juanjoGonDev/fastypest/compare/v3.0.41...v3.0.42) (2026-08-08)
 
 ### [3.0.41](https://github.com/juanjoGonDev/fastypest/compare/v3.0.40...v3.0.41) (2026-08-06)
