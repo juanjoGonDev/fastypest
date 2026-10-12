@@ -80,7 +80,7 @@
     "lint-staged": "^17.6.0",
     "mariadb": "^3.5.4",
     "mysql": "^2.18.1",
-    "pg": "^8.23.0",
+    "pg": "^8.23.1",
     "prettier": "^3.9.9",
     "reflect-metadata": "^0.2.2",
     "rimraf": "^6.1.3",
