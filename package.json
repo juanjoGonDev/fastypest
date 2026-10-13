@@ -43,7 +43,8 @@
     "up",
     "tests",
     "jest",
-    "fastypest"
+    "fastypest",
+    "testing"
   ],
   "author": "juanjoGonDev",
   "license": "GPL",
